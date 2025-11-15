@@ -26,7 +26,7 @@ interface SubmitJobResponse {
     companyName: string;
     jobTitle: string;
     deadline?: string;
-    scrapingMethod: 'cheerio' | 'puppeteer';
+    scrapingMethod: 'cheerio' | 'puppeteer' | 'playwright';
   };
   error?: string;
 }

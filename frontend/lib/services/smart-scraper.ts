@@ -47,7 +47,7 @@ export interface SmartScrapeResult {
 /**
  * Checks if a URL is from a restricted site
  */
-function isRestrictedSite(url: string): boolean {
+export function isRestrictedSite(url: string): boolean {
   try {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
