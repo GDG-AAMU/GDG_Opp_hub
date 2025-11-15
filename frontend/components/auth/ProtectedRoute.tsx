@@ -2,16 +2,19 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import LoginForm from '@/components/auth/LoginForm'
 import { useAuth } from '@/hooks/useAuth'
 
-export default function LoginPage() {
+interface ProtectedRouteProps {
+  children: React.ReactNode
+}
+
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter()
   const { user, loading } = useAuth()
 
   useEffect(() => {
-    if (!loading && user) {
-      router.push('/dashboard')
+    if (!loading && !user) {
+      router.push('/login')
     }
   }, [user, loading, router])
 
@@ -23,13 +26,9 @@ export default function LoginPage() {
     )
   }
 
-  if (user) {
+  if (!user) {
     return null
   }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-50 via-white to-blue-50 px-4 py-12">
-      <LoginForm />
-    </div>
-  )
+  return <>{children}</>
 }

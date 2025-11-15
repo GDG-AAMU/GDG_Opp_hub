@@ -1,11 +1,37 @@
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import SignupForm from '@/components/auth/SignupForm'
+import { useAuth } from '@/hooks/useAuth'
+
 export default function SignupPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-4">Sign Up</h1>
-        <p className="text-gray-600">Sign up page - Coming soon</p>
+  const router = useRouter()
+  const { user, loading } = useAuth()
+
+  useEffect(() => {
+    
+    if (!loading && user) {
+      router.push('/dashboard')
+    }
+  }, [user, loading, router])
+
+  
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
       </div>
+    )
+  }
+
+  if (user) {
+    return null
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-50 via-white to-blue-50 px-4 py-12">
+      <SignupForm />
     </div>
   )
 }
-
