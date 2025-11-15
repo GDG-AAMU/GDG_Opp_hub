@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Chrome } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,7 +16,7 @@ import { signupSchema, SignupFormData } from '@/lib/validations/auth'
 export default function SignupForm() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { signUp } = useAuth()
+  const { signUp, signInWithGoogle } = useAuth()
 
   const {
     register,
@@ -38,6 +38,14 @@ export default function SignupForm() {
       toast.error(error.message || 'Failed to create account')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign in with Google')
     }
   }
 
@@ -156,6 +164,25 @@ export default function SignupForm() {
           )}
         </Button>
       </form>
+
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-gray-300" />
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="bg-white px-2 text-gray-500">Or continue with</span>
+        </div>
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        onClick={handleGoogleSignIn}
+      >
+        <Chrome className="mr-2 h-4 w-4" />
+        Sign up with Google
+      </Button>
     </div>
   )
 }

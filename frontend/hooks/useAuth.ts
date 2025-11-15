@@ -11,7 +11,6 @@ export function useAuth() {
   const supabase = createClient()
 
   useEffect(() => {
-    // Get initial session
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
@@ -63,6 +62,17 @@ const signUp = async (data: SignupFormData) => {
     return authData
   }
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    })
+
+    if (error) throw error
+  }
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
@@ -73,6 +83,7 @@ const signUp = async (data: SignupFormData) => {
     loading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
   }
 }
