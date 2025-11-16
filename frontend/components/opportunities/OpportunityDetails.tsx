@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { Opportunity } from "@/types"
 import { Button } from "@/components/ui/button"
@@ -24,7 +24,9 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
       await navigator.clipboard.writeText(url)
       alert('Link copied to clipboard!')
     } catch (err) {
-      console.error('Failed to copy link:', err)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to copy link:', err)
+      }
       alert('Failed to copy link')
     }
   }

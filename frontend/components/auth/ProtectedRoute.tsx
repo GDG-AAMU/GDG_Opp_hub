@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 
 interface ProtectedRouteProps {
-  children: React.ReactNode
+  readonly children: React.ReactNode
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children }: Readonly<ProtectedRouteProps>) {
   const router = useRouter()
   const { user, loading } = useAuth()
 

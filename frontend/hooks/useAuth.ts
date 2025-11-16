@@ -44,7 +44,9 @@ const signUp = async (data: SignupFormData) => {
 
   if (authError) throw authError
 
-  if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
+  // Check if email already exists (identities array will be empty if account exists)
+  const hasNoIdentities = authData.user?.identities?.length === 0
+  if (hasNoIdentities) {
     throw new Error('An account with this email already exists. Please log in instead.')
   }
 
@@ -63,10 +65,14 @@ const signUp = async (data: SignupFormData) => {
   }
 
   const signInWithGoogle = async () => {
+    const redirectUrl = globalThis.window === undefined
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`
+      : `${globalThis.window.location.origin}/dashboard`
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: redirectUrl,
       },
     })
 

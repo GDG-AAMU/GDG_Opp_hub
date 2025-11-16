@@ -10,11 +10,11 @@ export const metadata: Metadata = {
   description: "Discover and submit job opportunities, internships, research positions, fellowships, and scholarships",
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+interface RootLayoutProps {
+  readonly children: React.ReactNode
+}
+
+export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
   return (
     <html lang="en">
       <body className={inter.className}>

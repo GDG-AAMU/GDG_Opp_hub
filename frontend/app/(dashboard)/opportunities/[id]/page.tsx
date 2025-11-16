@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -78,7 +78,9 @@ export default function OpportunityDetailsPage({
           setOpportunity(mockData);
         }
       } catch (err) {
-        console.error("Error fetching opportunity:", err);
+        if (process.env.NODE_ENV === 'development') {
+          console.error("Error fetching opportunity:", err);
+        }
         setError("An error occurred while loading the opportunity");
       } finally {
         setLoading(false);
