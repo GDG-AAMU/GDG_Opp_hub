@@ -1,4 +1,4 @@
-import { scrapeUrl } from '@/lib/services';
+import { scrapeUrl } from '@/backend/services';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {

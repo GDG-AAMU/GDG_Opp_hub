@@ -65,3 +65,4 @@ export type {
 export { canScrapeWithCheerio } from './cheerio-scraper';
 export { scrapeMultipleWithPuppeteer, takeScreenshot as takeScreenshotWithPuppeteer } from './puppeteer-scraper';
 export { scrapeMultipleWithPlaywright, takeScreenshot as takeScreenshotWithPlaywright, getPageHTML } from './playwright-scraper';
+
