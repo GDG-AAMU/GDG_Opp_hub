@@ -124,8 +124,6 @@ export async function scrapeUrl(
           fallbackChain,
         };
       }
-
-      console.log(`Cheerio failed for ${url} (content: ${cheerioResult.content.length} chars), trying Puppeteer...`);
     }
 
     // Step 2: Try Puppeteer
@@ -144,8 +142,6 @@ export async function scrapeUrl(
         fallbackChain,
       };
     }
-
-    console.log(`Puppeteer failed for ${url} (content: ${puppeteerResult.content.length} chars), trying Playwright (final fallback)...`);
 
     // Step 3: Try Playwright (final fallback)
     if (!options.disablePlaywrightFallback) {
@@ -246,3 +242,4 @@ export { validateUrl, isJavaScriptHeavySite, ScraperError } from './scraper-util
 export { scrapeWithCheerio } from './cheerio-scraper';
 export { scrapeWithPuppeteer, closeBrowser as closePuppeteerBrowser } from './puppeteer-scraper';
 export { scrapeWithPlaywright, closeBrowser as closePlaywrightBrowser } from './playwright-scraper';
+

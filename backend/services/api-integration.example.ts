@@ -292,3 +292,4 @@ export function handleScraperError(error: unknown): {
     message: 'Internal server error',
   };
 }
+
