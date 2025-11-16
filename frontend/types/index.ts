@@ -4,8 +4,15 @@ import { Database } from "@/lib/supabase/types"
 // User type (from database)
 export type User = Database["public"]["Tables"]["users"]["Row"]
 
-// Opportunity type (from database)
-export type Opportunity = Database["public"]["Tables"]["opportunities"]["Row"]
+// Base Opportunity type (from database)
+type BaseOpportunity = Database["public"]["Tables"]["opportunities"]["Row"]
+
+// Opportunity type with joined user data (when fetched with user name)
+// Supabase returns joined data as nested object: { users: { name: string } }
+export type Opportunity = Omit<BaseOpportunity, 'submitted_by'> & {
+  submitted_by: string | { name: string } | null
+  users?: { name: string } | null
+}
 
 // API Response types
 export interface ApiResponse<T> {

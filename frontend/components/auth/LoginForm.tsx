@@ -31,10 +31,8 @@ export default function LoginForm() {
     setIsLoading(true)
     try {
       await signIn(data)
-      toast.success('Logged in successfully! Redirecting...')
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 1000)
+      toast.success('Logged in successfully!')
+      router.push('/dashboard')
     } catch (error: any) {
       toast.error(error.message || 'Invalid email or password')
     } finally {

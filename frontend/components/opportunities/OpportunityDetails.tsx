@@ -2,6 +2,9 @@
 
 import { Opportunity } from "@/types"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
+import toast from "react-hot-toast"
+import { useState } from "react"
 
 interface OpportunityDetailsProps {
   opportunity: Opportunity
@@ -9,6 +12,10 @@ interface OpportunityDetailsProps {
 }
 
 export default function OpportunityDetails({ opportunity, isAdmin = false }: OpportunityDetailsProps) {
+  const router = useRouter()
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+
   // Check if deadline is within 7 days
   const isDeadlineApproaching = () => {
     if (!opportunity.deadline) return false
@@ -22,12 +29,12 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
     try {
       const url = window.location.href
       await navigator.clipboard.writeText(url)
-      alert('Link copied to clipboard!')
+      toast.success('Link copied to clipboard!')
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Failed to copy link:', err)
       }
-      alert('Failed to copy link')
+      toast.error('Failed to copy link')
     }
   }
 
@@ -54,6 +61,43 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
   }
 
   const relevantMajors = getRelevantMajors()
+
+  const handleEdit = () => {
+    // Navigate to edit page (to be implemented)
+    router.push(`/admin/opportunities/${opportunity.id}/edit`)
+  }
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this opportunity? This action cannot be undone.")) {
+      return
+    }
+
+    try {
+      setIsDeleting(true)
+      const response = await fetch(`/api/opportunities/${opportunity.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('You do not have permission to delete opportunities')
+        } else if (response.status === 404) {
+          throw new Error('Opportunity not found')
+        } else {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Failed to delete opportunity')
+        }
+      }
+
+      toast.success('Opportunity deleted successfully')
+      router.push('/dashboard')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete opportunity'
+      toast.error(errorMessage)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <>
@@ -130,10 +174,16 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
             </div>
           )}
 
-          {opportunity.submitted_by && (
+          {(opportunity.submitted_by || opportunity.users) && (
             <div>
               <p className="text-sm text-gray-500">Submitted By</p>
-              <p className="font-medium">{opportunity.submitted_by}</p>
+              <p className="font-medium">
+                {opportunity.users?.name
+                  ? opportunity.users.name
+                  : typeof opportunity.submitted_by === 'object' && opportunity.submitted_by !== null && 'name' in opportunity.submitted_by
+                  ? (opportunity.submitted_by as { name: string }).name
+                  : 'Unknown User'}
+              </p>
             </div>
           )}
 
@@ -149,13 +199,13 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
       {/* Description */}
       <div>
         <h2 className="text-xl font-semibold mb-2">Description</h2>
-        <p className="text-gray-700 whitespace-pre-wrap">{opportunity.description}</p>
+        <p className="text-gray-700 whitespace-pre-wrap">{opportunity.description || 'No description available.'}</p>
       </div>
 
       {/* Requirements */}
       <div>
         <h2 className="text-xl font-semibold mb-2">Requirements/Qualifications</h2>
-        <p className="text-gray-700 whitespace-pre-wrap">{opportunity.requirements}</p>
+        <p className="text-gray-700 whitespace-pre-wrap">{opportunity.requirements || 'No requirements specified.'}</p>
       </div>
 
       {/* Relevant Majors */}
@@ -198,13 +248,11 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
           <p className="text-sm text-gray-500 mb-3">Admin Actions</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button
-              onClick={() => {
-                // TODO: Implement edit functionality
-                alert("Edit functionality coming soon!");
-              }}
+              onClick={handleEdit}
               size="lg"
               variant="outline"
               className="w-full bg-yellow-500 text-white hover:bg-yellow-600 border-yellow-500"
+              disabled={isEditing}
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -212,20 +260,16 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
               Edit
             </Button>
             <Button
-              onClick={() => {
-                // TODO: Implement delete functionality
-                if (confirm("Are you sure you want to delete this opportunity?")) {
-                  alert("Delete functionality coming soon!");
-                }
-              }}
+              onClick={handleDelete}
               size="lg"
               variant="destructive"
               className="w-full"
+              disabled={isDeleting}
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-              Delete
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
           </div>
         </div>
@@ -233,4 +277,3 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
     </>
   )
 }
-

@@ -1,17 +1,16 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState } from 'react'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import FilterBar from '@/components/opportunities/FilterBar'
 import SortDropdown, { SortOption } from '@/components/opportunities/SortDropdown'
-import { createClient } from '@/lib/supabase/client'
 import { LogOut, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import OpportunityCard from '@/components/opportunities/OpportunityCard'
-import { Opportunity } from '@/types'
+import { useOpportunities } from '@/hooks/useOpportunities'
 
 type OpportunityType = 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
 
@@ -19,115 +18,17 @@ export default function DashboardPage() {
   const { signOut } = useAuth()
   const router = useRouter()
   
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  
   // Filter and sort state
   const [selectedTypes, setSelectedTypes] = useState<OpportunityType[]>([])
   const [selectedSort, setSelectedSort] = useState<SortOption>('deadline-asc')
 
-  // Fetch opportunities
-  useEffect(() => {
-    const abortController = new AbortController()
-    let isMounted = true
-
-    async function fetchOpportunities() {
-      try {
-        setLoading(true)
-        setError(null)
-
-        const supabase = createClient()
-
-        const { data, error: fetchError } = await supabase
-          .from('opportunities')
-          .select('*')
-          .eq('status', 'active')
-          .abortSignal(abortController.signal)
-
-        if (fetchError) {
-          throw fetchError
-        }
-
-        // Only update state if component is still mounted
-        if (!isMounted) return
-
-        // Validate data is an array before setting state
-        if (!Array.isArray(data)) {
-          throw new TypeError('Invalid data format received from database')
-        }
-
-        setOpportunities(data)
-      } catch (err) {
-        // Ignore abort errors
-        if (err instanceof Error && err.name === 'AbortError') return
-
-        // Only update state if component is still mounted
-        if (!isMounted) return
-
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Error fetching opportunities:', err)
-        }
-        setError(err instanceof Error ? err.message : 'Failed to load opportunities')
-      } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    fetchOpportunities()
-
-    // Cleanup function
-    return () => {
-      isMounted = false
-      abortController.abort()
-    }
-  }, [])
-
-  // Helper function to safely parse and compare dates
-  const compareDates = (dateA: string | null, dateB: string | null, ascending: boolean): number => {
-    if (!dateA) return 1
-    if (!dateB) return -1
-
-    const timeA = new Date(dateA).getTime()
-    const timeB = new Date(dateB).getTime()
-
-    if (Number.isNaN(timeA)) return 1
-    if (Number.isNaN(timeB)) return -1
-
-    return ascending ? timeA - timeB : timeB - timeA
-  }
-
-  // Apply filters and sorting
-  const filteredAndSortedOpportunities = useMemo(() => {
-    let filtered = [...opportunities]
-
-    // Apply type filter
-    if (selectedTypes.length > 0) {
-      filtered = filtered.filter(opp => selectedTypes.includes(opp.opportunity_type))
-    }
-
-    // Apply sorting
-    return filtered.sort((a, b) => {
-      switch (selectedSort) {
-        case 'deadline-asc':
-          return compareDates(a.deadline, b.deadline, true)
-
-        case 'deadline-desc':
-          return compareDates(a.deadline, b.deadline, false)
-
-        case 'recent':
-          return compareDates(a.created_at, b.created_at, false)
-
-        case 'company-asc':
-          return a.company_name.localeCompare(b.company_name)
-
-        default:
-          return 0
-      }
-    })
-  }, [opportunities, selectedTypes, selectedSort])
+  // Fetch opportunities using API hook
+  const { opportunities, loading, error, refetch } = useOpportunities({
+    types: selectedTypes,
+    status: 'active',
+    sort: selectedSort,
+    autoFetch: true
+  })
 
   const handleLogout = async () => {
     try {
@@ -178,13 +79,20 @@ export default function DashboardPage() {
                 Error Loading Opportunities
               </h3>
               <p className="text-red-700">{error}</p>
+              <Button
+                onClick={() => refetch()}
+                className="mt-4"
+                variant="outline"
+              >
+                Try Again
+              </Button>
             </div>
           </div>
         </div>
       )
     }
 
-    if (filteredAndSortedOpportunities.length === 0) {
+    if (opportunities.length === 0) {
       return (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center max-w-md">
@@ -218,7 +126,7 @@ export default function DashboardPage() {
 
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredAndSortedOpportunities.map((opportunity) => (
+        {opportunities.map((opportunity) => (
           <OpportunityCard key={opportunity.id} opportunity={opportunity} />
         ))}
       </div>

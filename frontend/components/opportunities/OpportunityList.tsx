@@ -1,61 +1,26 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { Opportunity } from '@/types'
 import OpportunityCard from './OpportunityCard'
+import { useOpportunities } from '@/hooks/useOpportunities'
 
-interface Opportunity {
-  id: string
-  url: string
-  company_name: string
-  job_title: string
-  opportunity_type: 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
-  role_type: string | null
-  relevant_majors: string[]
-  deadline: string | null
-  requirements: string | null
-  location: string | null
-  description: string | null
-  status: 'active' | 'expired'
-  created_at: string
+interface OpportunityListProps {
+  types?: ('internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship')[]
+  status?: 'active' | 'expired'
+  sort?: 'deadline-asc' | 'deadline-desc' | 'recent' | 'company-asc'
 }
 
-export default function OpportunityList() {
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    async function fetchOpportunities() {
-      try {
-        setLoading(true)
-        setError(null)
-
-        const supabase = createClient()
-        
-        const { data, error: fetchError } = await supabase
-          .from('opportunities')
-          .select('*')
-          .eq('status', 'active')
-          .order('deadline', { ascending: true, nullsFirst: false })
-
-        if (fetchError) {
-          throw fetchError
-        }
-
-        setOpportunities(data || [])
-      } catch (err) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Error fetching opportunities:', err)
-        }
-        setError(err instanceof Error ? err.message : 'Failed to load opportunities')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchOpportunities()
-  }, [])
+export default function OpportunityList({ 
+  types = [], 
+  status = 'active',
+  sort = 'deadline-asc'
+}: OpportunityListProps) {
+  const { opportunities, loading, error } = useOpportunities({
+    types,
+    status,
+    sort,
+    autoFetch: true
+  })
 
   // Loading state
   if (loading) {
