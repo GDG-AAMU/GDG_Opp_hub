@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import FilterBar from '@/components/opportunities/FilterBar'
 import SortDropdown, { SortOption } from '@/components/opportunities/SortDropdown'
+import SubmitModal from '@/components/opportunities/SubmitModal'
 import { LogOut, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import OpportunityCard from '@/components/opportunities/OpportunityCard'
@@ -21,6 +22,9 @@ export default function DashboardPage() {
   // Filter and sort state
   const [selectedTypes, setSelectedTypes] = useState<OpportunityType[]>([])
   const [selectedSort, setSelectedSort] = useState<SortOption>('deadline-asc')
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Fetch opportunities using API hook
   const { opportunities, loading, error, refetch } = useOpportunities({
@@ -41,7 +45,11 @@ export default function DashboardPage() {
   }
 
   const handleSubmitOpportunity = () => {
-    router.push('/submit')
+    setIsModalOpen(true)
+  }
+
+  const handleModalSuccess = () => {
+    refetch()
   }
 
   // Helper function to render opportunities list with different states
@@ -179,6 +187,13 @@ export default function DashboardPage() {
           {/* Opportunities List */}
           {renderOpportunitiesList()}
         </div>
+
+        {/* Submit Modal */}
+        <SubmitModal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          onSuccess={handleModalSuccess}
+        />
       </div>
     </ProtectedRoute>
   )
