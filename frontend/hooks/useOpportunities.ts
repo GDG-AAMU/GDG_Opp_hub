@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { Opportunity } from "@/types"
-import type { Major } from "@/lib/constants"
+import type { Major, RoleType } from "@/lib/constants"
 
 type OpportunityType = 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
 type OpportunityStatus = 'active' | 'expired'
@@ -11,6 +11,7 @@ type SortOption = 'deadline-asc' | 'deadline-desc' | 'recent' | 'company-asc'
 interface UseOpportunitiesOptions {
   types?: OpportunityType[]
   majors?: Major[]
+  roles?: RoleType[]
   status?: OpportunityStatus
   sort?: SortOption
   limit?: number
@@ -38,6 +39,7 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
   const {
     types = [],
     majors = [],
+    roles = [],
     status = 'active',
     sort = 'deadline-asc',
     limit = 20,
@@ -63,6 +65,9 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
       }
       if (majors.length > 0) {
         params.append('majors', majors.join(','))
+      }
+      if (roles.length > 0) {
+        params.append('roles', roles.join(','))
       }
       if (status) {
         params.append('status', status)
@@ -102,7 +107,7 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
     } finally {
       setLoading(false)
     }
-  }, [types, majors, status, sort, limit])
+  }, [types, majors, roles, status, sort, limit])
 
   const refetch = useCallback(async () => {
     await fetchOpportunities(0, false)

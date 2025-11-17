@@ -11,7 +11,7 @@ import OpportunityCard from '@/components/opportunities/OpportunityCard'
 import { useOpportunities } from '@/hooks/useOpportunities'
 import { useAuth } from '@/hooks/useAuth'
 import ProfileDropdown from '@/components/layout/ProfileDropdown'
-import type { Major } from '@/lib/constants'
+import type { Major, RoleType } from '@/lib/constants'
 
 type OpportunityType = 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
 
@@ -21,6 +21,7 @@ export default function DashboardPage() {
   // Filter and sort state
   const [selectedTypes, setSelectedTypes] = useState<OpportunityType[]>([])
   const [selectedMajors, setSelectedMajors] = useState<Major[]>([])
+  const [selectedRoles, setSelectedRoles] = useState<RoleType[]>([])
   const [selectedSort, setSelectedSort] = useState<SortOption>('deadline-asc')
 
   // Modal state
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   const { opportunities, loading, error, refetch } = useOpportunities({
     types: selectedTypes,
     majors: selectedMajors,
+    roles: selectedRoles,
     status: 'active',
     sort: selectedSort,
     autoFetch: !authLoading  // Don't fetch until auth is ready
@@ -91,7 +93,7 @@ export default function DashboardPage() {
       )
     }
 
-    const hasFilters = selectedTypes.length > 0 || selectedMajors.length > 0
+    const hasFilters = selectedTypes.length > 0 || selectedMajors.length > 0 || selectedRoles.length > 0
 
     if (opportunities.length === 0) {
       return (
@@ -174,6 +176,8 @@ export default function DashboardPage() {
             onFilterChange={setSelectedTypes}
             selectedMajors={selectedMajors}
             onMajorChange={setSelectedMajors}
+            selectedRoles={selectedRoles}
+            onRoleChange={setSelectedRoles}
           />
 
           {/* Opportunities List */}
