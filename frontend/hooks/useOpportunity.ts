@@ -35,13 +35,15 @@ export function useOpportunity(id: string | null): UseOpportunityReturn {
   // Memoize query key
   const queryKey = useMemo(() => ['opportunity', id] as const, [id])
 
-  // Memoize query function - don't throw in useMemo, handle it in the function
+  // Memoize query function - lazy evaluation, only checks when called
   const queryFn = useMemo(() => {
+    // Store id in closure to avoid stale closure issues
+    const opportunityId = id
     return () => {
-      if (!id) {
+      if (!opportunityId) {
         return Promise.reject(new Error("Opportunity ID is required"))
       }
-      return fetchOpportunity(id)
+      return fetchOpportunity(opportunityId)
     }
   }, [id])
 

@@ -54,13 +54,15 @@ export function useUserProfile(): UseUserProfileReturn {
   // Memoize query key
   const queryKey = useMemo(() => ['user-profile', user?.id] as const, [user?.id])
 
-  // Memoize query function - don't throw in useMemo, handle it in the function
+  // Memoize query function - lazy evaluation, only checks when called
   const queryFn = useMemo(() => {
+    // Store user.id in closure to avoid stale closure issues
+    const userId = user?.id
     return () => {
-      if (!user?.id) {
+      if (!userId) {
         return Promise.reject(new Error("User ID is required"))
       }
-      return fetchUserProfile(user.id)
+      return fetchUserProfile(userId)
     }
   }, [user?.id])
 
