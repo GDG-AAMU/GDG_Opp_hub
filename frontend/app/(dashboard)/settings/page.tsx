@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@/types'
@@ -757,6 +758,7 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+      <Footer />
     </ProtectedRoute>
   )
 }

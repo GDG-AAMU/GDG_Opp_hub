@@ -12,6 +12,7 @@ import OpportunityCard from '@/components/opportunities/OpportunityCard'
 import { useOpportunities } from '@/hooks/useOpportunities'
 import { useAuth } from '@/hooks/useAuth'
 import Navbar from '@/components/layout/Navbar'
+import Footer from '@/components/layout/Footer'
 import type { Major, RoleType } from '@/lib/constants'
 import SearchBar from '@/components/opportunities/SearchBar'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -304,6 +305,7 @@ export default function DashboardPage() {
           onSuccess={handleModalSuccess}
         />
       </div>
+      <Footer />
     </ProtectedRoute>
   )
 }
