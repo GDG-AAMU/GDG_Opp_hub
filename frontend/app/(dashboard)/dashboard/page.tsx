@@ -152,7 +152,7 @@ function DashboardContent() {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading opportunities...</p>
+            <p className="text-muted-foreground">Loading opportunities...</p>
           </div>
         </div>
       )
@@ -162,9 +162,9 @@ function DashboardContent() {
       return (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center max-w-md">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6">
               <svg
-                className="h-12 w-12 text-red-500 mx-auto mb-4"
+                className="h-12 w-12 text-destructive mx-auto mb-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -176,10 +176,10 @@ function DashboardContent() {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <h3 className="text-lg font-semibold text-red-900 mb-2">
+              <h3 className="text-lg font-semibold text-destructive mb-2">
                 Error Loading Opportunities
               </h3>
-              <p className="text-red-700">{error}</p>
+              <p className="text-destructive/80">{error}</p>
               <Button
                 onClick={() => refetch()}
                 className="mt-4"
@@ -197,9 +197,9 @@ function DashboardContent() {
       return (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center max-w-md">
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-8">
+            <div className="bg-card border border-border rounded-lg p-8">
               <svg
-                className="h-16 w-16 text-gray-400 mx-auto mb-4"
+                className="h-16 w-16 text-muted-foreground mx-auto mb-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -254,7 +254,7 @@ function DashboardContent() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div className="min-h-screen bg-background">
         <Navbar />
 
         {/* Main Content */}

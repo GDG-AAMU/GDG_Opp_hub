@@ -26,11 +26,11 @@ interface OpportunityCardProps {
 }
 
 const typeColors = {
-  internship: 'bg-blue-100 text-blue-700',
-  full_time: 'bg-green-100 text-green-700',
-  research: 'bg-purple-100 text-purple-700',
-  fellowship: 'bg-orange-100 text-orange-700',
-  scholarship: 'bg-pink-100 text-pink-700',
+  internship: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+  full_time: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+  research: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+  fellowship: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
+  scholarship: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300',
 }
 
 const typeLabels = {
@@ -43,7 +43,7 @@ const typeLabels = {
 
 export default function OpportunityCard({ opportunity, onStatusChange }: Readonly<OpportunityCardProps>) {
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-200 p-6 border border-gray-200 hover:border-purple-300">
+    <div className="bg-card rounded-lg shadow-md hover:shadow-xl transition-all duration-200 p-6 border border-border hover:border-purple-500 dark:hover:border-purple-400">
       {/* Company Logo */}
       <CompanyLogo
         companyName={opportunity.company_name}
@@ -53,18 +53,18 @@ export default function OpportunityCard({ opportunity, onStatusChange }: Readonl
       />
 
       {/* Company Name */}
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+      <h3 className="text-lg font-semibold text-foreground mb-2">
         {opportunity.company_name}
       </h3>
 
       {/* Job Title */}
-      <h4 className="text-md text-gray-700 mb-3">
+      <h4 className="text-md text-muted-foreground mb-3">
         {opportunity.job_title}
       </h4>
 
       {/* Type Badge */}
       <div className="flex items-center mb-2">
-        <Briefcase className="w-4 h-4 mr-2 flex-shrink-0 text-gray-600" />
+        <Briefcase className="w-4 h-4 mr-2 flex-shrink-0 text-muted-foreground" />
         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${typeColors[opportunity.opportunity_type]}`}>
           {typeLabels[opportunity.opportunity_type]}
         </span>
@@ -72,7 +72,7 @@ export default function OpportunityCard({ opportunity, onStatusChange }: Readonl
 
       {/* Location */}
       {opportunity.location && (
-        <div className="flex items-center text-gray-600 mb-2">
+        <div className="flex items-center text-muted-foreground mb-2">
           <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
           <span className="text-sm">{opportunity.location}</span>
         </div>
@@ -80,14 +80,14 @@ export default function OpportunityCard({ opportunity, onStatusChange }: Readonl
 
       {/* Deadline - Always show, more prominent */}
       <div className="flex items-center mb-4">
-        <Calendar className="w-4 h-4 mr-2 flex-shrink-0 text-purple-600" />
+        <Calendar className="w-4 h-4 mr-2 flex-shrink-0 text-purple-600 dark:text-purple-400" />
         <span className="text-sm font-medium">
           {opportunity.deadline ? (
-            <span className="text-gray-900">
+            <span className="text-foreground">
               Deadline: {format(new Date(opportunity.deadline), 'MMM dd, yyyy')}
             </span>
           ) : (
-            <span className="text-gray-400 italic">No deadline specified</span>
+            <span className="text-muted-foreground italic">No deadline specified</span>
           )}
         </span>
       </div>

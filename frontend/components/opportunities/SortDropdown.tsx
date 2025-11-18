@@ -32,8 +32,8 @@ export default function SortDropdown({ selectedSort, onSortChange }: Readonly<So
 
   return (
     <div className="flex items-center gap-2">
-      <ArrowUpDown className="h-4 w-4 text-gray-600" />
-      <span className="text-sm font-semibold text-gray-700">Sort by:</span>
+      <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+      <span className="text-sm font-semibold text-foreground">Sort by:</span>
       <Select value={selectedSort} onValueChange={(value) => onSortChange(value as SortOption)}>
         <SelectTrigger className="w-[200px]">
           <SelectValue>{currentSortLabel}</SelectValue>
