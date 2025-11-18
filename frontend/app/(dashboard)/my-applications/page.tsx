@@ -25,6 +25,8 @@ interface UserOpportunity {
     url: string
     status: 'active' | 'expired'
     created_at: string
+    offers_sponsorship: boolean
+    requires_us_citizenship: boolean
   }
 }
 
@@ -222,6 +224,8 @@ export default function MyApplicationsPage() {
                         opportunity_type: opp.opportunity_type,
                         location: opp.location,
                         deadline: opp.deadline,
+                        offers_sponsorship: opp.offers_sponsorship,
+                        requires_us_citizenship: opp.requires_us_citizenship,
                         userStatus: userOpp.status
                       }}
                       onStatusChange={(status) => handleStatusChange(status, opp.id)}

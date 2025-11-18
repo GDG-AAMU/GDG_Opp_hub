@@ -151,7 +151,9 @@ export async function GET(request: NextRequest) {
           deadline,
           url,
           status,
-          created_at
+          created_at,
+          offers_sponsorship,
+          requires_us_citizenship
         )
       `)
       .eq('user_id', user.id)

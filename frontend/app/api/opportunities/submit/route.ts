@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
           description: parsedData.description,
           offers_sponsorship: parsedData.offers_sponsorship,
           requires_us_citizenship: parsedData.requires_us_citizenship,
-          ai_parsed_data: parsedData,
+          ai_parsed_data: parsedData as any, // Cast to Json type for Supabase
         }
 
         await serviceClient
