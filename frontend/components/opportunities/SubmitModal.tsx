@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 import confetti from 'canvas-confetti'
 import { Loader2, Sparkles, Info } from 'lucide-react'
+import { useInvalidateOpportunities } from '@/hooks/useOpportunities'
 import {
   Dialog,
   DialogContent,
@@ -58,6 +59,7 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [manualContent, setManualContent] = useState('')
   const [requiresManual, setRequiresManual] = useState(false)
+  const invalidateOpportunities = useInvalidateOpportunities()
 
   const {
     register,
@@ -152,11 +154,14 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
           fontWeight: '500',
         },
       })
-      
+
+      // Invalidate opportunities cache to show new submission
+      invalidateOpportunities()
+
       reset()
       setManualContent('')
       setRequiresManual(false)
-      
+
       setTimeout(() => {
         onOpenChange(false)
         if (onSuccess) {

@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useState, useCallback } from "react"
 import { Opportunity } from "@/types"
 import type { Major, RoleType } from "@/lib/constants"
 
@@ -37,7 +38,13 @@ interface UseOpportunitiesReturn {
   invalidateCache: () => void
 }
 
-export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOpportunitiesReturn {
+interface OpportunitiesResponse {
+  data: Opportunity[]
+  pagination: PaginationInfo
+}
+
+// Generate query key based on filters (including search)
+function getQueryKey(options: UseOpportunitiesOptions, offset: number = 0) {
   const {
     types = [],
     majors = [],
@@ -45,142 +52,156 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
     status = 'active',
     sort = 'deadline-asc',
     limit = 20,
-    offset = 0,
     search = '',
-    autoFetch = true
   } = options
 
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [pagination, setPagination] = useState<PaginationInfo | null>(null)
+  return [
+    'opportunities',
+    {
+      types: types.sort(),
+      majors: majors.sort(),
+      roles: roles.sort(),
+      status,
+      sort,
+      limit,
+      offset,
+      search: search.trim(), // Include search in query key
+    },
+  ] as const
+}
+
+// Fetch opportunities function (with search support)
+async function fetchOpportunities(
+  options: UseOpportunitiesOptions,
+  fetchOffset: number = 0
+): Promise<OpportunitiesResponse> {
+  const {
+    types = [],
+    majors = [],
+    roles = [],
+    status = 'active',
+    sort = 'deadline-asc',
+    limit = 20,
+    search = '',
+  } = options
+
+  // Build query parameters
+  const params = new URLSearchParams()
+  if (types.length > 0) {
+    params.append('type', types.join(','))
+  }
+  if (majors.length > 0) {
+    params.append('majors', majors.join(','))
+  }
+  if (roles.length > 0) {
+    params.append('roles', roles.join(','))
+  }
+  if (status) {
+    params.append('status', status)
+  }
+  if (sort) {
+    params.append('sort', sort)
+  }
+  const trimmedSearch = search?.trim()
+  if (trimmedSearch) {
+    params.append('search', trimmedSearch)
+  }
+  params.append('limit', limit.toString())
+  params.append('offset', fetchOffset.toString())
+
+  const response = await fetch(`/api/opportunities?${params.toString()}`)
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Unauthorized. Please log in.')
+    }
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.error || `Failed to fetch opportunities: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return {
+    data: data.data || [],
+    pagination: data.pagination || { total: 0, limit, offset: fetchOffset, hasMore: false },
+  }
+}
+
+export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOpportunitiesReturn {
+  const {
+    offset = 0,
+    limit = 20,
+    autoFetch = true,
+  } = options
+
+  const queryClient = useQueryClient()
   const [currentOffset, setCurrentOffset] = useState(offset)
-  const abortControllerRef = useRef<AbortController | null>(null)
-  const cacheRef = useRef<Map<string, { data: Opportunity[]; pagination: PaginationInfo | null }>>(new Map())
+  const [accumulatedData, setAccumulatedData] = useState<Opportunity[]>([])
 
-  const fetchOpportunities = useCallback(async (fetchOffset: number = 0, append: boolean = false, skipCache: boolean = false) => {
-    let controller: AbortController | null = null
-    try {
-      setError(null)
+  // Use React Query for data fetching
+  const {
+    data,
+    isLoading,
+    error: queryError,
+    refetch: queryRefetch,
+  } = useQuery({
+    queryKey: getQueryKey(options, currentOffset),
+    queryFn: () => fetchOpportunities(options, currentOffset),
+    enabled: autoFetch,
+  })
 
-      // Build query parameters
-      const params = new URLSearchParams()
-      if (types.length > 0) {
-        params.append('type', types.join(','))
-      }
-      if (majors.length > 0) {
-        params.append('majors', majors.join(','))
-      }
-      if (roles.length > 0) {
-        params.append('roles', roles.join(','))
-      }
-      if (status) {
-        params.append('status', status)
-      }
-      if (sort) {
-        params.append('sort', sort)
-      }
-      const trimmedSearch = search?.trim()
-      if (trimmedSearch) {
-        params.append('search', trimmedSearch)
-      }
-      params.append('limit', limit.toString())
-      params.append('offset', fetchOffset.toString())
+  // Manage accumulated data for pagination
+  const opportunities = currentOffset === 0 ? (data?.data || []) : accumulatedData
+  const pagination = data?.pagination || null
+  const error = queryError ? (queryError as Error).message : null
 
-      const cacheKey = params.toString()
-      const canUseCache = !append && fetchOffset === 0 && !skipCache
-      if (canUseCache && cacheRef.current.has(cacheKey)) {
-        const cached = cacheRef.current.get(cacheKey)!
-        setOpportunities(cached.data)
-        setPagination(cached.pagination)
-        setCurrentOffset(fetchOffset)
-        setLoading(false)
-        return
-      }
+  // Invalidate cache function
+  const invalidateCache = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['opportunities'] })
+  }, [queryClient])
 
-      abortControllerRef.current?.abort()
-      controller = new AbortController()
-      abortControllerRef.current = controller
+  // Refetch from the beginning
+  const refetch = useCallback(async () => {
+    setCurrentOffset(0)
+    setAccumulatedData([])
+    await queryRefetch()
+  }, [queryRefetch])
 
-      setLoading(true)
+  // Fetch more for pagination
+  const fetchMore = useCallback(async () => {
+    if (pagination?.hasMore && !isLoading) {
+      const newOffset = currentOffset + limit
 
-      const response = await fetch(`/api/opportunities?${cacheKey}`, {
-        signal: controller.signal
+      // Prefetch the next page
+      const nextPageData = await queryClient.fetchQuery({
+        queryKey: getQueryKey(options, newOffset),
+        queryFn: () => fetchOpportunities(options, newOffset),
       })
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Unauthorized. Please log in.')
-        }
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Failed to fetch opportunities: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-
-      if (append) {
-        setOpportunities(prev => [...prev, ...(data.data || [])])
-      } else {
-        setOpportunities(data.data || [])
-        cacheRef.current.set(cacheKey, {
-          data: data.data || [],
-          pagination: data.pagination || null
-        })
-      }
-
-      setPagination(data.pagination || null)
-      setCurrentOffset(fetchOffset)
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        return
-      }
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch opportunities'
-      setError(errorMessage)
-      if (!append) {
-        setOpportunities([])
-      }
-    } finally {
-      if (controller && abortControllerRef.current === controller) {
-        abortControllerRef.current = null
-        setLoading(false)
-      }
+      // Append new data to accumulated data
+      setAccumulatedData(prev => {
+        const combined = currentOffset === 0 ? [...(data?.data || []), ...nextPageData.data] : [...prev, ...nextPageData.data]
+        return combined
+      })
+      setCurrentOffset(newOffset)
     }
-  }, [types, majors, roles, status, sort, limit, search])
-
-  useEffect(() => {
-    return () => {
-      abortControllerRef.current?.abort()
-      abortControllerRef.current = null
-    }
-  }, [])
-
-  const invalidateCache = useCallback(() => {
-    cacheRef.current.clear()
-  }, [])
-
-  const refetch = useCallback(async () => {
-    await fetchOpportunities(0, false, true)
-  }, [fetchOpportunities])
-
-  const fetchMore = useCallback(async () => {
-    if (pagination?.hasMore && !loading) {
-      await fetchOpportunities(currentOffset + limit, true)
-    }
-  }, [fetchOpportunities, pagination, loading, currentOffset, limit])
-
-  useEffect(() => {
-    if (autoFetch) {
-      fetchOpportunities(0, false)
-    }
-  }, [autoFetch, fetchOpportunities])
+  }, [pagination, isLoading, currentOffset, limit, queryClient, options, data])
 
   return {
     opportunities,
-    loading,
+    loading: isLoading,
     error,
     pagination,
     refetch,
     fetchMore,
-    invalidateCache
+    invalidateCache,
   }
+}
+
+// Export utility function to invalidate opportunities cache
+export function useInvalidateOpportunities() {
+  const queryClient = useQueryClient()
+
+  return useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['opportunities'] })
+  }, [queryClient])
 }
