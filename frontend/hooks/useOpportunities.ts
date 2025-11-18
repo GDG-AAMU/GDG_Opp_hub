@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useState, useCallback } from "react"
 import { Opportunity } from "@/types"
 import type { Major, RoleType } from "@/lib/constants"
 
@@ -35,7 +36,13 @@ interface UseOpportunitiesReturn {
   fetchMore: () => Promise<void>
 }
 
-export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOpportunitiesReturn {
+interface OpportunitiesResponse {
+  data: Opportunity[]
+  pagination: PaginationInfo
+}
+
+// Generate query key based on filters
+function getQueryKey(options: UseOpportunitiesOptions, offset: number = 0) {
   const {
     types = [],
     majors = [],
@@ -43,94 +50,143 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
     status = 'active',
     sort = 'deadline-asc',
     limit = 20,
-    offset = 0,
-    autoFetch = true
   } = options
 
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [pagination, setPagination] = useState<PaginationInfo | null>(null)
+  return [
+    'opportunities',
+    {
+      types: types.sort(),
+      majors: majors.sort(),
+      roles: roles.sort(),
+      status,
+      sort,
+      limit,
+      offset,
+    },
+  ] as const
+}
+
+// Fetch opportunities function
+async function fetchOpportunities(
+  options: UseOpportunitiesOptions,
+  fetchOffset: number = 0
+): Promise<OpportunitiesResponse> {
+  const {
+    types = [],
+    majors = [],
+    roles = [],
+    status = 'active',
+    sort = 'deadline-asc',
+    limit = 20,
+  } = options
+
+  // Build query parameters
+  const params = new URLSearchParams()
+  if (types.length > 0) {
+    params.append('type', types.join(','))
+  }
+  if (majors.length > 0) {
+    params.append('majors', majors.join(','))
+  }
+  if (roles.length > 0) {
+    params.append('roles', roles.join(','))
+  }
+  if (status) {
+    params.append('status', status)
+  }
+  if (sort) {
+    params.append('sort', sort)
+  }
+  params.append('limit', limit.toString())
+  params.append('offset', fetchOffset.toString())
+
+  const response = await fetch(`/api/opportunities?${params.toString()}`)
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Unauthorized. Please log in.')
+    }
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.error || `Failed to fetch opportunities: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return {
+    data: data.data || [],
+    pagination: data.pagination || { total: 0, limit, offset: fetchOffset, hasMore: false },
+  }
+}
+
+export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOpportunitiesReturn {
+  const {
+    offset = 0,
+    limit = 20,
+    autoFetch = true,
+  } = options
+
+  const queryClient = useQueryClient()
   const [currentOffset, setCurrentOffset] = useState(offset)
+  const [accumulatedData, setAccumulatedData] = useState<Opportunity[]>([])
 
-  const fetchOpportunities = useCallback(async (fetchOffset: number = 0, append: boolean = false) => {
-    try {
-      setLoading(true)
-      setError(null)
+  // Use React Query for data fetching
+  const {
+    data,
+    isLoading,
+    error: queryError,
+    refetch: queryRefetch,
+  } = useQuery({
+    queryKey: getQueryKey(options, currentOffset),
+    queryFn: () => fetchOpportunities(options, currentOffset),
+    enabled: autoFetch,
+  })
 
-      // Build query parameters
-      const params = new URLSearchParams()
-      if (types.length > 0) {
-        params.append('type', types.join(','))
-      }
-      if (majors.length > 0) {
-        params.append('majors', majors.join(','))
-      }
-      if (roles.length > 0) {
-        params.append('roles', roles.join(','))
-      }
-      if (status) {
-        params.append('status', status)
-      }
-      if (sort) {
-        params.append('sort', sort)
-      }
-      params.append('limit', limit.toString())
-      params.append('offset', fetchOffset.toString())
+  // Manage accumulated data for pagination
+  const opportunities = currentOffset === 0 ? (data?.data || []) : accumulatedData
+  const pagination = data?.pagination || null
+  const error = queryError ? (queryError as Error).message : null
 
-      const response = await fetch(`/api/opportunities?${params.toString()}`)
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Unauthorized. Please log in.')
-        }
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Failed to fetch opportunities: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-
-      if (append) {
-        setOpportunities(prev => [...prev, ...(data.data || [])])
-      } else {
-        setOpportunities(data.data || [])
-      }
-
-      setPagination(data.pagination || null)
-      setCurrentOffset(fetchOffset)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch opportunities'
-      setError(errorMessage)
-      if (!append) {
-        setOpportunities([])
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [types, majors, roles, status, sort, limit])
-
+  // Refetch from the beginning
   const refetch = useCallback(async () => {
-    await fetchOpportunities(0, false)
-  }, [fetchOpportunities])
+    setCurrentOffset(0)
+    setAccumulatedData([])
+    await queryRefetch()
+  }, [queryRefetch])
 
+  // Fetch more for pagination
   const fetchMore = useCallback(async () => {
-    if (pagination?.hasMore && !loading) {
-      await fetchOpportunities(currentOffset + limit, true)
-    }
-  }, [fetchOpportunities, pagination, loading, currentOffset, limit])
+    if (pagination?.hasMore && !isLoading) {
+      const newOffset = currentOffset + limit
 
-  useEffect(() => {
-    if (autoFetch) {
-      fetchOpportunities(0, false)
+      // Prefetch the next page
+      const nextPageData = await queryClient.fetchQuery({
+        queryKey: getQueryKey(options, newOffset),
+        queryFn: () => fetchOpportunities(options, newOffset),
+      })
+
+      // Append new data to accumulated data
+      setAccumulatedData(prev => {
+        const combined = currentOffset === 0 ? [...(data?.data || []), ...nextPageData.data] : [...prev, ...nextPageData.data]
+        return combined
+      })
+      setCurrentOffset(newOffset)
     }
-  }, [autoFetch, fetchOpportunities])
+  }, [pagination, isLoading, currentOffset, limit, queryClient, options, data])
 
   return {
     opportunities,
-    loading,
+    loading: isLoading,
     error,
     pagination,
     refetch,
-    fetchMore
+    fetchMore,
   }
+}
+
+// Export utility function to invalidate opportunities cache
+export function useInvalidateOpportunities() {
+  const queryClient = useQueryClient()
+
+  return useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['opportunities'] })
+  }, [queryClient])
 }

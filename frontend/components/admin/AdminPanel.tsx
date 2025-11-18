@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 import { format, formatDistanceToNow } from "date-fns"
 import { useAuth } from "@/hooks/useAuth"
+import { useDeleteOpportunity } from "@/hooks/useOpportunityMutations"
 import { Opportunity } from "@/types"
 import { OPPORTUNITY_TYPES, OpportunityType } from "@/lib/constants"
 import { Button } from "@/components/ui/button"
@@ -106,6 +107,7 @@ const formatDate = (value: string | null, fallback = "—") => {
 export default function AdminPanel() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
+  const deleteOpportunity = useDeleteOpportunity()
 
   const [checkingAdmin, setCheckingAdmin] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -134,7 +136,7 @@ export default function AdminPanel() {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [opportunityToDelete, setOpportunityToDelete] = useState<Opportunity | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  const deleting = deleteOpportunity.isPending
 
   useEffect(() => {
     if (authLoading) return
@@ -333,23 +335,17 @@ export default function AdminPanel() {
 
   const handleDeleteOpportunity = async () => {
     if (!opportunityToDelete) return
-    setDeleting(true)
+
     try {
-      const response = await fetch(`/api/opportunities/${opportunityToDelete.id}`, {
-        method: "DELETE",
-      })
-      const result = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to delete opportunity")
-      }
-      toast.success("Opportunity deleted")
+      // Use optimistic delete mutation
+      await deleteOpportunity.mutateAsync(opportunityToDelete.id)
+
       closeDeleteDialog()
       fetchOpportunities(currentPage)
       fetchStats()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to delete opportunity")
-    } finally {
-      setDeleting(false)
+      // Error handling is done in the mutation hook
+      console.error("Delete failed:", error)
     }
   }
 
