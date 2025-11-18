@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Opportunity } from "@/types"
 import type { Major, RoleType } from "@/lib/constants"
 
@@ -16,6 +16,7 @@ interface UseOpportunitiesOptions {
   sort?: SortOption
   limit?: number
   offset?: number
+  search?: string
   autoFetch?: boolean
 }
 
@@ -33,6 +34,7 @@ interface UseOpportunitiesReturn {
   pagination: PaginationInfo | null
   refetch: () => Promise<void>
   fetchMore: () => Promise<void>
+  invalidateCache: () => void
 }
 
 export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOpportunitiesReturn {
@@ -44,6 +46,7 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
     sort = 'deadline-asc',
     limit = 20,
     offset = 0,
+    search = '',
     autoFetch = true
   } = options
 
@@ -52,10 +55,12 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState<PaginationInfo | null>(null)
   const [currentOffset, setCurrentOffset] = useState(offset)
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const cacheRef = useRef<Map<string, { data: Opportunity[]; pagination: PaginationInfo | null }>>(new Map())
 
-  const fetchOpportunities = useCallback(async (fetchOffset: number = 0, append: boolean = false) => {
+  const fetchOpportunities = useCallback(async (fetchOffset: number = 0, append: boolean = false, skipCache: boolean = false) => {
+    let controller: AbortController | null = null
     try {
-      setLoading(true)
       setError(null)
 
       // Build query parameters
@@ -75,10 +80,33 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
       if (sort) {
         params.append('sort', sort)
       }
+      const trimmedSearch = search?.trim()
+      if (trimmedSearch) {
+        params.append('search', trimmedSearch)
+      }
       params.append('limit', limit.toString())
       params.append('offset', fetchOffset.toString())
 
-      const response = await fetch(`/api/opportunities?${params.toString()}`)
+      const cacheKey = params.toString()
+      const canUseCache = !append && fetchOffset === 0 && !skipCache
+      if (canUseCache && cacheRef.current.has(cacheKey)) {
+        const cached = cacheRef.current.get(cacheKey)!
+        setOpportunities(cached.data)
+        setPagination(cached.pagination)
+        setCurrentOffset(fetchOffset)
+        setLoading(false)
+        return
+      }
+
+      abortControllerRef.current?.abort()
+      controller = new AbortController()
+      abortControllerRef.current = controller
+
+      setLoading(true)
+
+      const response = await fetch(`/api/opportunities?${cacheKey}`, {
+        signal: controller.signal
+      })
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -94,23 +122,44 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
         setOpportunities(prev => [...prev, ...(data.data || [])])
       } else {
         setOpportunities(data.data || [])
+        cacheRef.current.set(cacheKey, {
+          data: data.data || [],
+          pagination: data.pagination || null
+        })
       }
 
       setPagination(data.pagination || null)
       setCurrentOffset(fetchOffset)
     } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return
+      }
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch opportunities'
       setError(errorMessage)
       if (!append) {
         setOpportunities([])
       }
     } finally {
-      setLoading(false)
+      if (controller && abortControllerRef.current === controller) {
+        abortControllerRef.current = null
+        setLoading(false)
+      }
     }
-  }, [types, majors, roles, status, sort, limit])
+  }, [types, majors, roles, status, sort, limit, search])
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort()
+      abortControllerRef.current = null
+    }
+  }, [])
+
+  const invalidateCache = useCallback(() => {
+    cacheRef.current.clear()
+  }, [])
 
   const refetch = useCallback(async () => {
-    await fetchOpportunities(0, false)
+    await fetchOpportunities(0, false, true)
   }, [fetchOpportunities])
 
   const fetchMore = useCallback(async () => {
@@ -131,6 +180,7 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
     error,
     pagination,
     refetch,
-    fetchMore
+    fetchMore,
+    invalidateCache
   }
 }

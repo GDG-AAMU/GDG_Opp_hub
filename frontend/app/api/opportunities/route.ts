@@ -24,6 +24,8 @@ export async function GET(request: NextRequest) {
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams
     const type = searchParams.get('type') as OpportunityType | null
+    const majors = searchParams.get('majors')
+    const rolesParam = searchParams.get('roles')
     const status = (searchParams.get('status') as OpportunityStatusFilter) || 'active'
     const sort = (searchParams.get('sort') as SortOption) || 'deadline-asc'
     const searchQuery = searchParams.get('search')
@@ -58,24 +60,60 @@ export async function GET(request: NextRequest) {
     }
 
     if (searchQuery) {
-      const ilikeQuery = searchQuery
-        .replace(/%/g, '')
-        .replace(/,/g, '')
-        .replace(/'/g, "''")
-        .trim()
+      const sanitizedQuery = searchQuery.trim()
 
-      if (ilikeQuery) {
-        const orFilters = [
-          `company_name.ilike.%${ilikeQuery}%`,
-          `job_title.ilike.%${ilikeQuery}%`,
-          `role_type.ilike.%${ilikeQuery}%`,
-          `location.ilike.%${ilikeQuery}%`,
-          `description.ilike.%${ilikeQuery}%`,
-          `requirements.ilike.%${ilikeQuery}%`,
-        ].join(',')
+      if (sanitizedQuery) {
+        const encodedSearch = encodeURIComponent(sanitizedQuery)
+        const ilikeQuery = sanitizedQuery
+          .replace(/%/g, '')
+          .replace(/,/g, '')
+          .replace(/'/g, "''")
 
-        query = query.or(orFilters)
+        const orFilters = [`search_vector.wfts.english.${encodedSearch}`]
+
+        if (ilikeQuery) {
+          orFilters.push(
+            `company_name.ilike.%${ilikeQuery}%`,
+            `job_title.ilike.%${ilikeQuery}%`,
+            `description.ilike.%${ilikeQuery}%`,
+            `requirements.ilike.%${ilikeQuery}%`,
+            `role_type.ilike.%${ilikeQuery}%`,
+            `location.ilike.%${ilikeQuery}%`
+          )
+        }
+
+        query = query.or(orFilters.join(','))
       }
+    }
+
+    if (rolesParam) {
+      const roles = rolesParam
+        .split(',')
+        .map(role => role.trim())
+        .filter(Boolean)
+
+      if (roles.length === 1) {
+        query = query.eq('role_type', roles[0])
+      } else if (roles.length > 1) {
+        query = query.in('role_type', roles)
+      }
+    }
+
+    // Apply major filter (comma separated values)
+    if (majors) {
+      const majorList = majors.split(',').map(m => m.trim()).filter(Boolean)
+
+      // Use PostgREST 'cs' (contains) operator for JSONB arrays
+      // Format: relevant_majors.cs.["MajorName"] checks if the JSONB array contains the value
+      const orFilters = majorList
+        .map((majors) => {
+          // Escape quotes in major name for JSON
+          const escapedMajor = majors.replace(/"/g, '\\"')
+          // Format: relevant_majors.cs.["MajorName"]
+          return `relevant_majors.cs.["${escapedMajor}"]`
+        })
+        .join(',')
+      query = query.or(orFilters)
     }
 
     // Apply sorting
