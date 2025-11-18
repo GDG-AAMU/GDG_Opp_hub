@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 // Configure in vercel.json: { "cron": "0 0 * * *" } for midnight daily
 // Automatically marks opportunities as expired when deadline has passed
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // Verify cron secret (optional but recommended)

@@ -7,6 +7,8 @@ import { processEmailQueue } from '@/lib/email/queue'
 // Note: Daily digest and deadline reminders process emails immediately after queuing,
 // so this is primarily a backup/cleanup job for any missed emails
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // Verify cron secret (optional but recommended)

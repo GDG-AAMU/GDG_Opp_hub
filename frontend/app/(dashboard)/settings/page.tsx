@@ -12,8 +12,6 @@ import { Button } from '@/components/ui/button'
 import { User as UserIcon, MapPin, Shield, Lock, Calendar, Mail, GraduationCap, Globe, MapPinned, ArrowLeft, Bell, Briefcase } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-export const dynamic = 'force-dynamic'
-
 type UserRow = Database["public"]["Tables"]["users"]["Row"]
 
 export default function SettingsPage() {
