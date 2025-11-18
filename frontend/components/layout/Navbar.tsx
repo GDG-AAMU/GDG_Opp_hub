@@ -4,16 +4,19 @@ import Link from "next/link"
 import { Briefcase, Menu, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
+import { createClient } from "@/lib/supabase/client"
 import ProfileDropdown from "./ProfileDropdown"
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const { user, loading } = useAuth()
 
   useEffect(() => {
     if (!user) {
       setIsAdmin(false)
+      setAvatarUrl(null)
       return
     }
 
@@ -36,7 +39,28 @@ export default function Navbar() {
       }
     }
 
+    const fetchAvatar = async () => {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('users')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .single()
+
+        if (!error && data && isMounted) {
+          setAvatarUrl(data.avatar_url)
+        }
+      } catch (err) {
+        // Silently fail - avatar is optional
+        if (isMounted) {
+          setAvatarUrl(null)
+        }
+      }
+    }
+
     checkAdmin()
+    fetchAvatar()
 
     return () => {
       isMounted = false
@@ -67,6 +91,12 @@ export default function Navbar() {
                 >
                   Dashboard
                 </Link>
+                <Link 
+                  href="/my-applications" 
+                  className="text-gray-700 hover:text-purple-600 font-medium transition-colors duration-200"
+                >
+                  My Applications
+                </Link>
                 {isAdmin && (
                   <Link
                     href="/admin"
@@ -95,18 +125,34 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-gray-700 hover:text-purple-600 transition-colors"
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
+          {/* Mobile Menu Button and Profile Picture */}
+          <div className="md:hidden flex items-center gap-2">
+            {user && (
+              <Link
+                href="/profile"
+                className="flex-shrink-0"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-purple-200 hover:border-purple-400 transition-colors cursor-pointer"
+                />
+              </Link>
             )}
-          </button>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 text-gray-700 hover:text-purple-600 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation Menu */}
@@ -120,6 +166,13 @@ export default function Navbar() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
+                </Link>
+                <Link
+                  href="/my-applications"
+                  className="block px-4 py-2 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-colors duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Applications
                 </Link>
                 {isAdmin && (
                   <Link
