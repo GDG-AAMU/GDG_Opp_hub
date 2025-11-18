@@ -19,6 +19,7 @@ interface UseOpportunitiesOptions {
   offset?: number
   search?: string
   autoFetch?: boolean
+  refetchInterval?: number | false
 }
 
 interface PaginationInfo {
@@ -131,6 +132,7 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
     offset = 0,
     limit = 20,
     autoFetch = true,
+    refetchInterval = false,
   } = options
 
   const queryClient = useQueryClient()
@@ -147,6 +149,24 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
     queryKey: getQueryKey(options, currentOffset),
     queryFn: () => fetchOpportunities(options, currentOffset),
     enabled: autoFetch,
+    refetchInterval: (query) => {
+      // If refetchInterval is explicitly false, don't poll
+      if (refetchInterval === false) return false
+
+      // If refetchInterval is a number, use it
+      if (typeof refetchInterval === 'number') {
+        // Check if there are any "Loading..." opportunities in the current data
+        const currentData = query.state.data as OpportunitiesResponse | undefined
+        const hasLoadingOpps = currentData?.data.some(opp =>
+          opp.job_title === 'Loading...' ||
+          opp.company_name === 'Loading...'
+        )
+        // Only poll if there are loading opportunities
+        return hasLoadingOpps ? refetchInterval : false
+      }
+
+      return false
+    },
   })
 
   // Manage accumulated data for pagination
