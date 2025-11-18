@@ -21,6 +21,8 @@ export interface UserOpportunity {
     url: string
     status: 'active' | 'expired'
     created_at: string
+    offers_sponsorship: boolean | null
+    requires_us_citizenship: boolean | null
   }
 }
 
