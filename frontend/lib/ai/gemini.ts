@@ -17,8 +17,8 @@ export interface ParsedJobData {
   requirements: string | null
   location: string | null
   description: string | null
-  offers_sponsorship: boolean | null // TRUE if offers visa sponsorship, FALSE if explicitly states no sponsorship
-  requires_us_citizenship: boolean | null // TRUE if requires US citizenship, FALSE if not required
+  offers_sponsorship: boolean // TRUE if offers visa sponsorship (default), FALSE if explicitly states no sponsorship
+  requires_us_citizenship: boolean // TRUE if requires US citizenship, FALSE if not required (default)
 }
 
 /**
@@ -305,7 +305,8 @@ Instructions:
    IMPORTANT NOTES:
    * "Equal Opportunity Employer", "EEO", "EOE", "AA/EEO" statements do NOT indicate anything about sponsorship - ignore these completely
    * If BOTH positive and negative indicators exist, the negative (no sponsorship) takes precedence
-   * Set to null if no clear indication either way or if statement is ambiguous
+   * DEFAULT BEHAVIOR: If no clear negative indicators are found, default to TRUE (assume sponsorship is available unless explicitly stated otherwise)
+   * Only set to FALSE if you find explicit evidence that sponsorship is NOT offered
 
 11. requires_us_citizenship: CAREFULLY detect if U.S. citizenship is required or NOT required
 
@@ -335,7 +336,8 @@ Instructions:
    * Security clearance almost always requires US citizenship - this is a strong indicator
    * DOD, federal government positions usually require citizenship unless explicitly stated otherwise
    * If BOTH positive and negative indicators exist, the positive (requires citizenship) takes precedence
-   * Set to null if no clear indication either way or if statement is ambiguous
+   * DEFAULT BEHAVIOR: If no clear positive indicators are found, default to FALSE (assume citizenship is NOT required unless explicitly stated)
+   * Only set to TRUE if you find explicit evidence that citizenship IS required
 
 Rules:
 - Return ONLY valid JSON, no markdown, no code blocks, no explanations
@@ -378,13 +380,13 @@ Example 7 - CITIZENSHIP REQUIRED (Explicit):
 Text: "U.S. citizenship is required for this role."
 Result: offers_sponsorship: false, requires_us_citizenship: true
 
-Example 8 - AMBIGUOUS (EEO Statement):
+Example 8 - AMBIGUOUS (EEO Statement - Use Defaults):
 Text: "We are an Equal Opportunity Employer committed to diversity."
-Result: offers_sponsorship: null, requires_us_citizenship: null
+Result: offers_sponsorship: true, requires_us_citizenship: false
 
 Example 9 - NO SPONSORSHIP (Work Authorization):
 Text: "Candidates must possess work authorization that does not require sponsorship by the employer."
-Result: offers_sponsorship: false, requires_us_citizenship: null
+Result: offers_sponsorship: false, requires_us_citizenship: false
 
 Example 10 - GREEN CARD HOLDERS OK:
 Text: "Open to U.S. citizens and Green Card holders only."
@@ -423,8 +425,10 @@ function parseAndValidateResponse(text: string): ParsedJobData {
       requirements: normalizeString(parsed.requirements),
       location: normalizeString(parsed.location),
       description: normalizeString(parsed.description),
-      offers_sponsorship: normalizeBoolean(parsed.offers_sponsorship),
-      requires_us_citizenship: normalizeBoolean(parsed.requires_us_citizenship),
+      // Default: offers_sponsorship = true (unless explicitly stated no sponsorship)
+      offers_sponsorship: normalizeBoolean(parsed.offers_sponsorship, true),
+      // Default: requires_us_citizenship = false (unless explicitly stated citizenship required)
+      requires_us_citizenship: normalizeBoolean(parsed.requires_us_citizenship, false),
     }
 
     return validated
@@ -509,10 +513,12 @@ function normalizeDate(value: any): string | null {
 }
 
 /**
- * Normalize boolean fields
+ * Normalize boolean fields with smart defaults
+ * @param value - The value to normalize
+ * @param defaultValue - Default value if null/undefined (true or false)
  */
-function normalizeBoolean(value: any): boolean | null {
-  if (value === null || value === undefined) return null
+function normalizeBoolean(value: any, defaultValue: boolean = false): boolean {
+  if (value === null || value === undefined) return defaultValue
   if (typeof value === 'boolean') return value
 
   // Handle string representations
@@ -522,7 +528,7 @@ function normalizeBoolean(value: any): boolean | null {
     if (lower === 'false') return false
   }
 
-  return null
+  return defaultValue
 }
 
 /**
