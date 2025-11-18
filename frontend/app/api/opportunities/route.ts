@@ -4,6 +4,7 @@ import { Database } from "@/lib/supabase/types"
 
 type OpportunityType = 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
 type OpportunityStatus = 'active' | 'expired'
+type OpportunityStatusFilter = OpportunityStatus | 'all'
 type SortOption = 'deadline-asc' | 'deadline-desc' | 'recent' | 'company-asc'
 
 export async function GET(request: NextRequest) {
@@ -24,11 +25,15 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const type = searchParams.get('type') as OpportunityType | null
     const majors = searchParams.get('majors')
-    const roles = searchParams.get('roles')
-    const status = (searchParams.get('status') as OpportunityStatus) || 'active'
+    const rolesParam = searchParams.get('roles')
+    const status = (searchParams.get('status') as OpportunityStatusFilter) || 'active'
     const sort = (searchParams.get('sort') as SortOption) || 'deadline-asc'
+    const searchQuery = searchParams.get('search')
+      ? searchParams.get('search')!.trim()
+      : ''
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
     const offset = parseInt(searchParams.get('offset') || '0')
+    const hideApplied = searchParams.get('hideApplied') !== 'false' // Default to true
 
     // Build query with user name join
     let query = supabase
@@ -41,7 +46,7 @@ export async function GET(request: NextRequest) {
       `, { count: 'exact' })
 
     // Apply status filter
-    if (status) {
+    if (status && status !== 'all') {
       query = query.eq('status', status)
     }
 
@@ -55,12 +60,43 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (roles) {
-      const roleList = roles.split(',').map(r => r.trim()).filter(Boolean)
-      if (roleList.length === 1) {
-        query = query.eq('role_type', roleList[0])
-      } else if (roleList.length > 1) {
-        query = query.in('role_type', roleList)
+    if (searchQuery) {
+      const sanitizedQuery = searchQuery.trim()
+
+      if (sanitizedQuery) {
+        const encodedSearch = encodeURIComponent(sanitizedQuery)
+        const ilikeQuery = sanitizedQuery
+          .replace(/%/g, '')
+          .replace(/,/g, '')
+          .replace(/'/g, "''")
+
+        const orFilters = [`search_vector.wfts.english.${encodedSearch}`]
+
+        if (ilikeQuery) {
+          orFilters.push(
+            `company_name.ilike.%${ilikeQuery}%`,
+            `job_title.ilike.%${ilikeQuery}%`,
+            `description.ilike.%${ilikeQuery}%`,
+            `requirements.ilike.%${ilikeQuery}%`,
+            `role_type.ilike.%${ilikeQuery}%`,
+            `location.ilike.%${ilikeQuery}%`
+          )
+        }
+
+        query = query.or(orFilters.join(','))
+      }
+    }
+
+    if (rolesParam) {
+      const roles = rolesParam
+        .split(',')
+        .map(role => role.trim())
+        .filter(Boolean)
+
+      if (roles.length === 1) {
+        query = query.eq('role_type', roles[0])
+      } else if (roles.length > 1) {
+        query = query.in('role_type', roles)
       }
     }
 
@@ -71,9 +107,9 @@ export async function GET(request: NextRequest) {
       // Use PostgREST 'cs' (contains) operator for JSONB arrays
       // Format: relevant_majors.cs.["MajorName"] checks if the JSONB array contains the value
       const orFilters = majorList
-        .map((major) => {
+        .map((majors) => {
           // Escape quotes in major name for JSON
-          const escapedMajor = major.replace(/"/g, '\\"')
+          const escapedMajor = majors.replace(/"/g, '\\"')
           // Format: relevant_majors.cs.["MajorName"]
           return `relevant_majors.cs.["${escapedMajor}"]`
         })
@@ -113,13 +149,40 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get user's opportunity statuses
+    const { data: userOpportunities } = await supabase
+      .from('user_opportunities')
+      .select('opportunity_id, status')
+      .eq('user_id', user.id)
+
+    // Create a map of opportunity_id -> status
+    const userStatusMap = new Map<string, 'saved' | 'applied'>()
+    userOpportunities?.forEach((uo) => {
+      userStatusMap.set(uo.opportunity_id, uo.status as 'saved' | 'applied')
+    })
+
+    // Filter out applied opportunities if hideApplied is true
+    let filteredData = (data || []).map((opp: any) => ({
+      ...opp,
+      userStatus: userStatusMap.get(opp.id) || null
+    }))
+
+    if (hideApplied) {
+      filteredData = filteredData.filter((opp: any) => opp.userStatus !== 'applied')
+    }
+
+    // Recalculate count after filtering
+    const filteredCount = hideApplied 
+      ? (count || 0) - (userOpportunities?.filter(uo => uo.status === 'applied').length || 0)
+      : (count || 0)
+
     return NextResponse.json({
-      data: data || [],
+      data: filteredData,
       pagination: {
-        total: count || 0,
+        total: filteredCount,
         limit,
         offset,
-        hasMore: (count || 0) > offset + limit
+        hasMore: filteredCount > offset + limit
       }
     })
   } catch (error) {

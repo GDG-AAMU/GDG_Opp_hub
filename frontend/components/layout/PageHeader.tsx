@@ -54,7 +54,7 @@ export default function PageHeader({
           </div>
           <div className="flex items-center gap-3">
             {rightActions}
-            <ProfileDropdown />
+           {/* <ProfileDropdown /> */}
           </div>
         </div>
       </div>

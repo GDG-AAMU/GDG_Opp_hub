@@ -4,6 +4,9 @@ import { format } from 'date-fns'
 import { Calendar, MapPin, Briefcase, Building2, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import SaveAppliedButtons from './SaveAppliedButtons'
+import AddToCalendarButton from './AddToCalendarButton'
+import SocialShareButton from './SocialShareButton'
 
 interface OpportunityCardProps {
   readonly opportunity: {
@@ -14,7 +17,9 @@ interface OpportunityCardProps {
     opportunity_type: 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
     location: string | null
     deadline: string | null
+    userStatus?: 'saved' | 'applied' | null
   }
+  onStatusChange?: (status: 'saved' | 'applied' | null) => void
 }
 
 const typeColors = {
@@ -33,7 +38,7 @@ const typeLabels = {
   scholarship: 'Scholarship',
 }
 
-export default function OpportunityCard({ opportunity }: Readonly<OpportunityCardProps>) {
+export default function OpportunityCard({ opportunity, onStatusChange }: Readonly<OpportunityCardProps>) {
   return (
     <div className="bg-card rounded-lg shadow-md hover:shadow-xl transition-all duration-200 p-6 border border-border hover:border-purple-500 dark:hover:border-purple-400">
       {/* Company Logo/Icon */}
@@ -81,13 +86,56 @@ export default function OpportunityCard({ opportunity }: Readonly<OpportunityCar
         </span>
       </div>
 
-      {/* View Details Button */}
-      <Link href={`/opportunities/${opportunity.id}`} className="block">
-        <Button variant="outline" className="w-full group">
-          View Details
-          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-        </Button>
-      </Link>
+      {/* Save/Applied Buttons */}
+      <div className="mb-3">
+        <SaveAppliedButtons
+          opportunityId={opportunity.id}
+          currentStatus={opportunity.userStatus || null}
+          onStatusChange={onStatusChange}
+        />
+      </div>
+
+      {/* Action Buttons */}
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          {/* Add to Calendar Button */}
+          <div className="flex-1">
+            <AddToCalendarButton
+              opportunity={{
+                id: opportunity.id,
+                company_name: opportunity.company_name,
+                job_title: opportunity.job_title,
+                deadline: opportunity.deadline,
+                location: opportunity.location,
+                url: opportunity.url
+              }}
+              size="sm"
+              className="w-full"
+            />
+          </div>
+
+          {/* Share Button */}
+          <SocialShareButton
+            opportunity={{
+              opportunity_type: opportunity.opportunity_type,
+              job_title: opportunity.job_title,
+              company_name: opportunity.company_name
+            }}
+            pageUrl={typeof window !== 'undefined' ? `${window.location.origin}/opportunities/${opportunity.id}` : ''}
+            size="sm"
+            className="flex-1"
+          />
+        </div>
+
+        {/* View Details Button */}
+        <Link href={`/opportunities/${opportunity.id}`} className="block">
+          <Button variant="outline" className="w-full group">
+            <span className="hidden sm:inline">View Details</span>
+            <span className="sm:hidden">Details</span>
+            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </Link>
+      </div>
     </div>
   )
 }

@@ -1,16 +1,72 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
-import { Menu, X } from "lucide-react"
-import { useState } from "react"
+import { Briefcase, Menu, X } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
+import { createClient } from "@/lib/supabase/client"
 import ProfileDropdown from "./ProfileDropdown"
 import { ThemeToggle } from "@/components/theme/ThemeToggle"
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const { user, loading } = useAuth()
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false)
+      setAvatarUrl(null)
+      return
+    }
+
+    let isMounted = true
+
+    const checkAdmin = async () => {
+      try {
+        const response = await fetch("/api/auth/user-role")
+        if (!response.ok) {
+          throw new Error("Unable to verify role")
+        }
+        const data = await response.json()
+        if (isMounted) {
+          setIsAdmin(Boolean(data.isAdmin))
+        }
+      } catch {
+        if (isMounted) {
+          setIsAdmin(false)
+        }
+      }
+    }
+
+    const fetchAvatar = async () => {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('users')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .single()
+
+        if (!error && data && isMounted) {
+          setAvatarUrl(data.avatar_url)
+        }
+      } catch (err) {
+        // Silently fail - avatar is optional
+        if (isMounted) {
+          setAvatarUrl(null)
+        }
+      }
+    }
+
+    checkAdmin()
+    fetchAvatar()
+
+    return () => {
+      isMounted = false
+    }
+  }, [user])
 
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm relative">
@@ -47,6 +103,20 @@ export default function Navbar() {
                 >
                   Dashboard
                 </Link>
+                <Link 
+                  href="/my-applications" 
+                  className="text-gray-700 hover:text-purple-600 font-medium transition-colors duration-200"
+                >
+                  My Applications
+                </Link>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="text-gray-700 hover:text-purple-600 font-medium transition-colors duration-200"
+                  >
+                    Admin
+                  </Link>
+                )}
                 <ProfileDropdown />
               </>
             ) : (
@@ -67,12 +137,25 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button and Profile Picture */}
           <div className="md:hidden flex items-center gap-2">
-            <ThemeToggle />
+            {user && (
+              <Link
+                href="/profile"
+                className="flex-shrink-0"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-purple-200 hover:border-purple-400 transition-colors cursor-pointer"
+                />
+              </Link>
+            )}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 text-foreground hover:text-purple-600 transition-colors"
+              className="p-2 text-gray-700 hover:text-purple-600 transition-colors"
               aria-label="Toggle menu"
             >
               {isMenuOpen ? (
@@ -96,6 +179,22 @@ export default function Navbar() {
                 >
                   Dashboard
                 </Link>
+                <Link
+                  href="/my-applications"
+                  className="block px-4 py-2 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-colors duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Applications
+                </Link>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="block px-4 py-2 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-colors duration-200"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Admin
+                  </Link>
+                )}
                 <Link
                   href="/profile"
                   className="block px-4 py-2 text-foreground hover:text-purple-600 hover:bg-accent rounded-lg font-medium transition-colors duration-200"

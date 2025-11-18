@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deadline Reminder</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #F9FAFB;">
+  <!-- Main Container -->
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #F9FAFB;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <!-- Email Content Container (600px max width) -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #FFFFFF; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          
+          <!-- Header with Gradient -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #DC2626 0%, #EF4444 50%, #F87171 100%); padding: 40px 30px; text-align: center;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center" style="padding-bottom: 10px;">
+                    <div style="font-size: 32px; margin-bottom: 10px;">⏰</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <h1 style="margin: 0; color: #FFFFFF; font-size: 24px; font-weight: 700; line-height: 1.4;">
+                      Deadline Reminder
+                    </h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 8px;">
+                    <p style="margin: 0; color: #FFFFFF; font-size: 16px; opacity: 0.95;">
+                      Don't miss these opportunities!
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 30px;">
+              <!-- Greeting -->
+              <p style="margin: 0 0 20px 0; color: #111827; font-size: 16px; line-height: 1.6;">
+                Hi {{USER_NAME}},
+              </p>
+              <p style="margin: 0 0 30px 0; color: #374151; font-size: 15px; line-height: 1.6;">
+                These opportunities have deadlines approaching soon. Make sure to apply before it's too late!
+              </p>
+
+              <!-- Opportunities List -->
+              {{OPPORTUNITIES_LIST}}
+
+              <!-- View All Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top: 30px;">
+                <tr>
+                  <td align="center">
+                    <a href="{{VIEW_ALL_URL}}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%); color: #FFFFFF; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.3);">
+                      View All Opportunities
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #F9FAFB; padding: 30px; text-align: center; border-top: 1px solid #E5E7EB;">
+              <p style="margin: 0 0 10px 0; color: #111827; font-size: 16px; font-weight: 600;">
+                GDG Opportunities Hub
+              </p>
+              <p style="margin: 0 0 20px 0; color: #6B7280; font-size: 14px; line-height: 1.6;">
+                Connecting students with opportunities
+              </p>
+              <p style="margin: 0; color: #9CA3AF; font-size: 12px; line-height: 1.6;">
+                <a href="{{MANAGE_PREFERENCES_URL}}" style="color: #9333EA; text-decoration: none;">Manage Preferences</a>
+                <span style="color: #D1D5DB;"> | </span>
+                <a href="{{UNSUBSCRIBE_URL}}" style="color: #9333EA; text-decoration: none;">Unsubscribe</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+

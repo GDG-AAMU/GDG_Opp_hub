@@ -2,41 +2,45 @@
 
 import { Opportunity } from "@/types"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { Loader2 } from "lucide-react"
+import EditOpportunityModal from "@/components/admin/EditOpportunityModal"
+import AddToCalendarButton from "./AddToCalendarButton"
+import SocialShareButton from "./SocialShareButton"
 
 interface OpportunityDetailsProps {
   opportunity: Opportunity
   isAdmin?: boolean
+  onOpportunityUpdated?: (opportunity: Opportunity) => void
 }
 
-export default function OpportunityDetails({ opportunity, isAdmin = false }: OpportunityDetailsProps) {
+export default function OpportunityDetails({
+  opportunity,
+  isAdmin = false,
+  onOpportunityUpdated,
+}: OpportunityDetailsProps) {
   const router = useRouter()
+  const [currentOpportunity, setCurrentOpportunity] = useState<Opportunity>(opportunity)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  useEffect(() => {
+    setCurrentOpportunity(opportunity)
+  }, [opportunity])
 
   // Check if deadline is within 7 days
   const isDeadlineApproaching = () => {
-    if (!opportunity.deadline) return false
-    const deadline = new Date(opportunity.deadline)
+    if (!currentOpportunity.deadline) return false
+    const deadline = new Date(currentOpportunity.deadline)
     const today = new Date()
     const daysUntilDeadline = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
     return daysUntilDeadline <= 7 && daysUntilDeadline >= 0
   }
 
-  const handleShare = async () => {
-    try {
-      const url = window.location.href
-      await navigator.clipboard.writeText(url)
-      toast.success('Link copied to clipboard!')
-    } catch (err) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to copy link:', err)
-      }
-      toast.error('Failed to copy link')
-    }
-  }
 
   const formatDate = (dateString: string | Date) => {
     const date = typeof dateString === 'string' ? new Date(dateString) : dateString
@@ -49,32 +53,28 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
 
   // Parse relevant_majors if it's a string
   const getRelevantMajors = () => {
-    if (!opportunity.relevant_majors) return []
-    if (typeof opportunity.relevant_majors === 'string') {
+    if (!currentOpportunity.relevant_majors) return []
+    if (typeof currentOpportunity.relevant_majors === 'string') {
       try {
-        return JSON.parse(opportunity.relevant_majors)
+        return JSON.parse(currentOpportunity.relevant_majors)
       } catch {
         return []
       }
     }
-    return opportunity.relevant_majors
+    return currentOpportunity.relevant_majors
   }
 
   const relevantMajors = getRelevantMajors()
 
-  const handleEdit = () => {
-    // Navigate to edit page (to be implemented)
-    router.push(`/admin/opportunities/${opportunity.id}/edit`)
+  const closeDeleteDialog = () => {
+    if (isDeleting) return
+    setDeleteDialogOpen(false)
   }
 
-  const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this opportunity? This action cannot be undone.")) {
-      return
-    }
-
+  const handleDeleteOpportunity = async () => {
     try {
       setIsDeleting(true)
-      const response = await fetch(`/api/opportunities/${opportunity.id}`, {
+      const response = await fetch(`/api/opportunities/${currentOpportunity.id}`, {
         method: 'DELETE',
       })
 
@@ -90,6 +90,7 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
       }
 
       toast.success('Opportunity deleted successfully')
+      setDeleteDialogOpen(false)
       router.push('/dashboard')
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete opportunity'
@@ -99,137 +100,155 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
     }
   }
 
+  const handleOpportunityRefresh = (updated: Opportunity) => {
+    setCurrentOpportunity(updated)
+    onOpportunityUpdated?.(updated)
+    router.refresh()
+  }
+
   return (
     <>
       {/* Details Card */}
-      <div className="bg-card rounded-lg shadow-md p-8 space-y-6 border border-border">
-      {/* Header Section */}
-      <div>
-        {/* Top row with company name and action icons */}
-        <div className="flex items-start justify-between gap-4 mb-2">
-          <h1 className="text-4xl font-bold flex-1">{opportunity.company_name}</h1>
-          
-          {/* Icon buttons */}
-          <div className="flex gap-2">
-            {/* Share Button */}
-            <Button 
-              onClick={handleShare}
-              size="icon"
-              variant="outline"
-              title="Share Link"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-            </Button>
-
-            {/* Review Resume Button - Coming Soon */}
-            <Button 
-              disabled 
-              size="icon"
-              variant="outline"
-              title="Review Resume - Coming Soon"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </Button>
-          </div>
-        </div>
-        
-        <h2 className="text-2xl font-semibold text-foreground mb-3">{opportunity.job_title}</h2>
-        
-        {/* Type Badge */}
-        <div className="flex items-center gap-3 mb-4">
-          <span className="inline-block px-4 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-semibold">
-            {opportunity.opportunity_type}
-          </span>
-          {opportunity.role_type && (
-            <span className="inline-block px-4 py-1 bg-muted text-foreground rounded-full text-sm">
-              {opportunity.role_type}
-            </span>
-          )}
-        </div>
-
-        {/* Key Information Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg border border-border">
-          {opportunity.location && (
-            <div>
-              <p className="text-sm text-muted-foreground">Location</p>
-              <p className="font-medium text-foreground">{opportunity.location}</p>
-            </div>
-          )}
-          
-          {opportunity.deadline && (
-            <div>
-              <p className="text-sm text-muted-foreground">Deadline</p>
-              <p className={`font-medium text-foreground ${isDeadlineApproaching() ? 'text-destructive font-bold' : ''}`}>
-                {formatDate(opportunity.deadline)}
-                {isDeadlineApproaching() && (
-                  <span className="ml-2 text-xs bg-destructive/10 text-destructive px-2 py-1 rounded">
-                    Closing Soon!
-                  </span>
-                )}
-              </p>
-            </div>
-          )}
-
-          {(opportunity.submitted_by || opportunity.users) && (
-            <div>
-              <p className="text-sm text-muted-foreground">Submitted By</p>
-              <p className="font-medium text-foreground">
-                {opportunity.users?.name
-                  ? opportunity.users.name
-                  : typeof opportunity.submitted_by === 'object' && opportunity.submitted_by !== null && 'name' in opportunity.submitted_by
-                  ? (opportunity.submitted_by as { name: string }).name
-                  : 'Unknown User'}
-              </p>
-            </div>
-          )}
-
-          {opportunity.created_at && (
-            <div>
-              <p className="text-sm text-muted-foreground">Posted On</p>
-              <p className="font-medium text-foreground">{formatDate(opportunity.created_at)}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Description */}
-      <div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">Description</h2>
-        <p className="text-foreground whitespace-pre-wrap">{opportunity.description || 'No description available.'}</p>
-      </div>
-
-      {/* Requirements */}
-      <div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">Requirements/Qualifications</h2>
-        <p className="text-foreground whitespace-pre-wrap">{opportunity.requirements || 'No requirements specified.'}</p>
-      </div>
-
-      {/* Relevant Majors */}
-      {relevantMajors && relevantMajors.length > 0 && (
+      <div className="bg-white rounded-lg shadow-md p-8 space-y-6">
+        {/* Header Section */}
         <div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">Relevant Majors</h2>
-          <div className="flex flex-wrap gap-2">
-            {relevantMajors.map((major: string, index: number) => (
-              <span key={index} className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-sm">
-                {major}
+          {/* Top row with company name and action icons */}
+          <div className="flex items-start justify-between gap-4 mb-2">
+            <h1 className="text-4xl font-bold flex-1">{currentOpportunity.company_name}</h1>
+
+            {/* Icon buttons */}
+            <div className="flex gap-2 flex-wrap">
+              {/* Add to Calendar Button */}
+              <AddToCalendarButton
+                opportunity={{
+                  id: currentOpportunity.id,
+                  company_name: currentOpportunity.company_name,
+                  job_title: currentOpportunity.job_title,
+                  deadline: currentOpportunity.deadline,
+                  location: currentOpportunity.location,
+                  url: currentOpportunity.url
+                }}
+                size="sm"
+              />
+
+              {/* Share Button */}
+              <SocialShareButton
+                opportunity={{
+                  opportunity_type: currentOpportunity.opportunity_type,
+                  job_title: currentOpportunity.job_title,
+                  company_name: currentOpportunity.company_name
+                }}
+                pageUrl={typeof window !== 'undefined' ? window.location.href : ''}
+                size="sm"
+              />
+
+              {/* Review Resume Button - Coming Soon */}
+              <Button
+                disabled
+                size="sm"
+                variant="outline"
+                title="Review Resume - Coming Soon"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </Button>
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-semibold text-gray-700 mb-3">{currentOpportunity.job_title}</h2>
+
+          {/* Type Badge */}
+          <div className="flex items-center gap-3 mb-4">
+            <span className="inline-block px-4 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+              {currentOpportunity.opportunity_type}
+            </span>
+            {currentOpportunity.role_type && (
+              <span className="inline-block px-4 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+                {currentOpportunity.role_type}
               </span>
-            ))}
+            )}
+          </div>
+
+          {/* Key Information Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+            {currentOpportunity.location && (
+              <div>
+                <p className="text-sm text-gray-500">Location</p>
+                <p className="font-medium">{currentOpportunity.location}</p>
+              </div>
+            )}
+
+            {currentOpportunity.deadline && (
+              <div>
+                <p className="text-sm text-gray-500">Deadline</p>
+                <p className={`font-medium ${isDeadlineApproaching() ? 'text-red-600 font-bold' : ''}`}>
+                  {formatDate(currentOpportunity.deadline)}
+                  {isDeadlineApproaching() && (
+                    <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                      Closing Soon!
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
+
+            {(currentOpportunity.submitted_by || currentOpportunity.users) && (
+              <div>
+                <p className="text-sm text-gray-500">Submitted By</p>
+                <p className="font-medium">
+                  {currentOpportunity.users?.name
+                    ? currentOpportunity.users.name
+                    : typeof currentOpportunity.submitted_by === 'object' && currentOpportunity.submitted_by !== null && 'name' in currentOpportunity.submitted_by
+                      ? (currentOpportunity.submitted_by as { name: string }).name
+                      : 'Unknown User'}
+                </p>
+              </div>
+            )}
+
+            {currentOpportunity.created_at && (
+              <div>
+                <p className="text-sm text-gray-500">Posted On</p>
+                <p className="font-medium">{formatDate(currentOpportunity.created_at)}</p>
+              </div>
+            )}
           </div>
         </div>
-      )}
+
+        {/* Description */}
+        <div>
+          <h2 className="text-xl font-semibold mb-2">Description</h2>
+          <p className="text-gray-700 whitespace-pre-wrap">{currentOpportunity.description || 'No description available.'}</p>
+        </div>
+
+        {/* Requirements */}
+        <div>
+          <h2 className="text-xl font-semibold mb-2">Requirements/Qualifications</h2>
+          <p className="text-gray-700 whitespace-pre-wrap">{currentOpportunity.requirements || 'No requirements specified.'}</p>
+        </div>
+
+        {/* Relevant Majors */}
+        {relevantMajors && relevantMajors.length > 0 && (
+          <div>
+            <h2 className="text-xl font-semibold mb-2">Relevant Majors</h2>
+            <div className="flex flex-wrap gap-2">
+              {relevantMajors.map((major: string, index: number) => (
+                <span key={index} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                  {major}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}
       <div className="mt-8">
         {/* Primary Action - Apply Now */}
-        {opportunity.url && (
+        {currentOpportunity.url && (
           <Button asChild size="lg" className="w-full">
             <a
-              href={opportunity.url}
+              href={currentOpportunity.url}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -248,11 +267,10 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
           <p className="text-sm text-muted-foreground mb-3">Admin Actions</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button
-              onClick={handleEdit}
+              onClick={() => setEditModalOpen(true)}
               size="lg"
               variant="outline"
               className="w-full bg-yellow-500 text-white hover:bg-yellow-600 border-yellow-500"
-              disabled={isEditing}
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -260,20 +278,57 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
               Edit
             </Button>
             <Button
-              onClick={handleDelete}
+              onClick={() => setDeleteDialogOpen(true)}
               size="lg"
               variant="destructive"
               className="w-full"
-              disabled={isDeleting}
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              Delete
             </Button>
           </div>
         </div>
       )}
+      {editModalOpen && (
+        <EditOpportunityModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          opportunity={currentOpportunity}
+          onSuccess={handleOpportunityRefresh}
+        />
+      )}
+
+      <Dialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => (open ? setDeleteDialogOpen(true) : closeDeleteDialog())}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete opportunity</DialogTitle>
+            <DialogDescription>
+              This will remove the opportunity and cannot be undone. You can re-create it later if needed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <p className="font-semibold">Are you sure?</p>
+            <p>
+              {currentOpportunity.job_title || "This opportunity"} at{" "}
+              {currentOpportunity.company_name}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDeleteDialog} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteOpportunity} disabled={isDeleting}>
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

@@ -1,0 +1,94 @@
+<!-- Opportunity Card Template -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 20px; background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+  <tr>
+    <td style="padding: 20px;">
+      <!-- Company Logo/Icon Area -->
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+        <tr>
+          <td style="padding-bottom: 12px;">
+            <div style="display: inline-block; width: 48px; height: 48px; background: linear-gradient(135deg, #E9D5FF 0%, #DBEAFE 100%); border-radius: 8px; text-align: center; line-height: 48px; font-size: 24px;">
+              🏢
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Company Name -->
+      <h3 style="margin: 0 0 8px 0; color: #111827; font-size: 18px; font-weight: 700; line-height: 1.4;">
+        {{COMPANY_NAME}}
+      </h3>
+
+      <!-- Job Title -->
+      <h4 style="margin: 0 0 16px 0; color: #374151; font-size: 16px; font-weight: 500; line-height: 1.4;">
+        {{JOB_TITLE}}
+      </h4>
+
+      <!-- Type Badge -->
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+        <tr>
+          <td>
+            <span style="display: inline-block; padding: 6px 12px; background-color: {{TYPE_BG_COLOR}}; color: {{TYPE_TEXT_COLOR}}; border-radius: 20px; font-size: 13px; font-weight: 600;">
+              {{OPPORTUNITY_TYPE}}
+            </span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Details Row -->
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+        <tr>
+          <!-- Deadline -->
+          <td style="padding-bottom: 8px; padding-right: 16px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+              <tr>
+                <td style="padding-right: 6px; vertical-align: middle;">
+                  <span style="color: {{DEADLINE_COLOR}}; font-size: 14px;">📅</span>
+                </td>
+                <td style="vertical-align: middle;">
+                  <span style="color: #6B7280; font-size: 13px; line-height: 1.5;">
+                    Deadline: <strong style="color: {{DEADLINE_COLOR}};">{{DEADLINE}}</strong>
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        {{#LOCATION}}
+        <tr>
+          <td style="padding-bottom: 8px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+              <tr>
+                <td style="padding-right: 6px; vertical-align: middle;">
+                  <span style="color: #6B7280; font-size: 14px;">📍</span>
+                </td>
+                <td style="vertical-align: middle;">
+                  <span style="color: #6B7280; font-size: 13px; line-height: 1.5;">{{LOCATION}}</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        {{/LOCATION}}
+      </table>
+
+      <!-- Description Preview -->
+      {{#DESCRIPTION}}
+      <p style="margin: 12px 0 16px 0; color: #6B7280; font-size: 14px; line-height: 1.6; max-height: 60px; overflow: hidden;">
+        {{DESCRIPTION}}
+      </p>
+      {{/DESCRIPTION}}
+
+      <!-- View Details Button -->
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+        <tr>
+          <td>
+            <a href="{{VIEW_DETAILS_URL}}" style="display: inline-block; padding: 10px 20px; background-color: #9333EA; color: #FFFFFF; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; text-align: center;">
+              View Details →
+            </a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
