@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
           requirements: parsedData.requirements,
           location: parsedData.location,
           description: parsedData.description,
-          ai_parsed_data: parsedData as Json,
+          ai_parsed_data: parsedData as unknown as Json,
         }
 
         await serviceClient
