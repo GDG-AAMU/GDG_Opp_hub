@@ -102,7 +102,7 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
   return (
     <>
       {/* Details Card */}
-      <div className="bg-white rounded-lg shadow-md p-8 space-y-6">
+      <div className="bg-card rounded-lg shadow-md p-8 space-y-6 border border-border">
       {/* Header Section */}
       <div>
         {/* Top row with company name and action icons */}
@@ -137,36 +137,36 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
           </div>
         </div>
         
-        <h2 className="text-2xl font-semibold text-gray-700 mb-3">{opportunity.job_title}</h2>
+        <h2 className="text-2xl font-semibold text-foreground mb-3">{opportunity.job_title}</h2>
         
         {/* Type Badge */}
         <div className="flex items-center gap-3 mb-4">
-          <span className="inline-block px-4 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+          <span className="inline-block px-4 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-semibold">
             {opportunity.opportunity_type}
           </span>
           {opportunity.role_type && (
-            <span className="inline-block px-4 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+            <span className="inline-block px-4 py-1 bg-muted text-foreground rounded-full text-sm">
               {opportunity.role_type}
             </span>
           )}
         </div>
 
         {/* Key Information Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg border border-border">
           {opportunity.location && (
             <div>
-              <p className="text-sm text-gray-500">Location</p>
-              <p className="font-medium">{opportunity.location}</p>
+              <p className="text-sm text-muted-foreground">Location</p>
+              <p className="font-medium text-foreground">{opportunity.location}</p>
             </div>
           )}
           
           {opportunity.deadline && (
             <div>
-              <p className="text-sm text-gray-500">Deadline</p>
-              <p className={`font-medium ${isDeadlineApproaching() ? 'text-red-600 font-bold' : ''}`}>
+              <p className="text-sm text-muted-foreground">Deadline</p>
+              <p className={`font-medium text-foreground ${isDeadlineApproaching() ? 'text-destructive font-bold' : ''}`}>
                 {formatDate(opportunity.deadline)}
                 {isDeadlineApproaching() && (
-                  <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                  <span className="ml-2 text-xs bg-destructive/10 text-destructive px-2 py-1 rounded">
                     Closing Soon!
                   </span>
                 )}
@@ -176,8 +176,8 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
 
           {(opportunity.submitted_by || opportunity.users) && (
             <div>
-              <p className="text-sm text-gray-500">Submitted By</p>
-              <p className="font-medium">
+              <p className="text-sm text-muted-foreground">Submitted By</p>
+              <p className="font-medium text-foreground">
                 {opportunity.users?.name
                   ? opportunity.users.name
                   : typeof opportunity.submitted_by === 'object' && opportunity.submitted_by !== null && 'name' in opportunity.submitted_by
@@ -189,8 +189,8 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
 
           {opportunity.created_at && (
             <div>
-              <p className="text-sm text-gray-500">Posted On</p>
-              <p className="font-medium">{formatDate(opportunity.created_at)}</p>
+              <p className="text-sm text-muted-foreground">Posted On</p>
+              <p className="font-medium text-foreground">{formatDate(opportunity.created_at)}</p>
             </div>
           )}
         </div>
@@ -198,23 +198,23 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
 
       {/* Description */}
       <div>
-        <h2 className="text-xl font-semibold mb-2">Description</h2>
-        <p className="text-gray-700 whitespace-pre-wrap">{opportunity.description || 'No description available.'}</p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">Description</h2>
+        <p className="text-foreground whitespace-pre-wrap">{opportunity.description || 'No description available.'}</p>
       </div>
 
       {/* Requirements */}
       <div>
-        <h2 className="text-xl font-semibold mb-2">Requirements/Qualifications</h2>
-        <p className="text-gray-700 whitespace-pre-wrap">{opportunity.requirements || 'No requirements specified.'}</p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">Requirements/Qualifications</h2>
+        <p className="text-foreground whitespace-pre-wrap">{opportunity.requirements || 'No requirements specified.'}</p>
       </div>
 
       {/* Relevant Majors */}
       {relevantMajors && relevantMajors.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold mb-2">Relevant Majors</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Relevant Majors</h2>
           <div className="flex flex-wrap gap-2">
             {relevantMajors.map((major: string, index: number) => (
-              <span key={index} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+              <span key={index} className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-sm">
                 {major}
               </span>
             ))}
@@ -244,8 +244,8 @@ export default function OpportunityDetails({ opportunity, isAdmin = false }: Opp
 
       {/* Admin Actions */}
       {isAdmin && (
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <p className="text-sm text-gray-500 mb-3">Admin Actions</p>
+        <div className="mt-6 pt-6 border-t border-border">
+          <p className="text-sm text-muted-foreground mb-3">Admin Actions</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button
               onClick={handleEdit}

@@ -108,7 +108,7 @@ export default function FilterBar({
     <div className="flex flex-col gap-2">
       <div className="flex flex-col gap-2.5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <h3 className="text-sm font-semibold text-gray-700">
+          <h3 className="text-sm font-semibold text-foreground">
             Filter by Type {selectedTypes.length > 0 && `(${selectedTypes.length})`}
           </h3>
         </div>
@@ -147,11 +147,11 @@ export default function FilterBar({
         </div>
       </div>
 
-      <div className="border-t border-gray-100 my-1" />
+      <div className="border-t border-border my-1" />
 
       <div className="flex flex-col gap-2.5">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-700">
+          <h3 className="text-sm font-semibold text-foreground">
             Filter by Major {selectedMajors.length > 0 && `(${selectedMajors.length})`}
           </h3>
           {hasMajorFilters && (
@@ -160,7 +160,7 @@ export default function FilterBar({
               size="sm"
               onClick={() => onMajorChange([])}
               aria-label="Clear major filters"
-              className="text-gray-600 hover:text-purple-600"
+              className="text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400"
             >
               Clear majors
             </Button>
@@ -187,11 +187,11 @@ export default function FilterBar({
         </div>
       </div>
 
-      <div className="border-t border-gray-100 my-1" />
+      <div className="border-t border-border my-1" />
 
       <div className="flex flex-col gap-2.5">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-700">
+          <h3 className="text-sm font-semibold text-foreground">
             Filter by Role {selectedRoles.length > 0 && `(${selectedRoles.length})`}
           </h3>
           {hasRoleFilters && (
@@ -200,7 +200,7 @@ export default function FilterBar({
               size="sm"
               onClick={() => onRoleChange([])}
               aria-label="Clear role filters"
-              className="text-gray-600 hover:text-purple-600"
+              className="text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400"
             >
               Clear roles
             </Button>
@@ -234,7 +234,7 @@ export default function FilterBar({
             size="sm"
             onClick={handleClearFilters}
             aria-label="Clear all filters"
-            className="text-gray-600 hover:text-purple-600"
+            className="text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400"
           >
             Clear All Filters
           </Button>
@@ -294,7 +294,7 @@ export default function FilterBar({
                   handleClearFilters()
                   setIsMobileFilterOpen(false)
                 }}
-                className="text-gray-600 hover:text-purple-600"
+                className="text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400"
               >
                 Clear All
               </Button>
@@ -304,7 +304,7 @@ export default function FilterBar({
       </Dialog>
 
       {/* Desktop Filter Bar - visible only on desktop */}
-      <div className="hidden md:block bg-white rounded-lg shadow-md p-4 mb-6 border border-gray-200">
+      <div className="hidden md:block bg-card rounded-lg shadow-md p-4 mb-6 border border-border">
         {renderFilterContent()}
       </div>
     </>

@@ -80,7 +80,6 @@ export default function Home() {
       
       {/* Hero Section */}
       <section className="relative w-full bg-gradient-to-r from-purple-600 via-purple-500 to-blue-500 text-white overflow-hidden">
-        {/* Background decorative icons - hidden on mobile */}
         <div className="hidden md:block absolute inset-0 opacity-10">
           <div className="absolute top-20 right-20 w-24 h-24">
             <Lightbulb className="w-full h-full" />
@@ -123,9 +122,9 @@ export default function Home() {
       </section>
 
       {/* Statistics Section */}
-      <section className="py-12 sm:py-16 md:py-20 bg-gray-50">
+      <section className="py-12 sm:py-16 md:py-20 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-gray-900 px-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-foreground px-4">
             Key Highlights
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
@@ -134,15 +133,15 @@ export default function Home() {
               return (
                 <div
                   key={index}
-                  className="bg-white rounded-xl p-6 sm:p-8 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 text-center"
+                  className="bg-card rounded-xl p-6 sm:p-8 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 text-center border border-border"
                 >
-                  <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-purple-100 text-purple-600 mb-4">
+                  <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 mb-4">
                     <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
                   </div>
-                  <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+                  <div className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
                     {stat.value}
                   </div>
-                  <div className="text-gray-600 text-base sm:text-lg">
+                  <div className="text-muted-foreground text-base sm:text-lg">
                     {stat.label}
                   </div>
                 </div>
@@ -153,9 +152,9 @@ export default function Home() {
       </section>
 
       {/* Explore Categories Section */}
-      <section className="py-12 sm:py-16 md:py-20 bg-white">
+      <section className="py-12 sm:py-16 md:py-20 bg-background">
         <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-gray-900 px-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-foreground px-4">
             Explore Categories
           </h2>
           <div className="flex flex-wrap justify-center gap-3 sm:gap-4 max-w-4xl mx-auto px-2">
@@ -166,7 +165,7 @@ export default function Home() {
                 className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-300 ${
                   index === 0
                     ? "bg-purple-600 text-white shadow-lg"
-                    : "bg-white text-gray-900 border-2 border-gray-200 hover:border-purple-600 hover:bg-purple-50"
+                    : "bg-card text-foreground border-2 border-border hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
                 } hover:scale-105 active:scale-95`}
               >
                 {type.name}
@@ -177,39 +176,39 @@ export default function Home() {
       </section>
 
       {/* Featured Opportunities Section */}
-      <section className="py-12 sm:py-16 md:py-20 bg-gray-50">
+      <section className="py-12 sm:py-16 md:py-20 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-gray-900 px-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-foreground px-4">
             Featured Opportunities
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-7xl mx-auto">
             {featuredOpportunities.map((opportunity) => (
               <div
                 key={opportunity.id}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden group"
+                className="bg-card rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden group border border-border"
               >
                 {/* Placeholder image area */}
-                <div className="w-full h-40 sm:h-48 bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-5xl sm:text-6xl">
+                <div className="w-full h-40 sm:h-48 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 flex items-center justify-center text-5xl sm:text-6xl">
                   {opportunity.image}
                 </div>
                 <div className="p-4 sm:p-6">
-                  <span className="inline-block px-2 sm:px-3 py-1 bg-purple-100 text-purple-700 text-xs sm:text-sm font-semibold rounded-full mb-3">
+                  <span className="inline-block px-2 sm:px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs sm:text-sm font-semibold rounded-full mb-3">
                     {opportunity.type}
                   </span>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">
+                  <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                     {opportunity.title}
                   </h3>
-                  <p className="text-gray-600 mb-4 text-sm sm:text-base line-clamp-3">
+                  <p className="text-muted-foreground mb-4 text-sm sm:text-base line-clamp-3">
                     {opportunity.description}
                   </p>
                   {opportunity.hasLink === false ? (
-                    <div className="inline-flex items-center text-gray-500 text-sm sm:text-base italic">
+                    <div className="inline-flex items-center text-muted-foreground text-sm sm:text-base italic">
                       <span>No opportunities yet. Be the first to share!</span>
                     </div>
                   ) : (
                     <Link
                       href={`/dashboard?type=${getTypeQueryParam(opportunity.type)}`}
-                      className="inline-flex items-center text-purple-600 font-semibold hover:text-purple-700 transition-colors group/link text-sm sm:text-base"
+                      className="inline-flex items-center text-purple-600 dark:text-purple-400 font-semibold hover:text-purple-700 dark:hover:text-purple-300 transition-colors group/link text-sm sm:text-base"
                     >
                       Learn More
                       <ArrowRight className="ml-2 w-4 h-4 group-hover/link:translate-x-1 transition-transform" />

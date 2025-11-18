@@ -31,7 +31,7 @@ export default function PageHeader({
   }
 
   return (
-    <div className="bg-white shadow-sm border-b border-gray-200">
+    <div className="bg-card shadow-sm border-b border-border">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -40,7 +40,7 @@ export default function PageHeader({
                 onClick={handleBack}
                 variant="ghost"
                 size="sm"
-                className="text-gray-600 hover:text-purple-600"
+                className="text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 {backButtonLabel}
