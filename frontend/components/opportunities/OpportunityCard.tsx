@@ -1,9 +1,8 @@
 'use client'
 
 import { format } from 'date-fns'
-import { Calendar, MapPin, Briefcase, Building2, ArrowRight } from 'lucide-react'
+import { Calendar, MapPin, Briefcase, Building2 } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import SaveAppliedButtons from './SaveAppliedButtons'
 import AddToCalendarButton from './AddToCalendarButton'
 import SocialShareButton from './SocialShareButton'
@@ -40,102 +39,105 @@ const typeLabels = {
 
 export default function OpportunityCard({ opportunity, onStatusChange }: Readonly<OpportunityCardProps>) {
   return (
-    <div className="bg-card rounded-lg shadow-md hover:shadow-xl transition-all duration-200 p-6 border border-border hover:border-purple-500 dark:hover:border-purple-400">
-      {/* Company Logo/Icon */}
-      <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 dark:from-purple-900/30 to-blue-100 dark:to-blue-900/30 rounded-lg mb-4">
-        <Building2 className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-      </div>
-
-      {/* Company Name */}
-      <h3 className="text-lg font-semibold text-foreground mb-2">
-        {opportunity.company_name}
-      </h3>
-
-      {/* Job Title */}
-      <h4 className="text-md text-muted-foreground mb-3">
-        {opportunity.job_title}
-      </h4>
-
-      {/* Type Badge */}
-      <div className="flex items-center mb-2">
-        <Briefcase className="w-4 h-4 mr-2 flex-shrink-0 text-muted-foreground" />
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${typeColors[opportunity.opportunity_type]}`}>
-          {typeLabels[opportunity.opportunity_type]}
-        </span>
-      </div>
-
-      {/* Location */}
-      {opportunity.location && (
-        <div className="flex items-center text-muted-foreground mb-2">
-          <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
-          <span className="text-sm">{opportunity.location}</span>
+    <Link 
+      href={`/opportunities/${opportunity.id}`}
+      className="block group"
+      onClick={(e) => {
+        // Don't navigate if clicking on action buttons
+        const target = e.target as HTMLElement
+        if (target.closest('button') || target.closest('a[href^="http"]')) {
+          e.preventDefault()
+        }
+      }}
+    >
+      <div className="bg-card rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-border hover:border-purple-500 dark:hover:border-purple-400 hover:-translate-y-1 cursor-pointer h-full flex flex-col">
+        {/* Company Logo/Icon */}
+        <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 dark:from-purple-900/30 to-blue-100 dark:to-blue-900/30 rounded-lg mb-4">
+          <Building2 className="w-8 h-8 text-purple-600 dark:text-purple-400" />
         </div>
-      )}
 
-      {/* Deadline - Always show, more prominent */}
-      <div className="flex items-center mb-4">
-        <Calendar className="w-4 h-4 mr-2 flex-shrink-0 text-purple-600 dark:text-purple-400" />
-        <span className="text-sm font-medium">
-          {opportunity.deadline ? (
-            <span className="text-foreground">
-              Deadline: {format(new Date(opportunity.deadline), 'MMM dd, yyyy')}
-            </span>
-          ) : (
-            <span className="text-muted-foreground italic">No deadline specified</span>
-          )}
-        </span>
-      </div>
+        {/* Company Name */}
+        <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+          {opportunity.company_name}
+        </h3>
 
-      {/* Save/Applied Buttons */}
-      <div className="mb-3">
-        <SaveAppliedButtons
-          opportunityId={opportunity.id}
-          currentStatus={opportunity.userStatus || null}
-          onStatusChange={onStatusChange}
-        />
-      </div>
+        {/* Job Title */}
+        <h4 className="text-md text-muted-foreground mb-3">
+          {opportunity.job_title}
+        </h4>
 
-      {/* Action Buttons */}
-      <div className="space-y-2">
-        <div className="flex gap-2">
-          {/* Add to Calendar Button */}
-          <div className="flex-1">
-            <AddToCalendarButton
-              opportunity={{
-                id: opportunity.id,
-                company_name: opportunity.company_name,
-                job_title: opportunity.job_title,
-                deadline: opportunity.deadline,
-                location: opportunity.location,
-                url: opportunity.url
-              }}
-              size="sm"
-              className="w-full"
-            />
+        {/* Type Badge */}
+        <div className="flex items-center mb-2">
+          <Briefcase className="w-4 h-4 mr-2 flex-shrink-0 text-muted-foreground" />
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${typeColors[opportunity.opportunity_type]}`}>
+            {typeLabels[opportunity.opportunity_type]}
+          </span>
+        </div>
+
+        {/* Location */}
+        {opportunity.location && (
+          <div className="flex items-center text-muted-foreground mb-2">
+            <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span className="text-sm">{opportunity.location}</span>
           </div>
+        )}
 
-          {/* Share Button */}
-          <SocialShareButton
-            opportunity={{
-              opportunity_type: opportunity.opportunity_type,
-              job_title: opportunity.job_title,
-              company_name: opportunity.company_name
-            }}
-            pageUrl={typeof window !== 'undefined' ? `${window.location.origin}/opportunities/${opportunity.id}` : ''}
-            size="sm"
-            className="flex-1"
+        {/* Deadline - Always show, more prominent */}
+        <div className="flex items-center mb-4">
+          <Calendar className="w-4 h-4 mr-2 flex-shrink-0 text-purple-600 dark:text-purple-400" />
+          <span className="text-sm font-medium">
+            {opportunity.deadline ? (
+              <span className="text-foreground">
+                Deadline: {format(new Date(opportunity.deadline), 'MMM dd, yyyy')}
+              </span>
+            ) : (
+              <span className="text-muted-foreground italic">No deadline specified</span>
+            )}
+          </span>
+        </div>
+
+        {/* Save/Applied Buttons */}
+        <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+          <SaveAppliedButtons
+            opportunityId={opportunity.id}
+            currentStatus={opportunity.userStatus || null}
+            onStatusChange={onStatusChange}
           />
         </div>
 
-        {/* View Details Button */}
-        <Link href={`/opportunities/${opportunity.id}`} className="block">
-          <Button variant="outline" className="w-full group">
-            <span className="hidden sm:inline">View Details</span>
-            <span className="sm:hidden">Details</span>
-            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </Link>
+        {/* Action Buttons */}
+        <div className="space-y-2 mt-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="flex gap-2">
+            {/* Add to Calendar Button */}
+            <div className="flex-1">
+              <AddToCalendarButton
+                opportunity={{
+                  id: opportunity.id,
+                  company_name: opportunity.company_name,
+                  job_title: opportunity.job_title,
+                  deadline: opportunity.deadline,
+                  location: opportunity.location,
+                  url: opportunity.url
+                }}
+                size="sm"
+                className="w-full"
+              />
+            </div>
+
+            {/* Share Button */}
+            <SocialShareButton
+              opportunity={{
+                opportunity_type: opportunity.opportunity_type,
+                job_title: opportunity.job_title,
+                company_name: opportunity.company_name
+              }}
+              pageUrl={typeof window !== 'undefined' ? `${window.location.origin}/opportunities/${opportunity.id}` : ''}
+              size="sm"
+              className="flex-1"
+            />
+          </div>
+        </div>
       </div>
-    </div>
+    </Link>
   )
 }
