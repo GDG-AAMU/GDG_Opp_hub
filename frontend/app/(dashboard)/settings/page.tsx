@@ -3,15 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@/types'
 import { Database } from '@/lib/supabase/types'
 import { Button } from '@/components/ui/button'
-import { User as UserIcon, MapPin, Shield, Lock, Calendar, Mail, GraduationCap, Globe, MapPinned, ArrowLeft, Bell } from 'lucide-react'
+import { User as UserIcon, MapPin, Shield, Lock, Calendar, Mail, GraduationCap, Globe, MapPinned, ArrowLeft, Bell, Briefcase } from 'lucide-react'
 import toast from 'react-hot-toast'
-
-export const dynamic = 'force-dynamic'
 
 type UserRow = Database["public"]["Tables"]["users"]["Row"]
 
@@ -273,6 +272,15 @@ export default function SettingsPage() {
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back
+                </Button>
+                <Button
+                  onClick={() => router.push('/dashboard')}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  <Briefcase className="h-4 w-4 mr-2" />
+                  Dashboard
                 </Button>
               </div>
               <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
@@ -569,7 +577,7 @@ export default function SettingsPage() {
                             />
                           </div>
                           <p className="mt-2 text-xs text-gray-500">
-                            We'll send your daily digest at this time (in your local timezone)
+                            We&apos;ll send your daily digest at this time (in your local timezone)
                           </p>
                         </div>
                       )}
@@ -581,7 +589,7 @@ export default function SettingsPage() {
                             Deadline Reminders
                           </h3>
                           <p className="text-sm text-gray-600">
-                            Get notified when opportunities you're interested in are approaching their deadline
+                            Get notified when opportunities you&apos;re interested in are approaching their deadline
                           </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
@@ -748,6 +756,7 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+      <Footer />
     </ProtectedRoute>
   )
 }

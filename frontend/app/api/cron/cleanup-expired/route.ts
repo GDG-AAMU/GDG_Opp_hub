@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 // Configure in vercel.json: { "cron": "0 2 * * 0" } for 2 AM every Sunday
 // Deletes expired opportunities older than 90 days to save database space
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // Verify cron secret (optional but recommended)

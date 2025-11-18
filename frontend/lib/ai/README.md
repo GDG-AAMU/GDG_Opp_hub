@@ -276,7 +276,7 @@ const result = await parseJobPostingFromUrl(url, {
 Complete workflow combining scraper + Gemini:
 
 ```typescript
-import { smartScrape } from '@/backend/services/smart-scraper'
+import { smartScrape } from '@/lib/services/smart-scraper'
 import { parseJobPostingFromText } from '@/lib/ai/gemini'
 
 async function parseJobFromUrl(url: string, manualContent?: string) {

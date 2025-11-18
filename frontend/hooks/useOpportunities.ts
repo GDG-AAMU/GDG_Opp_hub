@@ -17,6 +17,7 @@ interface UseOpportunitiesOptions {
   sort?: SortOption
   limit?: number
   offset?: number
+  search?: string
   autoFetch?: boolean
   refetchInterval?: number | false
 }
@@ -35,6 +36,7 @@ interface UseOpportunitiesReturn {
   pagination: PaginationInfo | null
   refetch: () => Promise<void>
   fetchMore: () => Promise<void>
+  invalidateCache: () => void
 }
 
 interface OpportunitiesResponse {
@@ -42,7 +44,7 @@ interface OpportunitiesResponse {
   pagination: PaginationInfo
 }
 
-// Generate query key based on filters
+// Generate query key based on filters (including search)
 function getQueryKey(options: UseOpportunitiesOptions, offset: number = 0) {
   const {
     types = [],
@@ -51,6 +53,7 @@ function getQueryKey(options: UseOpportunitiesOptions, offset: number = 0) {
     status = 'active',
     sort = 'deadline-asc',
     limit = 20,
+    search = '',
   } = options
 
   return [
@@ -63,11 +66,12 @@ function getQueryKey(options: UseOpportunitiesOptions, offset: number = 0) {
       sort,
       limit,
       offset,
+      search: search.trim(), // Include search in query key
     },
   ] as const
 }
 
-// Fetch opportunities function
+// Fetch opportunities function (with search support)
 async function fetchOpportunities(
   options: UseOpportunitiesOptions,
   fetchOffset: number = 0
@@ -79,6 +83,7 @@ async function fetchOpportunities(
     status = 'active',
     sort = 'deadline-asc',
     limit = 20,
+    search = '',
   } = options
 
   // Build query parameters
@@ -97,6 +102,10 @@ async function fetchOpportunities(
   }
   if (sort) {
     params.append('sort', sort)
+  }
+  const trimmedSearch = search?.trim()
+  if (trimmedSearch) {
+    params.append('search', trimmedSearch)
   }
   params.append('limit', limit.toString())
   params.append('offset', fetchOffset.toString())
@@ -165,6 +174,11 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
   const pagination = data?.pagination || null
   const error = queryError ? (queryError as Error).message : null
 
+  // Invalidate cache function
+  const invalidateCache = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['opportunities'] })
+  }, [queryClient])
+
   // Refetch from the beginning
   const refetch = useCallback(async () => {
     setCurrentOffset(0)
@@ -199,6 +213,7 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
     pagination,
     refetch,
     fetchMore,
+    invalidateCache,
   }
 }
 

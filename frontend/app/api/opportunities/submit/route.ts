@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
 import { submitOpportunitySchema } from "@/lib/validations/opportunity"
-import { smartScrape } from "@/backend/services/smart-scraper"
+import { smartScrape } from "@/lib/services/smart-scraper"
 import { parseJobPostingFromText, GeminiAPIError, RateLimitError } from "@/lib/ai/gemini"
 import { Database } from "@/lib/supabase/types"
 
