@@ -8,11 +8,15 @@ import type { Major, RoleType } from "@/lib/constants"
 type OpportunityType = 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
 type OpportunityStatus = 'active' | 'expired'
 type SortOption = 'deadline-asc' | 'deadline-desc' | 'recent' | 'company-asc'
+type SponsorshipFilter = 'any' | 'offers' | 'no-offers'
+type CitizenshipFilter = 'any' | 'required' | 'not-required'
 
 interface UseOpportunitiesOptions {
   types?: OpportunityType[]
   majors?: Major[]
   roles?: RoleType[]
+  sponsorship?: SponsorshipFilter
+  citizenship?: CitizenshipFilter
   status?: OpportunityStatus
   sort?: SortOption
   limit?: number
@@ -50,6 +54,8 @@ function getQueryKey(options: UseOpportunitiesOptions, offset: number = 0) {
     types = [],
     majors = [],
     roles = [],
+    sponsorship = 'any',
+    citizenship = 'any',
     status = 'active',
     sort = 'deadline-asc',
     limit = 20,
@@ -62,6 +68,8 @@ function getQueryKey(options: UseOpportunitiesOptions, offset: number = 0) {
       types: types.sort(),
       majors: majors.sort(),
       roles: roles.sort(),
+      sponsorship,
+      citizenship,
       status,
       sort,
       limit,
@@ -80,6 +88,8 @@ async function fetchOpportunities(
     types = [],
     majors = [],
     roles = [],
+    sponsorship = 'any',
+    citizenship = 'any',
     status = 'active',
     sort = 'deadline-asc',
     limit = 20,
@@ -96,6 +106,12 @@ async function fetchOpportunities(
   }
   if (roles.length > 0) {
     params.append('roles', roles.join(','))
+  }
+  if (sponsorship !== 'any') {
+    params.append('sponsorship', sponsorship)
+  }
+  if (citizenship !== 'any') {
+    params.append('citizenship', citizenship)
   }
   if (status) {
     params.append('status', status)

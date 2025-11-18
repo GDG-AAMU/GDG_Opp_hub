@@ -18,6 +18,8 @@ interface OpportunityCardProps {
     opportunity_type: 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
     location: string | null
     deadline: string | null
+    offers_sponsorship?: boolean | null
+    requires_us_citizenship?: boolean | null
     userStatus?: 'saved' | 'applied' | null
   }
   onStatusChange?: (status: 'saved' | 'applied' | null) => void
@@ -89,6 +91,22 @@ export default function OpportunityCard({ opportunity, onStatusChange }: Readonl
           )}
         </span>
       </div>
+
+      {/* Sponsorship & Citizenship Badges */}
+      {(opportunity.offers_sponsorship === false || opportunity.requires_us_citizenship === true) && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {opportunity.offers_sponsorship === false && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+              🛂 Does NOT offer sponsorship
+            </span>
+          )}
+          {opportunity.requires_us_citizenship === true && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+              🇺🇸 Requires U.S. Citizenship
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Save/Applied Buttons */}
       <div className="mb-3">

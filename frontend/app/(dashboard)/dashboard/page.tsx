@@ -21,6 +21,9 @@ import { useSearchSuggestions } from '@/hooks/useSearchSuggestions'
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver'
 
 type OpportunityType = 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
+type SponsorshipFilter = 'any' | 'offers' | 'no-offers'
+type CitizenshipFilter = 'any' | 'required' | 'not-required'
+
 const POPULAR_SEARCHES = [
   'Software Engineering',
   'Data Science',
@@ -37,6 +40,8 @@ function DashboardContent() {
   const [selectedTypes, setSelectedTypes] = useState<OpportunityType[]>([])
   const [selectedMajors, setSelectedMajors] = useState<Major[]>([])
   const [selectedRoles, setSelectedRoles] = useState<RoleType[]>([])
+  const [selectedSponsorship, setSelectedSponsorship] = useState<SponsorshipFilter>('any')
+  const [selectedCitizenship, setSelectedCitizenship] = useState<CitizenshipFilter>('any')
   const [selectedSort, setSelectedSort] = useState<SortOption>('deadline-asc')
   const [searchQuery, setSearchQuery] = useState('')
   const debouncedSearch = useDebounce(searchQuery, 400)
@@ -69,6 +74,8 @@ function DashboardContent() {
     types: selectedTypes,
     majors: selectedMajors,
     roles: selectedRoles,
+    sponsorship: selectedSponsorship,
+    citizenship: selectedCitizenship,
     status: 'active',
     sort: selectedSort,
     search: debouncedSearch,
@@ -117,7 +124,8 @@ function DashboardContent() {
     addSearchTerm(value)
   }
 
-  const hasFilters = selectedTypes.length > 0 || selectedMajors.length > 0 || selectedRoles.length > 0
+  const hasFilters = selectedTypes.length > 0 || selectedMajors.length > 0 || selectedRoles.length > 0 ||
+    selectedSponsorship !== 'any' || selectedCitizenship !== 'any'
   const hasSearchQuery = debouncedSearch.trim().length > 0
   const totalResults = pagination?.total ?? opportunities.length
   useEffect(() => {
@@ -301,6 +309,10 @@ function DashboardContent() {
             onMajorChange={setSelectedMajors}
             selectedRoles={selectedRoles}
             onRoleChange={setSelectedRoles}
+            selectedSponsorship={selectedSponsorship}
+            onSponsorshipChange={setSelectedSponsorship}
+            selectedCitizenship={selectedCitizenship}
+            onCitizenshipChange={setSelectedCitizenship}
           />
 
           {/* Opportunities List */}

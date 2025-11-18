@@ -26,6 +26,8 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') as OpportunityType | null
     const majors = searchParams.get('majors')
     const rolesParam = searchParams.get('roles')
+    const sponsorshipParam = searchParams.get('sponsorship') // 'offers' | 'no-offers'
+    const citizenshipParam = searchParams.get('citizenship') // 'required' | 'not-required'
     const status = (searchParams.get('status') as OpportunityStatusFilter) || 'active'
     const sort = (searchParams.get('sort') as SortOption) || 'deadline-asc'
     const searchQuery = searchParams.get('search')
@@ -97,6 +99,24 @@ export async function GET(request: NextRequest) {
         query = query.eq('role_type', roles[0])
       } else if (roles.length > 1) {
         query = query.in('role_type', roles)
+      }
+    }
+
+    // Apply sponsorship filter
+    if (sponsorshipParam) {
+      if (sponsorshipParam === 'offers') {
+        query = query.eq('offers_sponsorship', true)
+      } else if (sponsorshipParam === 'no-offers') {
+        query = query.eq('offers_sponsorship', false)
+      }
+    }
+
+    // Apply citizenship filter
+    if (citizenshipParam) {
+      if (citizenshipParam === 'required') {
+        query = query.eq('requires_us_citizenship', true)
+      } else if (citizenshipParam === 'not-required') {
+        query = query.eq('requires_us_citizenship', false)
       }
     }
 
