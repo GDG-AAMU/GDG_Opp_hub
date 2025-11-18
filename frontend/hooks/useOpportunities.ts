@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { Opportunity } from "@/types"
 import type { Major, RoleType } from "@/lib/constants"
 
@@ -155,6 +155,26 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
   const [currentOffset, setCurrentOffset] = useState(offset)
   const [accumulatedData, setAccumulatedData] = useState<Opportunity[]>([])
 
+  // Memoize query key to prevent unnecessary re-renders
+  const queryKey = useMemo(() => getQueryKey(options, currentOffset), [
+    options.types,
+    options.majors,
+    options.roles,
+    options.sponsorship,
+    options.citizenship,
+    options.status,
+    options.sort,
+    options.limit,
+    options.search,
+    currentOffset,
+  ])
+
+  // Memoize query function to prevent unnecessary re-renders
+  const queryFn = useMemo(() => () => fetchOpportunities(options, currentOffset), [
+    options,
+    currentOffset,
+  ])
+
   // Use React Query for data fetching
   const {
     data,
@@ -162,8 +182,8 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
     error: queryError,
     refetch: queryRefetch,
   } = useQuery({
-    queryKey: getQueryKey(options, currentOffset),
-    queryFn: () => fetchOpportunities(options, currentOffset),
+    queryKey,
+    queryFn,
     enabled: autoFetch,
     refetchInterval: (query) => {
       // If refetchInterval is explicitly false, don't poll

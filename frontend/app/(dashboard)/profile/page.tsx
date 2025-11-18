@@ -1,85 +1,24 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/hooks/useAuth'
+import { useUserProfile } from '@/hooks/useUserProfile'
 import { createClient } from '@/lib/supabase/client'
-import { Database } from '@/lib/supabase/types'
 import { Button } from '@/components/ui/button'
 import { Briefcase, Calendar, GraduationCap, Mail, Settings, User as UserIcon, Camera, Upload, ArrowLeft } from 'lucide-react'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 
-type UserProfile = Database['public']['Tables']['users']['Row']
-
 export default function ProfilePage() {
   const { user } = useAuth()
   const supabase = createClient()
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [profileData, setProfileData] = useState<UserProfile | null>(null)
-  const [opportunitiesCount, setOpportunitiesCount] = useState(0)
+  const { profile: profileData, opportunitiesCount, loading, invalidateCache } = useUserProfile()
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    const abortController = new AbortController()
-    let isMounted = true
-
-    async function fetchProfileData() {
-      if (!user?.id) return
-
-      try {
-        setLoading(true)
-
-        // Fetch user profile from users table
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-
-        if (userError) throw userError
-
-        // Fetch count of opportunities submitted by this user
-        const { count, error: countError } = await supabase
-          .from('opportunities')
-          .select('*', { count: 'exact', head: true })
-          .eq('submitted_by', user.id)
-
-        if (countError && process.env.NODE_ENV === 'development') {
-          console.error('Error fetching opportunities count:', countError)
-        }
-
-        if (!isMounted) return
-
-        setProfileData(userData)
-        setOpportunitiesCount(count || 0)
-      } catch (err) {
-        // Ignore abort errors
-        if (err instanceof Error && err.name === 'AbortError') return
-
-        if (!isMounted) return
-
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Error fetching profile data:', err)
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    fetchProfileData()
-
-    return () => {
-      isMounted = false
-      abortController.abort()
-    }
-  }, [user?.id, user?.email, supabase])
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A'
@@ -162,8 +101,8 @@ export default function ProfilePage() {
         throw updateError
       }
 
-      // Update local state
-      setProfileData(prev => prev ? { ...prev, avatar_url: publicUrl } : null)
+      // Invalidate cache to refetch updated profile
+      invalidateCache()
       toast.success('Profile picture updated successfully!')
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {

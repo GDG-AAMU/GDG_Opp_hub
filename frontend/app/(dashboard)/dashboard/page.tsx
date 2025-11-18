@@ -112,7 +112,7 @@ function DashboardContent() {
 
   const handleModalSuccess = () => {
     invalidateCache()
-    refetch()
+    // Note: invalidateCache() already triggers refetch automatically, so refetch() is redundant
   }
 
   const handleSearchChange = (value: string) => {

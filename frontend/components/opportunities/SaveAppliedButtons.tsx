@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Bookmark, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import toast from 'react-hot-toast'
+import { useSaveApplyOpportunity } from '@/hooks/useOpportunityMutations'
 
 interface SaveAppliedButtonsProps {
   opportunityId: string
@@ -17,7 +17,7 @@ export default function SaveAppliedButtons({
   onStatusChange
 }: SaveAppliedButtonsProps) {
   const [status, setStatus] = useState<'saved' | 'applied' | null>(currentStatus)
-  const [loading, setLoading] = useState(false)
+  const saveApplyMutation = useSaveApplyOpportunity()
 
   // Sync local state with prop changes (e.g., after refresh)
   useEffect(() => {
@@ -25,113 +25,50 @@ export default function SaveAppliedButtons({
   }, [currentStatus])
 
   const handleSave = async () => {
-    if (loading) return
+    if (saveApplyMutation.isPending) return
 
     const newStatus = status === 'saved' ? null : 'saved'
     
-    setLoading(true)
     try {
+      await saveApplyMutation.mutateAsync({
+        opportunityId,
+        status: newStatus
+      })
+
+      setStatus(newStatus)
+      onStatusChange?.(newStatus)
+      
       if (newStatus === null) {
-        // Remove status
-        const response = await fetch(`/api/user-opportunities?opportunityId=${opportunityId}`, {
-          method: 'DELETE'
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || 'Failed to remove saved status')
-        }
-
-        setStatus(null)
-        onStatusChange?.(null)
-        toast.success('Removed from saved')
+        // Success toast is handled by mutation hook
       } else {
-        // Set status to 'saved' - this will upsert (update if exists, insert if not)
-        const response = await fetch('/api/user-opportunities', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            opportunityId,
-            status: 'saved'
-          })
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          console.error('API Error:', errorData)
-          throw new Error(errorData.error || 'Failed to save opportunity')
-        }
-
-        const responseData = await response.json()
-        console.log('Saved status saved:', responseData)
-
-        setStatus('saved')
-        onStatusChange?.('saved')
-        toast.success('Saved for later')
+        // Success toast is handled by mutation hook
       }
     } catch (error) {
-      console.error('Error updating save status:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to update status')
-    } finally {
-      setLoading(false)
+      // Error toast is handled by mutation hook
     }
   }
 
   const handleApplied = async () => {
-    if (loading) return
+    if (saveApplyMutation.isPending) return
 
     const newStatus = status === 'applied' ? null : 'applied'
     
-    setLoading(true)
     try {
+      await saveApplyMutation.mutateAsync({
+        opportunityId,
+        status: newStatus
+      })
+
+      setStatus(newStatus)
+      onStatusChange?.(newStatus)
+      
       if (newStatus === null) {
-        // Remove status
-        const response = await fetch(`/api/user-opportunities?opportunityId=${opportunityId}`, {
-          method: 'DELETE'
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || 'Failed to remove applied status')
-        }
-
-        setStatus(null)
-        onStatusChange?.(null)
-        toast.success('Removed from applied')
+        // Success toast is handled by mutation hook
       } else {
-        // Set status to 'applied' - this will upsert (update if exists, insert if not)
-        const response = await fetch('/api/user-opportunities', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            opportunityId,
-            status: 'applied'
-          })
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          console.error('API Error:', errorData)
-          throw new Error(errorData.error || 'Failed to mark as applied')
-        }
-
-        const responseData = await response.json()
-        console.log('Applied status saved:', responseData)
-
-        const finalStatus = 'applied'
-        setStatus(finalStatus)
-        onStatusChange?.(finalStatus)
-        toast.success('Marked as applied')
+        // Success toast is handled by mutation hook
       }
     } catch (error) {
-      console.error('Error updating applied status:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to update status')
-    } finally {
-      setLoading(false)
+      // Error toast is handled by mutation hook
     }
   }
 
@@ -140,7 +77,7 @@ export default function SaveAppliedButtons({
       {/* Save Button */}
       <Button
         onClick={handleSave}
-        disabled={loading}
+        disabled={saveApplyMutation.isPending}
         variant={status === 'saved' ? 'default' : 'outline'}
         size="sm"
         className={`flex items-center gap-1.5 ${
@@ -161,7 +98,7 @@ export default function SaveAppliedButtons({
       {/* Applied Button */}
       <Button
         onClick={handleApplied}
-        disabled={loading}
+        disabled={saveApplyMutation.isPending}
         variant={status === 'applied' ? 'default' : 'outline'}
         size="sm"
         className={`flex items-center gap-1.5 ${
