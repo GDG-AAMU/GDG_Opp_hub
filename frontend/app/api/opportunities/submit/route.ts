@@ -4,7 +4,7 @@ import { createClient as createServiceClient } from "@supabase/supabase-js"
 import { submitOpportunitySchema } from "@/lib/validations/opportunity"
 import { smartScrape } from "@/lib/services/smart-scraper"
 import { parseJobPostingFromText, GeminiAPIError, RateLimitError } from "@/lib/ai/gemini"
-import { Database } from "@/lib/supabase/types"
+import { Database, Json } from "@/lib/supabase/types"
 
 export async function POST(request: NextRequest) {
   try {
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
           requirements: parsedData.requirements,
           location: parsedData.location,
           description: parsedData.description,
-          ai_parsed_data: parsedData,
+          ai_parsed_data: parsedData as unknown as Json,
         }
 
         await serviceClient
