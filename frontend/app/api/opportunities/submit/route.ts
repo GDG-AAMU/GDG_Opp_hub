@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { submitOpportunitySchema } from "@/lib/validations/opportunity"
-import { smartScrape } from "@/backend/services/smart-scraper"
+import { smartScrape } from "@/lib/services/smart-scraper"
 import { parseJobPostingFromText, GeminiAPIError, RateLimitError } from "@/lib/ai/gemini"
 
 export async function POST(request: NextRequest) {

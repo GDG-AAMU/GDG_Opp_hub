@@ -21,7 +21,6 @@ const nextConfig = {
   },
   webpack: (config, { isServer }) => {
     // Ensure modules are resolved from frontend node_modules
-    // This is needed when importing from backend folder
     if (isServer) {
       const originalResolveModules = config.resolve.modules || []
       config.resolve.modules = [
