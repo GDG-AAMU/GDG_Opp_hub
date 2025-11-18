@@ -1,6 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail, generateDailyDigestEmail, generateDeadlineReminderEmail, generatePlainTextEmail, type Opportunity } from './service'
 
+// Re-export Opportunity type for convenience
+export type { Opportunity }
+
 // Process pending emails from the queue
 export async function processEmailQueue(batchSize: number = 10): Promise<{
   processed: number
