@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { Button } from '@/components/ui/button'
@@ -17,6 +17,7 @@ import SearchBar from '@/components/opportunities/SearchBar'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useSearchHistory } from '@/hooks/useSearchHistory'
 import { useSearchSuggestions } from '@/hooks/useSearchSuggestions'
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver'
 
 type OpportunityType = 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
 const POPULAR_SEARCHES = [
@@ -63,7 +64,7 @@ export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Fetch opportunities using API hook - only when auth is ready
-  const { opportunities, loading, error, pagination, refetch, invalidateCache } = useOpportunities({
+  const { opportunities, loading, error, pagination, refetch, invalidateCache, fetchMore } = useOpportunities({
     types: selectedTypes,
     majors: selectedMajors,
     roles: selectedRoles,
@@ -71,6 +72,21 @@ export default function DashboardPage() {
     sort: selectedSort,
     search: debouncedSearch,
     autoFetch: !authLoading  // Don't fetch until auth is ready
+  })
+
+  // Infinite scroll sentinel ref
+  const sentinelRef = useRef<HTMLDivElement>(null)
+
+  // Infinite scroll intersection observer
+  useIntersectionObserver({
+    target: sentinelRef,
+    onIntersect: () => {
+      if (pagination?.hasMore && !loading) {
+        fetchMore()
+      }
+    },
+    threshold: 0.1,
+    enabled: !authLoading && !loading && (pagination?.hasMore ?? false)
   })
 
   const handleSubmitOpportunity = () => {
@@ -194,11 +210,27 @@ export default function DashboardPage() {
     }
 
     return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {opportunities.map((opportunity) => (
-          <OpportunityCard key={opportunity.id} opportunity={opportunity} />
-        ))}
-      </div>
+      <>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {opportunities.map((opportunity) => (
+            <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+          ))}
+        </div>
+        {/* Infinite scroll sentinel */}
+        <div ref={sentinelRef} className="h-10 flex items-center justify-center">
+          {loading && pagination?.hasMore && (
+            <div className="flex items-center gap-2 text-gray-600">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+              <span className="text-sm">Loading more opportunities...</span>
+            </div>
+          )}
+          {!pagination?.hasMore && opportunities.length > 0 && (
+            <p className="text-sm text-gray-500 text-center py-4">
+              You&apos;ve reached the end of the list
+            </p>
+          )}
+        </div>
+      </>
     )
   }
 

@@ -8,6 +8,8 @@ import toast from "react-hot-toast"
 import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
 import EditOpportunityModal from "@/components/admin/EditOpportunityModal"
+import AddToCalendarButton from "./AddToCalendarButton"
+import SocialShareButton from "./SocialShareButton"
 
 interface OpportunityDetailsProps {
   opportunity: Opportunity
@@ -39,18 +41,6 @@ export default function OpportunityDetails({
     return daysUntilDeadline <= 7 && daysUntilDeadline >= 0
   }
 
-  const handleShare = async () => {
-    try {
-      const url = window.location.href
-      await navigator.clipboard.writeText(url)
-      toast.success('Link copied to clipboard!')
-    } catch (err) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to copy link:', err)
-      }
-      toast.error('Failed to copy link')
-    }
-  }
 
   const formatDate = (dateString: string | Date) => {
     const date = typeof dateString === 'string' ? new Date(dateString) : dateString
@@ -127,27 +117,39 @@ export default function OpportunityDetails({
             <h1 className="text-4xl font-bold flex-1">{currentOpportunity.company_name}</h1>
 
             {/* Icon buttons */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              {/* Add to Calendar Button */}
+              <AddToCalendarButton
+                opportunity={{
+                  id: currentOpportunity.id,
+                  company_name: currentOpportunity.company_name,
+                  job_title: currentOpportunity.job_title,
+                  deadline: currentOpportunity.deadline,
+                  location: currentOpportunity.location,
+                  url: currentOpportunity.url
+                }}
+                size="sm"
+              />
+
               {/* Share Button */}
-              <Button
-                onClick={handleShare}
-                size="icon"
-                variant="outline"
-                title="Share Link"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-              </Button>
+              <SocialShareButton
+                opportunity={{
+                  opportunity_type: currentOpportunity.opportunity_type,
+                  job_title: currentOpportunity.job_title,
+                  company_name: currentOpportunity.company_name
+                }}
+                pageUrl={typeof window !== 'undefined' ? window.location.href : ''}
+                size="sm"
+              />
 
               {/* Review Resume Button - Coming Soon */}
               <Button
                 disabled
-                size="icon"
+                size="sm"
                 variant="outline"
                 title="Review Resume - Coming Soon"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </Button>

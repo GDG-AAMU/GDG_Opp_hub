@@ -215,7 +215,7 @@ export default function ProfilePage() {
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIxIDEuNzktNCA0LTRzNCAxLjc5IDQgNC0xLjc5IDQtNCA0LTQtMS43OS00LTR6bTAgMTBjMC0yLjIxIDEuNzktNCA0LTRzNCAxLjc5IDQgNC0xLjc5IDQtNCA0LTQtMS43OS00LTR6TTI2IDM0YzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00em0wIDEwYzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-30"></div>
             
             {/* Back Button */}
-            <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
+            <div className="absolute top-4 left-4 sm:top-6 sm:left-6 flex gap-2">
               <Button
                 onClick={() => router.back()}
                 variant="outline"
@@ -224,6 +224,15 @@ export default function ProfilePage() {
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
+              </Button>
+              <Button
+                onClick={() => router.push('/dashboard')}
+                variant="outline"
+                size="sm"
+                className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:text-white"
+              >
+                <Briefcase className="h-4 w-4 mr-2" />
+                Dashboard
               </Button>
             </div>
 

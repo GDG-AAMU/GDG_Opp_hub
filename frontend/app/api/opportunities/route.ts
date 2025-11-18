@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       : ''
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
     const offset = parseInt(searchParams.get('offset') || '0')
+    const hideApplied = searchParams.get('hideApplied') !== 'false' // Default to true
 
     // Build query with user name join
     let query = supabase
@@ -148,13 +149,40 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get user's opportunity statuses
+    const { data: userOpportunities } = await supabase
+      .from('user_opportunities')
+      .select('opportunity_id, status')
+      .eq('user_id', user.id)
+
+    // Create a map of opportunity_id -> status
+    const userStatusMap = new Map<string, 'saved' | 'applied'>()
+    userOpportunities?.forEach((uo) => {
+      userStatusMap.set(uo.opportunity_id, uo.status as 'saved' | 'applied')
+    })
+
+    // Filter out applied opportunities if hideApplied is true
+    let filteredData = (data || []).map((opp: any) => ({
+      ...opp,
+      userStatus: userStatusMap.get(opp.id) || null
+    }))
+
+    if (hideApplied) {
+      filteredData = filteredData.filter((opp: any) => opp.userStatus !== 'applied')
+    }
+
+    // Recalculate count after filtering
+    const filteredCount = hideApplied 
+      ? (count || 0) - (userOpportunities?.filter(uo => uo.status === 'applied').length || 0)
+      : (count || 0)
+
     return NextResponse.json({
-      data: data || [],
+      data: filteredData,
       pagination: {
-        total: count || 0,
+        total: filteredCount,
         limit,
         offset,
-        hasMore: (count || 0) > offset + limit
+        hasMore: filteredCount > offset + limit
       }
     })
   } catch (error) {
