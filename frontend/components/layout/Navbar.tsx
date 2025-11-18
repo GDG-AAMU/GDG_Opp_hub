@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Briefcase, Menu, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
