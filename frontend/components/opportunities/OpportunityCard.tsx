@@ -18,8 +18,8 @@ interface OpportunityCardProps {
     opportunity_type: 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
     location: string | null
     deadline: string | null
-    offers_sponsorship?: boolean | null
-    requires_us_citizenship?: boolean | null
+    offers_sponsorship: boolean
+    requires_us_citizenship: boolean
     userStatus?: 'saved' | 'applied' | null
   }
   onStatusChange?: (status: 'saved' | 'applied' | null) => void
