@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { processEmailQueue } from '@/lib/email/queue'
 
 // This route processes the email queue
-// Can be called frequently (every 5 minutes) to process pending emails
-// Configure in vercel.json: { "cron": "*/5 * * * *" } for every 5 minutes
+// Runs once per day at 7 PM as a backup to catch any failed or missed emails
+// Configure in vercel.json: { "cron": "0 19 * * *" } for 7 PM daily
+// Note: Daily digest and deadline reminders process emails immediately after queuing,
+// so this is primarily a backup/cleanup job for any missed emails
 
 export async function GET(request: NextRequest) {
   try {

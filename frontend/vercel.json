@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/process-queue",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 19 * * *"
     },
     {
       "path": "/api/cron/auto-expire",
