@@ -77,8 +77,8 @@ export default function OpportunityDetailsPage({
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-gray-600">Loading opportunity details...</p>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
+            <p className="text-muted-foreground">Loading opportunity details...</p>
           </div>
         </div>
       </div>
@@ -88,12 +88,12 @@ export default function OpportunityDetailsPage({
   if (error || !opportunity) {
     return (
       <div className="container mx-auto p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-2xl mx-auto mt-8">
-          <h2 className="text-xl font-semibold text-red-800 mb-2">Error</h2>
-          <p className="text-red-700 mb-4">{error || "Opportunity not found"}</p>
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 max-w-2xl mx-auto mt-8">
+          <h2 className="text-xl font-semibold text-destructive mb-2">Error</h2>
+          <p className="text-destructive/80 mb-4">{error || "Opportunity not found"}</p>
           <button
             onClick={() => router.back()}
-            className="text-blue-600 hover:text-blue-800 underline"
+            className="text-primary hover:text-primary/80 underline"
           >
             Go back
           </button>
@@ -103,7 +103,7 @@ export default function OpportunityDetailsPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <div className="min-h-screen bg-background">
       <Navbar />
       <PageHeader />
       <div className="container mx-auto p-6">

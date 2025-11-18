@@ -316,8 +316,8 @@ export default function OpportunityDetails({
 
       {/* Admin Actions */}
       {isAdmin && (
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <p className="text-sm text-gray-500 mb-3">Admin Actions</p>
+        <div className="mt-6 pt-6 border-t border-border">
+          <p className="text-sm text-muted-foreground mb-3">Admin Actions</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button
               onClick={() => setEditModalOpen(true)}

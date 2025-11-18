@@ -128,25 +128,25 @@ export default function ProfileDropdown() {
             setFocusedIndex(0)
           }
         }}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-label="User menu"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 dark:from-purple-500 dark:to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
           {getInitials()}
         </div>
-        <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+          className="absolute right-0 mt-2 w-56 bg-popover rounded-lg shadow-lg border border-border py-1 z-50"
         >
           {/* User Info */}
-          <div className="px-4 py-3 border-b border-gray-200">
-            <p className="text-sm font-medium text-gray-900 truncate">{user?.email}</p>
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-sm font-medium text-popover-foreground truncate">{user?.email}</p>
           </div>
 
           {/* Menu Items */}
@@ -160,9 +160,9 @@ export default function ProfileDropdown() {
                 role="menuitem"
                 className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
                   item.isDestructive
-                    ? 'text-red-600 hover:bg-red-50'
-                    : 'text-gray-700 hover:bg-gray-50'
-                } focus:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-inset`}
+                    ? 'text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20'
+                    : 'text-popover-foreground hover:bg-accent hover:text-accent-foreground'
+                } focus:bg-accent focus:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-inset`}
                 onFocus={() => setFocusedIndex(index)}
               >
                 <Icon className="w-4 h-4" />
