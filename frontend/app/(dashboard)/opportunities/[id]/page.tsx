@@ -6,6 +6,7 @@ import OpportunityDetails from "@/components/opportunities/OpportunityDetails"
 import { Opportunity } from "@/types"
 import { useAuth } from "@/hooks/useAuth"
 import Navbar from "@/components/layout/Navbar"
+import Footer from "@/components/layout/Footer"
 import PageHeader from "@/components/layout/PageHeader"
 
 export default function OpportunityDetailsPage({
@@ -114,6 +115,7 @@ export default function OpportunityDetailsPage({
           />
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

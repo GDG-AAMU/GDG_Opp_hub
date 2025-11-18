@@ -12,6 +12,7 @@ type BaseOpportunity = Database["public"]["Tables"]["opportunities"]["Row"]
 export type Opportunity = Omit<BaseOpportunity, 'submitted_by'> & {
   submitted_by: string | { name: string } | null
   users?: { name: string } | null
+  userStatus?: 'saved' | 'applied' | null 
 }
 
 // API Response types
