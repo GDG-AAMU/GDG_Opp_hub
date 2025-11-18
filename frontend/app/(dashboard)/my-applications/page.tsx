@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import Navbar from '@/components/layout/Navbar'
+import Footer from '@/components/layout/Footer'
 import OpportunityCard from '@/components/opportunities/OpportunityCard'
 import { Button } from '@/components/ui/button'
 import { Bookmark, CheckCircle2 } from 'lucide-react'
@@ -232,6 +233,7 @@ export default function MyApplicationsPage() {
           )}
         </div>
       </div>
+      <Footer />
     </ProtectedRoute>
   )
 }
