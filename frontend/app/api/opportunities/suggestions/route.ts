@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server"
 const MIN_QUERY_LENGTH = 2
 const MAX_RESULTS = 10
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()

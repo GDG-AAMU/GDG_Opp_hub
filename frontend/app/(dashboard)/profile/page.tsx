@@ -12,8 +12,6 @@ import { Briefcase, Calendar, GraduationCap, Mail, Settings, User as UserIcon, C
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 
-export const dynamic = 'force-dynamic'
-
 type UserProfile = Database['public']['Tables']['users']['Row']
 
 export default function ProfilePage() {

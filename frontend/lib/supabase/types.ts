@@ -86,6 +86,11 @@ export type Database = {
           country: string | null
           created_at: string | null
           email: string
+          email_notifications_enabled: boolean | null
+          daily_digest_enabled: boolean | null
+          deadline_reminders_enabled: boolean | null
+          daily_digest_time: string | null
+          last_digest_sent_at: string | null
           gender: string | null
           id: string
           major: string | null
@@ -101,6 +106,11 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           email: string
+          email_notifications_enabled?: boolean | null
+          daily_digest_enabled?: boolean | null
+          deadline_reminders_enabled?: boolean | null
+          daily_digest_time?: string | null
+          last_digest_sent_at?: string | null
           gender?: string | null
           id?: string
           major?: string | null
@@ -116,6 +126,11 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           email?: string
+          email_notifications_enabled?: boolean | null
+          daily_digest_enabled?: boolean | null
+          deadline_reminders_enabled?: boolean | null
+          daily_digest_time?: string | null
+          last_digest_sent_at?: string | null
           gender?: string | null
           id?: string
           major?: string | null
@@ -126,6 +141,151 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      user_opportunities: {
+        Row: {
+          id: string
+          user_id: string
+          opportunity_id: string
+          status: 'saved' | 'applied'
+          applied_at: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          opportunity_id: string
+          status: 'saved' | 'applied'
+          applied_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          opportunity_id?: string
+          status?: 'saved' | 'applied'
+          applied_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_opportunities_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_opportunities_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      email_queue: {
+        Row: {
+          id: string
+          user_id: string
+          email_type: 'daily_digest' | 'deadline_reminder'
+          subject: string
+          html_content: string
+          text_content: string | null
+          status: 'pending' | 'processing' | 'sent' | 'failed'
+          error_message: string | null
+          retry_count: number
+          max_retries: number
+          scheduled_for: string
+          processed_at: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_type: 'daily_digest' | 'deadline_reminder'
+          subject: string
+          html_content: string
+          text_content?: string | null
+          status?: 'pending' | 'processing' | 'sent' | 'failed'
+          error_message?: string | null
+          retry_count?: number
+          max_retries?: number
+          scheduled_for: string
+          processed_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_type?: 'daily_digest' | 'deadline_reminder'
+          subject?: string
+          html_content?: string
+          text_content?: string | null
+          status?: 'pending' | 'processing' | 'sent' | 'failed'
+          error_message?: string | null
+          retry_count?: number
+          max_retries?: number
+          scheduled_for?: string
+          processed_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_queue_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      email_logs: {
+        Row: {
+          id: string
+          user_id: string
+          email_type: 'daily_digest' | 'deadline_reminder'
+          subject: string
+          opportunity_ids: Json
+          sent_at: string | null
+          resend_message_id: string | null
+          status: 'sent' | 'failed' | 'bounced'
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_type: 'daily_digest' | 'deadline_reminder'
+          subject: string
+          opportunity_ids?: Json
+          sent_at?: string | null
+          resend_message_id?: string | null
+          status?: 'sent' | 'failed' | 'bounced'
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_type?: 'daily_digest' | 'deadline_reminder'
+          subject?: string
+          opportunity_ids?: Json
+          sent_at?: string | null
+          resend_message_id?: string | null
+          status?: 'sent' | 'failed' | 'bounced'
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {

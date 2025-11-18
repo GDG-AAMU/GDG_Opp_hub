@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { Button } from '@/components/ui/button'
@@ -29,7 +29,7 @@ const POPULAR_SEARCHES = [
   'Full-time roles',
 ] as const
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { loading: authLoading } = useAuth()
   const searchParams = useSearchParams()
 
@@ -64,7 +64,7 @@ export default function DashboardPage() {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Fetch opportunities using API hook - only when auth is ready
+  // Fetch opportunities using API hook - with smart polling for background updates
   const { opportunities, loading, error, pagination, refetch, invalidateCache, fetchMore } = useOpportunities({
     types: selectedTypes,
     majors: selectedMajors,
@@ -72,8 +72,17 @@ export default function DashboardPage() {
     status: 'active',
     sort: selectedSort,
     search: debouncedSearch,
-    autoFetch: !authLoading  // Don't fetch until auth is ready
+    autoFetch: !authLoading,  // Don't fetch until auth is ready
+    refetchInterval: !authLoading ? 5000 : false  // Poll every 5 seconds to catch background updates
   })
+
+  // Check if any opportunities are still loading (show visual feedback)
+  const hasLoadingOpportunities = useMemo(() => {
+    return opportunities.some(opp =>
+      opp.job_title === 'Loading...' ||
+      opp.company_name === 'Loading...'
+    )
+  }, [opportunities])
 
   // Infinite scroll sentinel ref
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -307,5 +316,26 @@ export default function DashboardPage() {
       </div>
       <Footer />
     </ProtectedRoute>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+          <Navbar />
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </ProtectedRoute>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }

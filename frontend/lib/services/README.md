@@ -40,7 +40,7 @@ npx playwright install chromium
 ## Basic Usage
 
 ```typescript
-import { scrapeUrl } from '@/backend/services';
+import { scrapeUrl } from '@/lib/services';
 
 // Scrape a URL (automatic fallback chain)
 const result = await scrapeUrl('https://example.com/job-posting');
@@ -60,7 +60,7 @@ if (result.success) {
 ### Custom Timeout
 
 ```typescript
-import { scrapeUrl } from '@/backend/services/web-scraper';
+import { scrapeUrl } from '@/lib/services/web-scraper';
 
 const result = await scrapeUrl('https://example.com/job', {
   timeout: 60000, // 60 seconds
@@ -70,7 +70,7 @@ const result = await scrapeUrl('https://example.com/job', {
 ### Force Puppeteer
 
 ```typescript
-import { scrapeUrl } from '@/backend/services/web-scraper';
+import { scrapeUrl } from '@/lib/services/web-scraper';
 
 const result = await scrapeUrl('https://example.com/job', {
   forcePuppeteer: true, // Always use Puppeteer
@@ -80,7 +80,7 @@ const result = await scrapeUrl('https://example.com/job', {
 ### Force Specific Scraper
 
 ```typescript
-import { scrapeUrl } from '@/backend/services';
+import { scrapeUrl } from '@/lib/services';
 
 // Force Cheerio only
 const cheerioResult = await scrapeUrl('https://example.com/job', {
@@ -106,7 +106,7 @@ const noPlaywrightResult = await scrapeUrl('https://example.com/job', {
 ### Scrape Multiple URLs
 
 ```typescript
-import { scrapeMultipleUrls } from '@/backend/services/web-scraper';
+import { scrapeMultipleUrls } from '@/lib/services/web-scraper';
 
 const urls = [
   'https://example.com/job1',
@@ -128,7 +128,7 @@ results.forEach((result, index) => {
 ### Cleanup Resources
 
 ```typescript
-import { cleanup } from '@/backend/services/web-scraper';
+import { cleanup } from '@/lib/services/web-scraper';
 
 // When done with all scraping
 await cleanup();
@@ -181,7 +181,7 @@ Clean up browser instances and resources.
 The scraper provides comprehensive error handling:
 
 ```typescript
-import { scrapeUrl, ScraperError } from '@/backend/services/web-scraper';
+import { scrapeUrl, ScraperError } from '@/lib/services/web-scraper';
 
 try {
   const result = await scrapeUrl('https://example.com/job');

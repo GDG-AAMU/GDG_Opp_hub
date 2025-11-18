@@ -6,6 +6,8 @@ import { processEmailQueue } from '@/lib/email/queue'
 // This route should be called by Vercel Cron or similar
 // Configure in vercel.json: { "cron": "0 18 * * *" } for 6 PM daily
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // Verify cron secret (optional but recommended)

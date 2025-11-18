@@ -4,6 +4,8 @@ import { Database } from "@/lib/supabase/types"
 
 type UserRole = Database["public"]["Tables"]["users"]["Row"]["role"]
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const supabase = createClient()
