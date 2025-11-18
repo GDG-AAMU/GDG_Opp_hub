@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { Button } from '@/components/ui/button'
@@ -42,15 +42,25 @@ export default function DashboardPage() {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Fetch opportunities using API hook - only when auth is ready
+  // Fetch opportunities using API hook - always poll every 5 seconds
+  // This ensures cards update when background processing completes
   const { opportunities, loading, error, refetch } = useOpportunities({
     types: selectedTypes,
     majors: selectedMajors,
     roles: selectedRoles,
     status: 'active',
     sort: selectedSort,
-    autoFetch: !authLoading  // Don't fetch until auth is ready
+    autoFetch: !authLoading,  // Don't fetch until auth is ready
+    refetchInterval: !authLoading ? 5000 : false  // Poll every 5 seconds to catch background updates
   })
+
+  // Check if any opportunities are still loading (show visual feedback)
+  const hasLoadingOpportunities = useMemo(() => {
+    return opportunities.some(opp =>
+      opp.job_title === 'Loading...' ||
+      opp.company_name === 'Loading...'
+    )
+  }, [opportunities])
 
   const handleSubmitOpportunity = () => {
     setIsModalOpen(true)
