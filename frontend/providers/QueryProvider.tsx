@@ -22,6 +22,8 @@ export function QueryProvider({ children }: QueryProviderProps) {
             refetchOnWindowFocus: false,
             // Don't refetch on mount if data is fresh
             refetchOnMount: false,
+            // Don't refetch on reconnect to prevent unnecessary API calls
+            refetchOnReconnect: false,
             // Retry failed requests 3 times
             retry: 3,
             // Exponential backoff for retries
