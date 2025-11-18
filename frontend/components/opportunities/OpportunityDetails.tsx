@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react"
 import EditOpportunityModal from "@/components/admin/EditOpportunityModal"
 import AddToCalendarButton from "./AddToCalendarButton"
 import SocialShareButton from "./SocialShareButton"
+import { CompanyLogo } from "@/components/ui/CompanyLogo"
 
 interface OpportunityDetailsProps {
   opportunity: Opportunity
@@ -112,6 +113,15 @@ export default function OpportunityDetails({
       <div className="bg-white rounded-lg shadow-md p-8 space-y-6">
         {/* Header Section */}
         <div>
+          {/* Company Logo */}
+          <div className="mb-4">
+            <CompanyLogo
+              companyName={currentOpportunity.company_name}
+              url={currentOpportunity.url}
+              size={80}
+            />
+          </div>
+
           {/* Top row with company name and action icons */}
           <div className="flex items-start justify-between gap-4 mb-2">
             <h1 className="text-4xl font-bold flex-1">{currentOpportunity.company_name}</h1>

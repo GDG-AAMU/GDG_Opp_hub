@@ -17,6 +17,18 @@ const nextConfig = {
         port: '',
         pathname: '/7.x/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.google.com',
+        port: '',
+        pathname: '/s2/favicons/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'icons.duckduckgo.com',
+        port: '',
+        pathname: '/ip3/**',
+      },
     ],
   },
   webpack: (config, { isServer }) => {

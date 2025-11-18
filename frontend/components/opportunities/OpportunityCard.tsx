@@ -1,9 +1,10 @@
 'use client'
 
 import { format } from 'date-fns'
-import { Calendar, MapPin, Briefcase, Building2, ArrowRight } from 'lucide-react'
+import { Calendar, MapPin, Briefcase, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { CompanyLogo } from '@/components/ui/CompanyLogo'
 import SaveAppliedButtons from './SaveAppliedButtons'
 import AddToCalendarButton from './AddToCalendarButton'
 import SocialShareButton from './SocialShareButton'
@@ -41,10 +42,13 @@ const typeLabels = {
 export default function OpportunityCard({ opportunity, onStatusChange }: Readonly<OpportunityCardProps>) {
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-200 p-6 border border-gray-200 hover:border-purple-300">
-      {/* Company Logo/Icon */}
-      <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg mb-4">
-        <Building2 className="w-8 h-8 text-purple-600" />
-      </div>
+      {/* Company Logo */}
+      <CompanyLogo
+        companyName={opportunity.company_name}
+        url={opportunity.url}
+        size={64}
+        className="mb-4"
+      />
 
       {/* Company Name */}
       <h3 className="text-lg font-semibold text-gray-900 mb-2">
