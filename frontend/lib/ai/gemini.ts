@@ -17,6 +17,8 @@ export interface ParsedJobData {
   requirements: string | null
   location: string | null
   description: string | null
+  offers_sponsorship: boolean | null // TRUE if offers visa sponsorship, FALSE if explicitly states no sponsorship
+  requires_us_citizenship: boolean | null // TRUE if requires US citizenship, FALSE if not required
 }
 
 /**
@@ -251,7 +253,9 @@ Extract the following fields and return as JSON:
   "deadline": "YYYY-MM-DD or null",
   "requirements": "string or null",
   "location": "string or null",
-  "description": "string or null"
+  "description": "string or null",
+  "offers_sponsorship": true|false|null,
+  "requires_us_citizenship": true|false|null
 }
 
 Instructions:
@@ -266,15 +270,28 @@ Instructions:
 4. role_type: Extract the role category (e.g., "Software Engineering", "Product Management", "Data Science", "Marketing", etc.) from job title or description
 5. relevant_majors: Extract list of relevant academic majors or fields of study. Look for mentions of degrees, majors, or fields
 6. deadline: Extract application deadline in YYYY-MM-DD format. Parse dates like "December 15, 2025" as "2025-12-15". Look for "deadline", "apply by", "closing date" keywords
-7. requirements: Extract ALL key requirements including education, experience, skills, qualifications. Combine all requirement sections into one comprehensive string. Include preferred qualifications if available.
+7. requirements: Extract ALL key requirements including education, experience, skills, qualifications. Format as a newline-separated list where EACH requirement is on its own line. Example format:
+   "First requirement here\nSecond requirement here\nThird requirement here"
+   - Each line should be a distinct requirement or qualification
+   - Separate different requirements with \\n (newline character)
+   - Do NOT combine multiple requirements into one long sentence
+   - Include preferred qualifications as separate lines if available
 8. location: Extract job location (city, state, country, or "Remote"). Look for location mentions, "based in", "located in", or remote indicators
 9. description: Extract a comprehensive job description. Include what the role involves, responsibilities, and what the company is looking for. If full description isn't available, create a brief summary based on available information.
+10. offers_sponsorship: Detect if visa/work sponsorship is offered
+   - Set to true if mentions: "visa sponsorship available", "will sponsor", "H1B sponsorship", "work authorization provided"
+   - Set to false if mentions: "no sponsorship", "must be authorized to work", "sponsorship not available", "must have work authorization"
+   - Set to null if no clear indication either way
+11. requires_us_citizenship: Detect if U.S. citizenship is required
+   - Set to true if mentions: "U.S. citizenship required", "must be a U.S. citizen", "citizenship required", "security clearance required"
+   - Set to false if mentions: "no citizenship required", "open to all", "international applicants welcome"
+   - Set to null if no clear indication either way
 
 Rules:
 - Return ONLY valid JSON, no markdown, no code blocks, no explanations
 - Be AGGRESSIVE in extracting information - look for any clues in the content
 - If information is partially available, extract what you can find
-- For requirements: Combine all requirement sections, qualifications, and preferred qualifications into one string
+- For requirements: Format as newline-separated list with \\n between each requirement. Each line = one requirement. DO NOT create one long paragraph.
 - For description: Provide a comprehensive description (3-5 sentences) if possible, or at least 2 sentences
 - Use null ONLY if absolutely no information can be found for a field
 - For dates, always use YYYY-MM-DD format

@@ -172,6 +172,8 @@ export async function POST(request: NextRequest) {
           requirements: parsedData.requirements,
           location: parsedData.location,
           description: parsedData.description,
+          offers_sponsorship: parsedData.offers_sponsorship,
+          requires_us_citizenship: parsedData.requires_us_citizenship,
           ai_parsed_data: parsedData,
         }
 

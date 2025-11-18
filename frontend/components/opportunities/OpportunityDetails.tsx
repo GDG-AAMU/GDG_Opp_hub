@@ -180,6 +180,22 @@ export default function OpportunityDetails({
             )}
           </div>
 
+          {/* Sponsorship & Citizenship Badges */}
+          {(currentOpportunity.offers_sponsorship === false || currentOpportunity.requires_us_citizenship === true) && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {currentOpportunity.offers_sponsorship === false && (
+                <span className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-red-50 text-red-700 border border-red-200">
+                  🛂 Does NOT offer sponsorship
+                </span>
+              )}
+              {currentOpportunity.requires_us_citizenship === true && (
+                <span className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-red-50 text-red-700 border border-red-200">
+                  🇺🇸 Requires U.S. Citizenship
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Key Information Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
             {currentOpportunity.location && (
@@ -234,9 +250,36 @@ export default function OpportunityDetails({
         {/* Requirements */}
         <div>
           <h2 className="text-xl font-semibold mb-2">Requirements/Qualifications</h2>
-          <p className="text-gray-700 whitespace-pre-wrap">{currentOpportunity.requirements || 'No requirements specified.'}</p>
-        </div>
+          {currentOpportunity.requirements ? (
+            <ul className="list-disc list-inside space-y-2 text-gray-700">
+              {(() => {
+                // Try splitting by newlines first
+                let items = currentOpportunity.requirements.split('\n').filter(line => line.trim())
 
+                // If we only get 1 item, try splitting by sentence-ending patterns
+                if (items.length === 1) {
+                  // Split by period followed by space and capital letter, or newline
+                  items = currentOpportunity.requirements
+                    .split(/\.(?=\s+[A-Z])/g)
+                    .map(item => item.trim())
+                    .filter(item => item.length > 0)
+                }
+
+                return items.map((requirement, index) => {
+                  // Clean up bullet markers and trailing periods
+                  let cleaned = requirement.trim().replace(/^[•\-\*]\s*/, '').replace(/\.$/, '')
+                  return (
+                    <li key={index} className="ml-2">
+                      {cleaned}
+                    </li>
+                  )
+                })
+              })()}
+            </ul>
+          ) : (
+            <p className="text-gray-700">No requirements specified.</p>
+          )}
+        </div>
         {/* Relevant Majors */}
         {relevantMajors && relevantMajors.length > 0 && (
           <div>

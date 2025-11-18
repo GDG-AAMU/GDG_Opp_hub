@@ -7,6 +7,8 @@ import { Filter } from 'lucide-react'
 import { MAJORS, ROLE_TYPES, type Major, type RoleType } from '@/lib/constants'
 
 type OpportunityType = 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
+type SponsorshipFilter = 'any' | 'offers' | 'no-offers'
+type CitizenshipFilter = 'any' | 'required' | 'not-required'
 
 interface FilterBarProps {
   readonly selectedTypes: OpportunityType[]
@@ -15,6 +17,10 @@ interface FilterBarProps {
   readonly onMajorChange: (majors: Major[]) => void
   readonly selectedRoles: RoleType[]
   readonly onRoleChange: (roles: RoleType[]) => void
+  readonly selectedSponsorship: SponsorshipFilter
+  readonly onSponsorshipChange: (sponsorship: SponsorshipFilter) => void
+  readonly selectedCitizenship: CitizenshipFilter
+  readonly onCitizenshipChange: (citizenship: CitizenshipFilter) => void
 }
 
 const filterOptions = [
@@ -29,9 +35,13 @@ export default function FilterBar({
   selectedTypes,
   selectedMajors,
   selectedRoles,
+  selectedSponsorship,
+  selectedCitizenship,
   onFilterChange,
   onMajorChange,
-  onRoleChange
+  onRoleChange,
+  onSponsorshipChange,
+  onCitizenshipChange
 }: Readonly<FilterBarProps>) {
   const handleToggleType = (type: OpportunityType) => {
     if (selectedTypes.includes(type)) {
@@ -61,6 +71,8 @@ export default function FilterBar({
     onFilterChange([])
     onMajorChange([])
     onRoleChange([])
+    onSponsorshipChange('any')
+    onCitizenshipChange('any')
   }
 
   const handleSelectAllTypes = () => {
@@ -76,7 +88,9 @@ export default function FilterBar({
   const someTypesSelected = selectedTypes.length > 0 && !allTypesSelected
   const hasMajorFilters = selectedMajors.length > 0
   const hasRoleFilters = selectedRoles.length > 0
-  const hasActiveFilters = selectedTypes.length > 0 || hasMajorFilters || hasRoleFilters
+  const hasSponsorshipFilter = selectedSponsorship !== 'any'
+  const hasCitizenshipFilter = selectedCitizenship !== 'any'
+  const hasActiveFilters = selectedTypes.length > 0 || hasMajorFilters || hasRoleFilters || hasSponsorshipFilter || hasCitizenshipFilter
 
   const getAllButtonLabel = () => {
     if (noTypesSelected || allTypesSelected) return 'All'
@@ -101,7 +115,8 @@ export default function FilterBar({
   const allButtonAriaLabel = getAllButtonAriaLabel()
 
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
-  const activeFilterCount = selectedTypes.length + selectedMajors.length + selectedRoles.length
+  const activeFilterCount = selectedTypes.length + selectedMajors.length + selectedRoles.length +
+    (hasSponsorshipFilter ? 1 : 0) + (hasCitizenshipFilter ? 1 : 0)
 
   // Render filter content (used in both mobile modal and desktop view)
   const renderFilterContent = () => (
@@ -224,6 +239,132 @@ export default function FilterBar({
               {role}
             </Button>
           ))}
+        </div>
+      </div>
+
+      <div className="border-t border-gray-100 my-1" />
+
+      <div className="flex flex-col gap-2.5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-700">
+            Visa Sponsorship {hasSponsorshipFilter && '(1)'}
+          </h3>
+          {hasSponsorshipFilter && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onSponsorshipChange('any')}
+              aria-label="Clear sponsorship filter"
+              className="text-gray-600 hover:text-purple-600"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={selectedSponsorship === 'any' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onSponsorshipChange('any')}
+            aria-pressed={selectedSponsorship === 'any'}
+            aria-label="Show all opportunities regardless of sponsorship"
+            className={`
+              transition-all duration-200
+              ${selectedSponsorship === 'any' ? 'shadow-md' : 'hover:border-purple-300'}
+            `}
+          >
+            Any
+          </Button>
+          <Button
+            variant={selectedSponsorship === 'offers' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onSponsorshipChange('offers')}
+            aria-pressed={selectedSponsorship === 'offers'}
+            aria-label="Show only opportunities that offer sponsorship"
+            className={`
+              transition-all duration-200
+              ${selectedSponsorship === 'offers' ? 'shadow-md' : 'hover:border-purple-300'}
+            `}
+          >
+            Offers Sponsorship
+          </Button>
+          <Button
+            variant={selectedSponsorship === 'no-offers' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onSponsorshipChange('no-offers')}
+            aria-pressed={selectedSponsorship === 'no-offers'}
+            aria-label="Show only opportunities that do not offer sponsorship"
+            className={`
+              transition-all duration-200
+              ${selectedSponsorship === 'no-offers' ? 'shadow-md bg-red-50 text-red-700 hover:bg-red-100' : 'hover:border-purple-300'}
+            `}
+          >
+            🛂 Does NOT Offer
+          </Button>
+        </div>
+      </div>
+
+      <div className="border-t border-gray-100 my-1" />
+
+      <div className="flex flex-col gap-2.5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-700">
+            U.S. Citizenship {hasCitizenshipFilter && '(1)'}
+          </h3>
+          {hasCitizenshipFilter && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCitizenshipChange('any')}
+              aria-label="Clear citizenship filter"
+              className="text-gray-600 hover:text-purple-600"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={selectedCitizenship === 'any' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onCitizenshipChange('any')}
+            aria-pressed={selectedCitizenship === 'any'}
+            aria-label="Show all opportunities regardless of citizenship requirement"
+            className={`
+              transition-all duration-200
+              ${selectedCitizenship === 'any' ? 'shadow-md' : 'hover:border-purple-300'}
+            `}
+          >
+            Any
+          </Button>
+          <Button
+            variant={selectedCitizenship === 'required' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onCitizenshipChange('required')}
+            aria-pressed={selectedCitizenship === 'required'}
+            aria-label="Show only opportunities that require US citizenship"
+            className={`
+              transition-all duration-200
+              ${selectedCitizenship === 'required' ? 'shadow-md bg-red-50 text-red-700 hover:bg-red-100' : 'hover:border-purple-300'}
+            `}
+          >
+            🇺🇸 Required
+          </Button>
+          <Button
+            variant={selectedCitizenship === 'not-required' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onCitizenshipChange('not-required')}
+            aria-pressed={selectedCitizenship === 'not-required'}
+            aria-label="Show only opportunities that do not require US citizenship"
+            className={`
+              transition-all duration-200
+              ${selectedCitizenship === 'not-required' ? 'shadow-md' : 'hover:border-purple-300'}
+            `}
+          >
+            Not Required
+          </Button>
         </div>
       </div>
 
