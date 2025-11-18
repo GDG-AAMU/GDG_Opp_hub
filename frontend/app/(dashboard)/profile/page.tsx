@@ -12,6 +12,9 @@ import { Briefcase, Calendar, GraduationCap, Mail, Settings, User as UserIcon, C
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 
+// Prevent static generation - this page requires authentication
+export const dynamic = 'force-dynamic'
+
 export default function ProfilePage() {
   const { user } = useAuth()
   const supabase = createClient()

@@ -14,6 +14,9 @@ import toast from 'react-hot-toast'
 
 type UserRow = Database["public"]["Tables"]["users"]["Row"]
 
+// Prevent static generation - this page requires authentication
+export const dynamic = 'force-dynamic'
+
 export default function SettingsPage() {
   const { user } = useAuth()
   const router = useRouter()
