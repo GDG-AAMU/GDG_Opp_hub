@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import toast from "react-hot-toast"
 import { Loader2, Plus } from "lucide-react"
+import { useUpdateOpportunity } from "@/hooks/useOpportunityMutations"
 import {
   Dialog,
   DialogContent,
@@ -120,6 +120,7 @@ export default function EditOpportunityModal({
   onSuccess,
 }: EditOpportunityModalProps) {
   const [majorInput, setMajorInput] = useState("")
+  const updateOpportunity = useUpdateOpportunity()
 
   const {
     register,
@@ -128,7 +129,7 @@ export default function EditOpportunityModal({
     setValue,
     watch,
     handleSubmit,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isValid },
   } = useForm<EditOpportunityFormData>({
     resolver: zodResolver(editOpportunitySchema),
     mode: "onChange",
@@ -136,6 +137,7 @@ export default function EditOpportunityModal({
   })
 
   const watchedMajors = watch("relevant_majors")
+  const isSubmitting = updateOpportunity.isPending
 
   useEffect(() => {
     reset(getDefaultValues(opportunity))
@@ -167,29 +169,17 @@ export default function EditOpportunityModal({
     if (!opportunity) return
 
     try {
-      const response = await fetch(`/api/opportunities/${opportunity.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      // Use optimistic update mutation
+      const updated = await updateOpportunity.mutateAsync({
+        id: opportunity.id,
+        data,
       })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(
-          errorData?.error || "Failed to update this opportunity"
-        )
-      }
-
-      const updated = (await response.json()) as Opportunity
-      toast.success("Opportunity updated successfully")
       onSuccess?.(updated)
       onOpenChange(false)
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to update opportunity"
-      toast.error(message)
+      // Error handling is done in the mutation hook
+      console.error("Update failed:", error)
     }
   }
 
