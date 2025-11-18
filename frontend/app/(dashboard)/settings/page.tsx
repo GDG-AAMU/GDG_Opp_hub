@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { useAuth } from '@/hooks/useAuth'
+import { useUserProfile } from '@/hooks/useUserProfile'
 import { createClient } from '@/lib/supabase/client'
-import { User } from '@/types'
 import { Database } from '@/lib/supabase/types'
 import { Button } from '@/components/ui/button'
 import { User as UserIcon, MapPin, Shield, Lock, Calendar, Mail, GraduationCap, Globe, MapPinned, ArrowLeft, Bell, Briefcase, Moon, Sun, Monitor } from 'lucide-react'
@@ -14,13 +14,15 @@ import toast from 'react-hot-toast'
 
 type UserRow = Database["public"]["Tables"]["users"]["Row"]
 
+// Prevent static generation - this page requires authentication
+export const dynamic = 'force-dynamic'
+
 export default function SettingsPage() {
   const { user } = useAuth()
   const router = useRouter()
   const { theme, setTheme, resolvedTheme } = useTheme()
-  const [loading, setLoading] = useState(true)
+  const { profile: profileData, loading, invalidateCache } = useUserProfile()
   const [saving, setSaving] = useState(false)
-  const [profileData, setProfileData] = useState<User | null>(null)
   const [activeSection, setActiveSection] = useState<'basic' | 'location' | 'notifications' | 'appearance' | 'account'>('basic')
 
   // Form states
@@ -44,70 +46,28 @@ export default function SettingsPage() {
   const [notificationSaving, setNotificationSaving] = useState(false)
   const [notificationChanges, setNotificationChanges] = useState(false)
 
+  // Initialize form fields when profile data loads
   useEffect(() => {
-    const abortController = new AbortController()
-    let isMounted = true
+    if (!profileData) return
 
-    async function fetchProfileData() {
-      if (!user?.id) return
-
-      try {
-        setLoading(true)
-        const supabase = createClient()
-
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single<UserRow>()
-
-        if (userError) throw userError
-
-        if (!isMounted) return
-
-        if (userData) {
-          setProfileData(userData)
-          setName(userData.name || '')
-          setEmail(userData.email || '')
-          setMajor(userData.major || '')
-          setGender((userData.gender || '') as 'male' | 'female' | 'other' | '')
-          setBirthday(userData.birthday || '')
-          setCountry(userData.country || '')
-          setRegion(userData.region || '')
-          setState(userData.state || '')
-          
-          // Load notification preferences
-          setEmailNotificationsEnabled(userData.email_notifications_enabled ?? true)
-          setDailyDigestEnabled(userData.daily_digest_enabled ?? true)
-          setDeadlineRemindersEnabled(userData.deadline_reminders_enabled ?? true)
-          if (userData.daily_digest_time) {
-            const time = userData.daily_digest_time.substring(0, 5) // Extract HH:MM from HH:MM:SS
-            setDailyDigestTime(time)
-          }
-        }
-      } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return
-
-        if (!isMounted) return
-
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Error fetching profile data:', err)
-        }
-        toast.error('Failed to load profile data')
-      } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
-      }
+    setName(profileData.name || '')
+    setEmail(profileData.email || '')
+    setMajor(profileData.major || '')
+    setGender((profileData.gender || '') as 'male' | 'female' | 'other' | '')
+    setBirthday(profileData.birthday || '')
+    setCountry(profileData.country || '')
+    setRegion(profileData.region || '')
+    setState(profileData.state || '')
+    
+    // Load notification preferences
+    setEmailNotificationsEnabled(profileData.email_notifications_enabled ?? true)
+    setDailyDigestEnabled(profileData.daily_digest_enabled ?? true)
+    setDeadlineRemindersEnabled(profileData.deadline_reminders_enabled ?? true)
+    if (profileData.daily_digest_time) {
+      const time = profileData.daily_digest_time.substring(0, 5) // Extract HH:MM from HH:MM:SS
+      setDailyDigestTime(time)
     }
-
-    fetchProfileData()
-
-    return () => {
-      isMounted = false
-      abortController.abort()
-    }
-  }, [user?.id])
+  }, [profileData])
 
   // Track changes
   useEffect(() => {
@@ -154,7 +114,8 @@ export default function SettingsPage() {
 
       if (error) throw error
 
-      setProfileData(prev => prev ? { ...prev, ...updates } : null)
+      // Invalidate cache to refetch updated profile
+      invalidateCache()
       setHasChanges(false)
       toast.success('Settings saved successfully!')
     } catch (err) {
@@ -221,16 +182,8 @@ export default function SettingsPage() {
         throw new Error(data.error || 'Failed to save preferences')
       }
 
-      // Update local state
-      if (profileData) {
-        setProfileData({
-          ...profileData,
-          email_notifications_enabled: emailNotificationsEnabled,
-          daily_digest_enabled: dailyDigestEnabled,
-          deadline_reminders_enabled: deadlineRemindersEnabled,
-          daily_digest_time: `${dailyDigestTime}:00`,
-        })
-      }
+      // Invalidate cache to refetch updated profile
+      invalidateCache()
 
       setNotificationChanges(false)
       toast.success('Notification preferences saved!')

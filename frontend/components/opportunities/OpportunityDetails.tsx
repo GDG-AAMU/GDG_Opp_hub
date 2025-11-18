@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react"
 import EditOpportunityModal from "@/components/admin/EditOpportunityModal"
 import AddToCalendarButton from "./AddToCalendarButton"
 import SocialShareButton from "./SocialShareButton"
+import { CompanyLogo } from "@/components/ui/CompanyLogo"
 
 interface OpportunityDetailsProps {
   opportunity: Opportunity
@@ -119,6 +120,15 @@ export default function OpportunityDetails({
         <div className="bg-card rounded-lg shadow-md p-8 space-y-6 border border-border m-1">
         {/* Header Section */}
         <div>
+          {/* Company Logo */}
+          <div className="mb-4">
+            <CompanyLogo
+              companyName={currentOpportunity.company_name}
+              url={currentOpportunity.url}
+              size={80}
+            />
+          </div>
+
           {/* Top row with company name and action icons */}
           <div className="flex items-start justify-between gap-4 mb-2">
             <h1 className="text-4xl font-bold flex-1 text-foreground">{currentOpportunity.company_name}</h1>
@@ -177,6 +187,22 @@ export default function OpportunityDetails({
             )}
           </div>
 
+          {/* Sponsorship & Citizenship Badges */}
+          {(currentOpportunity.offers_sponsorship === false || currentOpportunity.requires_us_citizenship === true) && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {currentOpportunity.offers_sponsorship === false && (
+                <span className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                  🛂 Does NOT offer sponsorship
+                </span>
+              )}
+              {currentOpportunity.requires_us_citizenship === true && (
+                <span className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                  🇺🇸 Requires U.S. Citizenship
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Key Information Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg border border-border">
             {currentOpportunity.location && (
@@ -231,9 +257,36 @@ export default function OpportunityDetails({
         {/* Requirements */}
         <div>
           <h2 className="text-xl font-semibold mb-2 text-foreground">Requirements/Qualifications</h2>
-          <p className="text-foreground whitespace-pre-wrap">{currentOpportunity.requirements || 'No requirements specified.'}</p>
-        </div>
+          {currentOpportunity.requirements ? (
+            <ul className="list-disc list-inside space-y-2 text-foreground">
+              {(() => {
+                // Try splitting by newlines first
+                let items = currentOpportunity.requirements.split('\n').filter(line => line.trim())
 
+                // If we only get 1 item, try splitting by sentence-ending patterns
+                if (items.length === 1) {
+                  // Split by period followed by space and capital letter, or newline
+                  items = currentOpportunity.requirements
+                    .split(/\.(?=\s+[A-Z])/g)
+                    .map(item => item.trim())
+                    .filter(item => item.length > 0)
+                }
+
+                return items.map((requirement, index) => {
+                  // Clean up bullet markers and trailing periods
+                  let cleaned = requirement.trim().replace(/^[•\-\*]\s*/, '').replace(/\.$/, '')
+                  return (
+                    <li key={index} className="ml-2">
+                      {cleaned}
+                    </li>
+                  )
+                })
+              })()}
+            </ul>
+          ) : (
+            <p className="text-foreground">No requirements specified.</p>
+          )}
+        </div>
         {/* Relevant Majors */}
         {relevantMajors && relevantMajors.length > 0 && (
           <div>

@@ -17,6 +17,8 @@ export interface ParsedJobData {
   requirements: string | null
   location: string | null
   description: string | null
+  offers_sponsorship: boolean // TRUE if offers visa sponsorship (default), FALSE if explicitly states no sponsorship
+  requires_us_citizenship: boolean // TRUE if requires US citizenship, FALSE if not required (default)
 }
 
 /**
@@ -251,7 +253,9 @@ Extract the following fields and return as JSON:
   "deadline": "YYYY-MM-DD or null",
   "requirements": "string or null",
   "location": "string or null",
-  "description": "string or null"
+  "description": "string or null",
+  "offers_sponsorship": true|false|null,
+  "requires_us_citizenship": true|false|null
 }
 
 Instructions:
@@ -266,20 +270,127 @@ Instructions:
 4. role_type: Extract the role category (e.g., "Software Engineering", "Product Management", "Data Science", "Marketing", etc.) from job title or description
 5. relevant_majors: Extract list of relevant academic majors or fields of study. Look for mentions of degrees, majors, or fields
 6. deadline: Extract application deadline in YYYY-MM-DD format. Parse dates like "December 15, 2025" as "2025-12-15". Look for "deadline", "apply by", "closing date" keywords
-7. requirements: Extract ALL key requirements including education, experience, skills, qualifications. Combine all requirement sections into one comprehensive string. Include preferred qualifications if available.
+7. requirements: Extract ALL key requirements including education, experience, skills, qualifications. Format as a newline-separated list where EACH requirement is on its own line. Example format:
+   "First requirement here\nSecond requirement here\nThird requirement here"
+   - Each line should be a distinct requirement or qualification
+   - Separate different requirements with \\n (newline character)
+   - Do NOT combine multiple requirements into one long sentence
+   - Include preferred qualifications as separate lines if available
 8. location: Extract job location (city, state, country, or "Remote"). Look for location mentions, "based in", "located in", or remote indicators
 9. description: Extract a comprehensive job description. Include what the role involves, responsibilities, and what the company is looking for. If full description isn't available, create a brief summary based on available information.
+10. offers_sponsorship: CAREFULLY detect if visa/work sponsorship is offered or NOT offered
+
+   Set to TRUE (offers sponsorship) if you find ANY of these phrases:
+   * "visa sponsorship available", "visa sponsorship provided", "visa sponsorship offered"
+   * "will sponsor", "we sponsor", "can sponsor", "may sponsor", "sponsorship offered"
+   * "H1B sponsorship", "H-1B sponsorship", "OPT sponsorship", "CPT sponsorship"
+   * "work authorization provided", "will provide work authorization"
+   * "sponsorship for work authorization", "immigration sponsorship"
+   * "sponsor eligible candidates", "sponsorship may be available"
+
+   Set to FALSE (does NOT offer sponsorship) if you find ANY of these phrases:
+   * "no sponsorship", "sponsorship not available", "sponsorship not provided", "sponsorship not offered"
+   * "cannot sponsor", "does not sponsor", "will not sponsor", "unable to sponsor", "not able to sponsor"
+   * "must be authorized to work", "must have authorization to work", "must possess authorization to work"
+   * "must have work authorization", "work authorization required", "current work authorization required"
+   * "must be legally authorized to work", "legally authorized to work", "currently authorized to work"
+   * "must be eligible to work without sponsorship", "eligible to work without company sponsorship"
+   * "must possess work authorization that does not require sponsorship"
+   * "authorized to work without sponsorship", "no visa sponsorship", "without need for sponsorship"
+   * "must be able to work without sponsorship", "able to work legally without sponsorship"
+   * "employment eligibility verification required", "I-9 employment eligibility" (when combined with work auth language)
+   * "permanently authorized to work", "permanent work authorization required"
+   * "US work authorization required", "valid US work authorization"
+
+   IMPORTANT NOTES:
+   * "Equal Opportunity Employer", "EEO", "EOE", "AA/EEO" statements do NOT indicate anything about sponsorship - ignore these completely
+   * If BOTH positive and negative indicators exist, the negative (no sponsorship) takes precedence
+   * DEFAULT BEHAVIOR: If no clear negative indicators are found, default to TRUE (assume sponsorship is available unless explicitly stated otherwise)
+   * Only set to FALSE if you find explicit evidence that sponsorship is NOT offered
+
+11. requires_us_citizenship: CAREFULLY detect if U.S. citizenship is required or NOT required
+
+   Set to TRUE (citizenship IS required) if you find ANY of these phrases:
+   * "U.S. citizenship required", "US citizenship required", "United States citizenship required"
+   * "must be a U.S. citizen", "must be a US citizen", "must be US citizen", "U.S. citizens only"
+   * "citizenship required", "US citizen only", "only US citizens", "restricted to US citizens"
+   * "security clearance required", "clearance required", "active security clearance", "must have clearance"
+   * "secret clearance", "top secret clearance", "TS/SCI", "TS clearance", "SCI clearance"
+   * "federal government", "DOD", "Department of Defense", "DoD contractor", "government clearance"
+   * "must be a US national", "U.S. national", "US Person", "must be US Person"
+   * "ability to obtain security clearance", "eligible for security clearance" (implies citizenship)
+   * "ITAR", "International Traffic in Arms Regulations" (often requires US citizenship)
+   * "Export Control", "export compliance" (when combined with citizenship language)
+   * "must be a citizen of the United States"
+
+   Set to FALSE (citizenship NOT required) if you find ANY of these phrases:
+   * "no citizenship required", "citizenship not required", "US citizenship not required"
+   * "open to all", "international applicants welcome", "international students welcome", "international candidates welcome"
+   * "non-citizens may apply", "non-US citizens may apply", "citizenship not necessary"
+   * "visa sponsorship available", "will sponsor", "H1B sponsorship" (strongly implies non-citizens can apply)
+   * "Green Card holders welcome", "permanent residents eligible", "lawful permanent residents"
+   * "all qualified applicants", "regardless of citizenship status"
+
+   IMPORTANT NOTES:
+   * "Equal Opportunity Employer", "EEO", "EOE", "AA/EEO" statements do NOT mean citizenship is required - ignore these completely
+   * Security clearance almost always requires US citizenship - this is a strong indicator
+   * DOD, federal government positions usually require citizenship unless explicitly stated otherwise
+   * If BOTH positive and negative indicators exist, the positive (requires citizenship) takes precedence
+   * DEFAULT BEHAVIOR: If no clear positive indicators are found, default to FALSE (assume citizenship is NOT required unless explicitly stated)
+   * Only set to TRUE if you find explicit evidence that citizenship IS required
 
 Rules:
 - Return ONLY valid JSON, no markdown, no code blocks, no explanations
 - Be AGGRESSIVE in extracting information - look for any clues in the content
 - If information is partially available, extract what you can find
-- For requirements: Combine all requirement sections, qualifications, and preferred qualifications into one string
+- For requirements: Format as newline-separated list with \\n between each requirement. Each line = one requirement. DO NOT create one long paragraph.
 - For description: Provide a comprehensive description (3-5 sentences) if possible, or at least 2 sentences
 - Use null ONLY if absolutely no information can be found for a field
 - For dates, always use YYYY-MM-DD format
 - For relevant_majors, return an array even if only one major is found
 - Be thorough and extract as much information as possible
+
+EXAMPLES FOR SPONSORSHIP & CITIZENSHIP DETECTION:
+
+Example 1 - NO SPONSORSHIP:
+Text: "Applicants must be currently authorized to work in the United States on a full-time basis."
+Result: offers_sponsorship: false, requires_us_citizenship: null
+
+Example 2 - OFFERS SPONSORSHIP:
+Text: "We provide H1B visa sponsorship for qualified candidates."
+Result: offers_sponsorship: true, requires_us_citizenship: false
+
+Example 3 - REQUIRES CITIZENSHIP (Security Clearance):
+Text: "This position requires the ability to obtain a Secret security clearance."
+Result: offers_sponsorship: false, requires_us_citizenship: true
+
+Example 4 - REQUIRES CITIZENSHIP (DOD):
+Text: "This is a Department of Defense contractor position."
+Result: offers_sponsorship: false, requires_us_citizenship: true
+
+Example 5 - NO SPONSORSHIP (Explicit):
+Text: "We are unable to provide visa sponsorship at this time."
+Result: offers_sponsorship: false, requires_us_citizenship: null
+
+Example 6 - INTERNATIONAL WELCOME:
+Text: "We welcome applications from international students. Visa sponsorship is available."
+Result: offers_sponsorship: true, requires_us_citizenship: false
+
+Example 7 - CITIZENSHIP REQUIRED (Explicit):
+Text: "U.S. citizenship is required for this role."
+Result: offers_sponsorship: false, requires_us_citizenship: true
+
+Example 8 - AMBIGUOUS (EEO Statement - Use Defaults):
+Text: "We are an Equal Opportunity Employer committed to diversity."
+Result: offers_sponsorship: true, requires_us_citizenship: false
+
+Example 9 - NO SPONSORSHIP (Work Authorization):
+Text: "Candidates must possess work authorization that does not require sponsorship by the employer."
+Result: offers_sponsorship: false, requires_us_citizenship: false
+
+Example 10 - GREEN CARD HOLDERS OK:
+Text: "Open to U.S. citizens and Green Card holders only."
+Result: offers_sponsorship: false, requires_us_citizenship: false
 
 Return the JSON now:`
 }
@@ -314,6 +425,10 @@ function parseAndValidateResponse(text: string): ParsedJobData {
       requirements: normalizeString(parsed.requirements),
       location: normalizeString(parsed.location),
       description: normalizeString(parsed.description),
+      // Default: offers_sponsorship = true (unless explicitly stated no sponsorship)
+      offers_sponsorship: normalizeBoolean(parsed.offers_sponsorship, true),
+      // Default: requires_us_citizenship = false (unless explicitly stated citizenship required)
+      requires_us_citizenship: normalizeBoolean(parsed.requires_us_citizenship, false),
     }
 
     return validated
@@ -395,6 +510,25 @@ function normalizeDate(value: any): string | null {
   }
   
   return null
+}
+
+/**
+ * Normalize boolean fields with smart defaults
+ * @param value - The value to normalize
+ * @param defaultValue - Default value if null/undefined (true or false)
+ */
+function normalizeBoolean(value: any, defaultValue: boolean = false): boolean {
+  if (value === null || value === undefined) return defaultValue
+  if (typeof value === 'boolean') return value
+
+  // Handle string representations
+  if (typeof value === 'string') {
+    const lower = value.toLowerCase().trim()
+    if (lower === 'true') return true
+    if (lower === 'false') return false
+  }
+
+  return defaultValue
 }
 
 /**

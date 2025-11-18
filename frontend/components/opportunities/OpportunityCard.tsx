@@ -1,8 +1,9 @@
 'use client'
 
 import { format } from 'date-fns'
-import { Calendar, MapPin, Briefcase, Building2 } from 'lucide-react'
+import { Calendar, MapPin, Briefcase } from 'lucide-react'
 import Link from 'next/link'
+import { CompanyLogo } from '@/components/ui/CompanyLogo'
 import SaveAppliedButtons from './SaveAppliedButtons'
 import AddToCalendarButton from './AddToCalendarButton'
 import SocialShareButton from './SocialShareButton'
@@ -16,6 +17,8 @@ interface OpportunityCardProps {
     opportunity_type: 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
     location: string | null
     deadline: string | null
+    offers_sponsorship: boolean
+    requires_us_citizenship: boolean
     userStatus?: 'saved' | 'applied' | null
   }
   onStatusChange?: (status: 'saved' | 'applied' | null) => void
@@ -51,10 +54,13 @@ export default function OpportunityCard({ opportunity, onStatusChange }: Readonl
       }}
     >
       <div className="bg-card rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-border hover:border-purple-500 dark:hover:border-purple-400 hover:-translate-y-1 cursor-pointer h-full flex flex-col">
-        {/* Company Logo/Icon */}
-        <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 dark:from-purple-900/30 to-blue-100 dark:to-blue-900/30 rounded-lg mb-4">
-          <Building2 className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-        </div>
+        {/* Company Logo */}
+        <CompanyLogo
+          companyName={opportunity.company_name}
+          url={opportunity.url}
+          size={64}
+          className="mb-4"
+        />
 
         {/* Company Name */}
         <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
@@ -65,6 +71,22 @@ export default function OpportunityCard({ opportunity, onStatusChange }: Readonl
         <h4 className="text-md text-muted-foreground mb-3">
           {opportunity.job_title}
         </h4>
+
+        {/* Sponsorship & Citizenship Badges */}
+        {(opportunity.offers_sponsorship === false || opportunity.requires_us_citizenship === true) && (
+          <div className="flex flex-wrap gap-2 mb-3" onClick={(e) => e.stopPropagation()}>
+            {opportunity.offers_sponsorship === false && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                🛂 Does NOT offer sponsorship
+              </span>
+            )}
+            {opportunity.requires_us_citizenship === true && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                🇺🇸 Requires U.S. Citizenship
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Type Badge */}
         <div className="flex items-center mb-2">

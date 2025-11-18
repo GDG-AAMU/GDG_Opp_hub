@@ -1,18 +1,22 @@
 "use client"
 
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { Opportunity } from "@/types"
 import type { Major, RoleType } from "@/lib/constants"
 
 type OpportunityType = 'internship' | 'full_time' | 'research' | 'fellowship' | 'scholarship'
 type OpportunityStatus = 'active' | 'expired'
 type SortOption = 'deadline-asc' | 'deadline-desc' | 'recent' | 'company-asc'
+type SponsorshipFilter = 'any' | 'offers' | 'no-offers'
+type CitizenshipFilter = 'any' | 'required' | 'not-required'
 
 interface UseOpportunitiesOptions {
   types?: OpportunityType[]
   majors?: Major[]
   roles?: RoleType[]
+  sponsorship?: SponsorshipFilter
+  citizenship?: CitizenshipFilter
   status?: OpportunityStatus
   sort?: SortOption
   limit?: number
@@ -50,6 +54,8 @@ function getQueryKey(options: UseOpportunitiesOptions, offset: number = 0) {
     types = [],
     majors = [],
     roles = [],
+    sponsorship = 'any',
+    citizenship = 'any',
     status = 'active',
     sort = 'deadline-asc',
     limit = 20,
@@ -62,6 +68,8 @@ function getQueryKey(options: UseOpportunitiesOptions, offset: number = 0) {
       types: types.sort(),
       majors: majors.sort(),
       roles: roles.sort(),
+      sponsorship,
+      citizenship,
       status,
       sort,
       limit,
@@ -80,6 +88,8 @@ async function fetchOpportunities(
     types = [],
     majors = [],
     roles = [],
+    sponsorship = 'any',
+    citizenship = 'any',
     status = 'active',
     sort = 'deadline-asc',
     limit = 20,
@@ -96,6 +106,12 @@ async function fetchOpportunities(
   }
   if (roles.length > 0) {
     params.append('roles', roles.join(','))
+  }
+  if (sponsorship !== 'any') {
+    params.append('sponsorship', sponsorship)
+  }
+  if (citizenship !== 'any') {
+    params.append('citizenship', citizenship)
   }
   if (status) {
     params.append('status', status)
@@ -139,6 +155,26 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
   const [currentOffset, setCurrentOffset] = useState(offset)
   const [accumulatedData, setAccumulatedData] = useState<Opportunity[]>([])
 
+  // Memoize query key to prevent unnecessary re-renders
+  const queryKey = useMemo(() => getQueryKey(options, currentOffset), [
+    options.types,
+    options.majors,
+    options.roles,
+    options.sponsorship,
+    options.citizenship,
+    options.status,
+    options.sort,
+    options.limit,
+    options.search,
+    currentOffset,
+  ])
+
+  // Memoize query function to prevent unnecessary re-renders
+  const queryFn = useMemo(() => () => fetchOpportunities(options, currentOffset), [
+    options,
+    currentOffset,
+  ])
+
   // Use React Query for data fetching
   const {
     data,
@@ -146,8 +182,8 @@ export function useOpportunities(options: UseOpportunitiesOptions = {}): UseOppo
     error: queryError,
     refetch: queryRefetch,
   } = useQuery({
-    queryKey: getQueryKey(options, currentOffset),
-    queryFn: () => fetchOpportunities(options, currentOffset),
+    queryKey,
+    queryFn,
     enabled: autoFetch,
     refetchInterval: (query) => {
       // If refetchInterval is explicitly false, don't poll
