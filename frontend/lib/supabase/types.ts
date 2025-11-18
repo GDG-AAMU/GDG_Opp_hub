@@ -25,8 +25,10 @@ export type Database = {
           id: string
           job_title: string
           location: string | null
+          offers_sponsorship: boolean | null
           opportunity_type: Database["public"]["Enums"]["opportunity_type"]
           relevant_majors: Json | null
+          requires_us_citizenship: boolean | null
           requirements: string | null
           role_type: string | null
           status: Database["public"]["Enums"]["opportunity_status"]
@@ -43,8 +45,10 @@ export type Database = {
           id?: string
           job_title: string
           location?: string | null
+          offers_sponsorship?: boolean | null
           opportunity_type: Database["public"]["Enums"]["opportunity_type"]
           relevant_majors?: Json | null
+          requires_us_citizenship?: boolean | null
           requirements?: string | null
           role_type?: string | null
           status?: Database["public"]["Enums"]["opportunity_status"]
@@ -61,8 +65,10 @@ export type Database = {
           id?: string
           job_title?: string
           location?: string | null
+          offers_sponsorship?: boolean | null
           opportunity_type?: Database["public"]["Enums"]["opportunity_type"]
           relevant_majors?: Json | null
+          requires_us_citizenship?: boolean | null
           requirements?: string | null
           role_type?: string | null
           status?: Database["public"]["Enums"]["opportunity_status"]
