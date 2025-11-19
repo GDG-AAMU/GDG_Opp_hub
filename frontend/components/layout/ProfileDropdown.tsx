@@ -2,7 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
+import { createClient } from '@/lib/supabase/client'
 import { User, Settings, LogOut, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -11,9 +13,46 @@ export default function ProfileDropdown() {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [focusedIndex, setFocusedIndex] = useState(-1)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const menuItemsRef = useRef<(HTMLButtonElement | null)[]>([])
+
+  // Fetch avatar URL
+  useEffect(() => {
+    if (!user) {
+      setAvatarUrl(null)
+      return
+    }
+
+    let isMounted = true
+
+    const fetchAvatar = async () => {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('users')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .single()
+
+        if (!error && data && isMounted) {
+          setAvatarUrl(data.avatar_url)
+        }
+      } catch (err) {
+        // Silently fail - avatar is optional
+        if (isMounted) {
+          setAvatarUrl(null)
+        }
+      }
+    }
+
+    fetchAvatar()
+
+    return () => {
+      isMounted = false
+    }
+  }, [user])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -133,9 +172,21 @@ export default function ProfileDropdown() {
         aria-haspopup="menu"
         aria-label="User menu"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 dark:from-purple-500 dark:to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-          {getInitials()}
-        </div>
+        {avatarUrl ? (
+          <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-purple-200 dark:border-purple-800">
+            <Image
+              src={avatarUrl}
+              alt="Profile"
+              width={32}
+              height={32}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 dark:from-purple-500 dark:to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+            {getInitials()}
+          </div>
+        )}
         <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
