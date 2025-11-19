@@ -60,7 +60,21 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(data)
+    // Get user's status for this opportunity
+    const { data: userOpportunity } = await supabase
+      .from('user_opportunities')
+      .select('status')
+      .eq('user_id', user.id)
+      .eq('opportunity_id', params.id)
+      .single()
+
+    // Add userStatus to the response
+    const opportunityWithStatus = {
+      ...data,
+      userStatus: userOpportunity?.status || null
+    }
+
+    return NextResponse.json(opportunityWithStatus)
   } catch (error) {
     console.error('API error:', error)
     return NextResponse.json(
