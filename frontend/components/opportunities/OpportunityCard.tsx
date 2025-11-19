@@ -3,6 +3,7 @@
 import { format } from 'date-fns'
 import { Calendar, MapPin, Briefcase, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { CompanyLogo } from '@/components/ui/CompanyLogo'
 import SaveAppliedButtons from './SaveAppliedButtons'
@@ -42,19 +43,28 @@ const typeLabels = {
 }
 
 export default function OpportunityCard({ opportunity, onStatusChange }: Readonly<OpportunityCardProps>) {
+  const router = useRouter()
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Only navigate if clicking on the card content, not on buttons
+    const target = e.target as HTMLElement
+    // Don't navigate if clicking on buttons, links, or elements marked with data-no-navigate
+    if (
+      target.closest('button') || 
+      target.closest('a') || 
+      target.closest('[data-no-navigate]')
+    ) {
+      return
+    }
+    router.push(`/opportunities/${opportunity.id}`)
+  }
+
   return (
-    <Link 
-      href={`/opportunities/${opportunity.id}`}
-      className="block group"
-      onClick={(e) => {
-        // Don't navigate if clicking on action buttons
-        const target = e.target as HTMLElement
-        if (target.closest('button') || target.closest('a[href^="http"]')) {
-          e.preventDefault()
-        }
-      }}
+    <div 
+      className="block group cursor-pointer"
+      onClick={handleCardClick}
     >
-      <div className="bg-card rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-border hover:border-purple-500 dark:hover:border-purple-400 hover:-translate-y-1 cursor-pointer h-full flex flex-col">
+      <div className="bg-card rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-border hover:border-purple-500 dark:hover:border-purple-400 hover:-translate-y-1 h-full flex flex-col">
         {/* Company Logo */}
         <CompanyLogo
           companyName={opportunity.company_name}
@@ -121,7 +131,11 @@ export default function OpportunityCard({ opportunity, onStatusChange }: Readonl
 
         {/* Action Buttons Row - Save, Apply, Calendar, Share */}
         {/* Use grid on mobile for equal columns, flex on desktop */}
-        <div className="grid grid-cols-4 gap-2 mb-3 md:flex md:items-center md:gap-2 overflow-hidden mt-auto" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="grid grid-cols-4 gap-2 mb-3 md:flex md:items-center md:gap-2 overflow-hidden mt-auto" 
+          data-no-navigate
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Save/Applied Buttons - spans 2 columns on mobile */}
           <div className="col-span-2 md:col-span-1 md:flex md:items-center md:gap-2 min-w-0">
             <SaveAppliedButtons
@@ -163,14 +177,16 @@ export default function OpportunityCard({ opportunity, onStatusChange }: Readonl
         </div>
 
         {/* View Details Button */}
-        <div onClick={(e) => e.stopPropagation()}>
-          <Button variant="outline" className="w-full group">
-            <span className="hidden sm:inline">View Details</span>
-            <span className="sm:hidden">Details</span>
-            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
+        <div data-no-navigate onClick={(e) => e.stopPropagation()}>
+          <Link href={`/opportunities/${opportunity.id}`}>
+            <Button variant="outline" className="w-full group">
+              <span className="hidden sm:inline">View Details</span>
+              <span className="sm:hidden">Details</span>
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }
