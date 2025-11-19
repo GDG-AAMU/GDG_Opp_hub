@@ -74,11 +74,14 @@ export default function SignupForm() {
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="yourname@aamu.edu"
               {...register('email')}
               disabled={isLoading}
               className="mt-1"
             />
+            <p className="mt-1 text-xs text-gray-500">
+              Only @aamu.edu and @bulldogs.aamu.edu emails are accepted
+            </p>
             {errors.email && (
               <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
             )}
