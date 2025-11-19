@@ -293,6 +293,66 @@ export type Database = {
           }
         ]
       }
+      feedback: {
+        Row: {
+          id: string
+          user_id: string | null
+          feedback_type: Database["public"]["Enums"]["feedback_type"]
+          subject: string
+          description: string
+          page_url: string | null
+          status: Database["public"]["Enums"]["feedback_status"]
+          admin_notes: string | null
+          resolved_by: string | null
+          resolved_at: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          feedback_type?: Database["public"]["Enums"]["feedback_type"]
+          subject: string
+          description: string
+          page_url?: string | null
+          status?: Database["public"]["Enums"]["feedback_status"]
+          admin_notes?: string | null
+          resolved_by?: string | null
+          resolved_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          feedback_type?: Database["public"]["Enums"]["feedback_type"]
+          subject?: string
+          description?: string
+          page_url?: string | null
+          status?: Database["public"]["Enums"]["feedback_status"]
+          admin_notes?: string | null
+          resolved_by?: string | null
+          resolved_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -309,6 +369,8 @@ export type Database = {
         | "fellowship"
         | "scholarship"
       user_role: "student" | "admin"
+      feedback_status: "new" | "in_progress" | "resolved"
+      feedback_type: "bug" | "feature_request" | "general" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -445,6 +507,8 @@ export const Constants = {
         "scholarship",
       ],
       user_role: ["student", "admin"],
+      feedback_status: ["new", "in_progress", "resolved"],
+      feedback_type: ["bug", "feature_request", "general", "other"],
     },
   },
 } as const

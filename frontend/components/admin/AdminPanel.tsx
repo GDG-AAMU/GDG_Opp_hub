@@ -28,6 +28,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import EditOpportunityModal from "./EditOpportunityModal"
+import FeedbackSection from "./FeedbackSection"
 import {
   ShieldCheck,
   Briefcase,
@@ -42,6 +43,7 @@ import {
   Users as UsersIcon,
   AlertTriangle,
   Loader2,
+  MessageSquare,
 } from "lucide-react"
 
 type StatusFilter = "all" | "active" | "expired"
@@ -112,6 +114,7 @@ export default function AdminPanel() {
   const [checkingAdmin, setCheckingAdmin] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [accessError, setAccessError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'opportunities' | 'feedback'>('opportunities')
 
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [recentSubmissions, setRecentSubmissions] = useState<Opportunity[]>([])
@@ -386,13 +389,51 @@ export default function AdminPanel() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-sm text-gray-500">Admin access granted</p>
-          <h2 className="text-2xl font-bold text-gray-900">Opportunities Control Center</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Admin Dashboard</h2>
         </div>
-        <Button variant="outline" onClick={handleManualRefresh} className="flex items-center gap-2">
-          <RefreshCcw className="h-4 w-4" />
-          Refresh Data
-        </Button>
+        {activeTab === 'opportunities' && (
+          <Button variant="outline" onClick={handleManualRefresh} className="flex items-center gap-2">
+            <RefreshCcw className="h-4 w-4" />
+            Refresh Data
+          </Button>
+        )}
       </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('opportunities')}
+            className={`
+              flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors
+              ${activeTab === 'opportunities'
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }
+            `}
+          >
+            <Briefcase className="h-5 w-5" />
+            Opportunities
+          </button>
+          <button
+            onClick={() => setActiveTab('feedback')}
+            className={`
+              flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors
+              ${activeTab === 'feedback'
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }
+            `}
+          >
+            <MessageSquare className="h-5 w-5" />
+            Feedback
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'opportunities' ? (
+        <div className="space-y-8">
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
@@ -785,6 +826,11 @@ export default function AdminPanel() {
           )}
         </div>
       </section>
+
+        </div>
+      ) : (
+        <FeedbackSection />
+      )}
 
       <EditOpportunityModal
         open={editDialogOpen}
