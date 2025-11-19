@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
 import { submitOpportunitySchema } from "@/lib/validations/opportunity"
 import { smartScrape } from "@/lib/services/smart-scraper"
-import { parseJobPostingFromText, GeminiAPIError, RateLimitError } from "@/lib/ai/gemini"
+import { parseJobPostingFromUrl, parseJobPostingFromText, GeminiAPIError, RateLimitError } from "@/lib/ai/gemini"
+import { filterContentForGemini } from "@/lib/services/content-filter"
 import { Database } from "@/lib/supabase/types"
 
 export async function POST(request: NextRequest) {
@@ -49,9 +50,139 @@ export async function POST(request: NextRequest) {
     const { url, company_name: userProvidedCompany, opportunity_type: userProvidedType } = validationResult.data
     const manualContent = (body as any).manualContent // Get manual content if provided
 
-    console.log(`[Submit] Starting submission for URL: ${url}`)
-    if (manualContent) {
-      console.log(`[Submit] Manual content provided (${manualContent.length} chars)`)
+    // PRE-CHECK: If no manual content, quickly check if site is blocked before saving
+    const hasManualContent = manualContent && manualContent.trim().length >= 50
+    if (!hasManualContent) {
+      // First, check URL domain for known restricted sites (fastest check)
+      const urlLower = url.toLowerCase()
+      const knownRestrictedDomains = [
+        'linkedin.com',
+        'facebook.com',
+        'meta.com',
+        'twitter.com',
+        'x.com',
+        'instagram.com',
+      ]
+      
+      const isKnownRestricted = knownRestrictedDomains.some(domain => urlLower.includes(domain))
+      
+      if (isKnownRestricted) {
+        return NextResponse.json(
+          {
+            error: "Manual content required",
+            requiresManual: true,
+            message: "This site requires authentication. Please paste the job description manually.",
+          },
+          { status: 400 }
+        )
+      }
+
+      // Try Gemini URL parsing first (fastest way to detect blocked sites)
+      try {
+        await parseJobPostingFromUrl(url, {
+          timeout: 10000, // 10 second timeout for pre-check
+          maxRetries: 1, // Only 1 retry for speed
+        })
+      } catch (geminiError) {
+        // Check if it's a blocked/authentication error
+        const errorMessage = geminiError instanceof Error ? geminiError.message : String(geminiError)
+        const errorLower = errorMessage.toLowerCase()
+        
+        const isBlocked = (
+          errorLower.includes('access denied') ||
+          errorLower.includes('access_denied') ||
+          errorLower.includes('401') ||
+          errorLower.includes('403') ||
+          errorLower.includes('forbidden') ||
+          errorLower.includes('unauthorized') ||
+          errorLower.includes('login required') ||
+          errorLower.includes('sign in') ||
+          errorLower.includes('authentication required') ||
+          errorLower.includes('blocked') ||
+          errorLower.includes('bot detection') ||
+          errorLower.includes('captcha') ||
+          errorLower.includes('rate limit') ||
+          errorLower.includes('429')
+        )
+
+        if (isBlocked) {
+          return NextResponse.json(
+            {
+              error: "Manual content required",
+              requiresManual: true,
+              message: "This site appears to be blocked or requires authentication. Please paste the job description manually.",
+            },
+            { status: 400 }
+          )
+        }
+
+        // Gemini failed but not blocked - might be a parsing issue or slow site
+        // Try a quick scrape check to see if we can at least get the page
+        const { scrapeUrl } = await import('@/lib/services/web-scraper')
+        const quickCheck = await scrapeUrl(url, {
+          timeout: 8000, // 8 second timeout for quick check
+          forceCheerio: true, // Only use Cheerio for speed
+        })
+
+        // Check scraped content for login page indicators
+        if (quickCheck.success && quickCheck.content) {
+          const contentLower = quickCheck.content.toLowerCase()
+          const isLoginPage = (
+            contentLower.includes('sign in') ||
+            contentLower.includes('signin') ||
+            contentLower.includes('log in') ||
+            contentLower.includes('login') ||
+            contentLower.includes('authentication required') ||
+            contentLower.includes('please log in') ||
+            contentLower.includes('access denied') ||
+            (contentLower.includes('linkedin') && contentLower.includes('join'))
+          )
+
+          if (isLoginPage) {
+            return NextResponse.json(
+              {
+                error: "Manual content required",
+                requiresManual: true,
+                message: "This site requires authentication. Please paste the job description manually.",
+              },
+              { status: 400 }
+            )
+          }
+        }
+
+        // Check if scrape error indicates blocking
+        if (!quickCheck.success && quickCheck.error) {
+          const errorLower = quickCheck.error.toLowerCase()
+          const isBlockedError = (
+            errorLower.includes('access denied') ||
+            errorLower.includes('access_denied') ||
+            errorLower.includes('401') ||
+            errorLower.includes('403') ||
+            errorLower.includes('forbidden') ||
+            errorLower.includes('unauthorized') ||
+            errorLower.includes('login required') ||
+            errorLower.includes('sign in required') ||
+            errorLower.includes('authentication required') ||
+            errorLower.includes('blocked') ||
+            errorLower.includes('bot detection') ||
+            errorLower.includes('captcha')
+          )
+
+          if (isBlockedError) {
+            return NextResponse.json(
+              {
+                error: "Manual content required",
+                requiresManual: true,
+                message: "This site appears to be blocked or requires authentication. Please paste the job description manually.",
+              },
+              { status: 400 }
+            )
+          }
+        }
+
+        // Pre-check failed but not clearly blocked - might be a slow site or other issue
+        // We'll still save and let background processing handle it
+      }
     }
 
     // Step 1: Check if URL already exists
@@ -74,7 +205,6 @@ export async function POST(request: NextRequest) {
 
     // If URL exists but is expired, delete it to allow resubmission
     if (existingOpportunity && existingOpportunity.status === 'expired') {
-      console.log(`[Submit] Found expired opportunity with same URL, deleting to allow resubmission`)
       const { error: deleteError } = await supabase
         .from('opportunities')
         .delete()
@@ -82,8 +212,6 @@ export async function POST(request: NextRequest) {
 
       if (deleteError) {
         console.error(`[Submit] Failed to delete expired opportunity:`, deleteError)
-      } else {
-        console.log(`[Submit] Deleted expired opportunity (ID: ${existingOpportunity.id})`)
       }
     }
 
@@ -130,42 +258,141 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log(`[Submit] Quick save successful: ${savedOpportunity.id}`)
-
     // Background processing: Update with full details (fire and forget)
     setImmediate(async () => {
       try {
-        console.log(`[Background] Starting processing for ${savedOpportunity.id}`)
 
         // Create service role client for background update (bypasses RLS)
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
         const serviceClient = createServiceClient<Database>(supabaseUrl, supabaseServiceKey)
 
-        const scrapeResult = await smartScrape({
-          url,
-          manualContent,
-          timeout: 30000
-        })
+        let parsedData: Awaited<ReturnType<typeof parseJobPostingFromText>> | null = null
 
-        if (!scrapeResult.success || !scrapeResult.content) {
-          console.error(`[Background] Scraping failed:`, scrapeResult.error)
+        // Check if we have manual content
+        const hasManualContent = manualContent && manualContent.trim().length >= 50
+
+        // STEP 1: For manual content, skip Gemini URL and go straight to parsing
+        // (We detect if site is blocked during scraping, not beforehand)
+        if (hasManualContent) {
+          // Manual content is already clean, use it directly (gentle filtering only)
+          // Just trim and clean whitespace, don't aggressively filter
+          const cleanedManualContent = manualContent.trim().replace(/\s+/g, ' ').replace(/\n\s*\n\s*\n/g, '\n\n')
+          
+          try {
+            parsedData = await parseJobPostingFromText(cleanedManualContent, {
+              timeout: 30000,
+              maxRetries: 3
+            })
+          } catch (manualParseError) {
+            console.error(`[Background] Manual content parsing failed:`, manualParseError)
+            // Update with user-provided fields as fallback instead of leaving "Loading..."
+            await serviceClient
+              .from('opportunities')
+              .update({
+                company_name: userProvidedCompany || 'Company Name Not Available',
+                job_title: 'Job Title Not Available - Parsing Failed',
+              })
+              .eq('id', savedOpportunity.id)
+            return
+          }
+        } else {
+          // STEP 1: Try Gemini with URL first (original approach) - only for non-restricted sites
+          try {
+            parsedData = await parseJobPostingFromUrl(url, {
+              timeout: 30000,
+              maxRetries: 2 // Fewer retries for URL method
+            })
+          } catch (geminiUrlError) {
+
+            // STEP 2: Fallback to scraper
+            const scrapeResult = await smartScrape({
+              url,
+              manualContent,
+              timeout: 30000
+            })
+
+            if (!scrapeResult.success || !scrapeResult.content) {
+              console.error(`[Background] Scraping also failed:`, scrapeResult.error)
+              // Update with user-provided fields as fallback instead of leaving "Loading..."
+              await serviceClient
+                .from('opportunities')
+                .update({
+                  company_name: userProvidedCompany || 'Company Name Not Available',
+                  job_title: 'Job Title Not Available - Scraping Failed',
+                })
+                .eq('id', savedOpportunity.id)
+              return
+            }
+
+            // STEP 3: Filter content before sending to Gemini
+            // Use gentler filtering for manual content
+            const contentToFilter = scrapeResult.content
+            const filteredContent = hasManualContent 
+              ? contentToFilter.trim().replace(/\s+/g, ' ').replace(/\n\s*\n\s*\n/g, '\n\n') // Gentle cleaning for manual content
+              : filterContentForGemini(contentToFilter) // Aggressive filtering for scraped content
+            
+            if (!filteredContent || filteredContent.trim().length < 50) {
+              console.error(`[Background] Content filtering resulted in insufficient content`)
+              // Update with user-provided fields as fallback instead of leaving "Loading..."
+              await serviceClient
+                .from('opportunities')
+                .update({
+                  company_name: userProvidedCompany || 'Company Name Not Available',
+                  job_title: 'Job Title Not Available - Insufficient Content',
+                })
+                .eq('id', savedOpportunity.id)
+              return
+            }
+
+            // STEP 4: Parse scraped content with Gemini
+            try {
+              parsedData = await parseJobPostingFromText(filteredContent, {
+                timeout: 30000,
+                maxRetries: 3
+              })
+            } catch (geminiTextError) {
+              console.error(`[Background] Gemini text parsing failed:`, geminiTextError)
+              // Update with user-provided fields as fallback instead of leaving "Loading..."
+              await serviceClient
+                .from('opportunities')
+                .update({
+                  company_name: userProvidedCompany || 'Company Name Not Available',
+                  job_title: 'Job Title Not Available - Parsing Failed',
+                })
+                .eq('id', savedOpportunity.id)
+              return
+            }
+          }
+        }
+
+        if (!parsedData) {
+          console.error(`[Background] All parsing methods failed`)
+          // Update with user-provided fields as fallback instead of leaving "Loading..."
+          await serviceClient
+            .from('opportunities')
+            .update({
+              company_name: userProvidedCompany || 'Company Name Not Available',
+              job_title: 'Job Title Not Available - All Parsing Methods Failed',
+            })
+            .eq('id', savedOpportunity.id)
           return
         }
 
-        console.log(`[Background] Scraping successful (${scrapeResult.content.length} chars)`)
-
-        const parsedData = await parseJobPostingFromText(scrapeResult.content, {
-          timeout: 30000,
-          maxRetries: 3
-        })
-
-        console.log(`[Background] AI parsing successful`)
-
-        // Update the opportunity with full details
+        // STEP 5: Update with smart field merging (preserve user input)
         const updateData = {
+          // Always preserve user-provided type (highest priority)
+          opportunity_type: userProvidedType || parsedData.opportunity_type || savedOpportunity.opportunity_type,
+          
+          // Use user-provided company name if available, otherwise use AI result
           company_name: userProvidedCompany || parsedData.company_name || savedOpportunity.company_name,
-          job_title: parsedData.job_title || 'Position Not Specified',
+          
+          // Only use AI job_title if it's valid (not "Position Not Specified")
+          job_title: parsedData.job_title && parsedData.job_title !== 'Position Not Specified'
+            ? parsedData.job_title
+            : savedOpportunity.job_title,
+          
+          // Use AI results for other fields
           role_type: parsedData.role_type,
           relevant_majors: parsedData.relevant_majors || [],
           deadline: parsedData.deadline,
@@ -181,10 +408,24 @@ export async function POST(request: NextRequest) {
           .from('opportunities')
           .update(updateData)
           .eq('id', savedOpportunity.id)
-
-        console.log(`[Background] Updated opportunity ${savedOpportunity.id} with full details`)
       } catch (error) {
         console.error(`[Background] Processing failed for ${savedOpportunity.id}:`, error)
+        // Update with user-provided fields as fallback even on unexpected errors
+        try {
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+          const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+          const serviceClient = createServiceClient<Database>(supabaseUrl, supabaseServiceKey)
+          
+          await serviceClient
+            .from('opportunities')
+            .update({
+              company_name: userProvidedCompany || 'Company Name Not Available',
+              job_title: 'Job Title Not Available - Processing Error',
+            })
+            .eq('id', savedOpportunity.id)
+        } catch (updateError) {
+          console.error(`[Background] Failed to update fallback fields:`, updateError)
+        }
       }
     })
 

@@ -13,6 +13,7 @@ import {
   DEFAULT_TIMEOUT,
   DEFAULT_USER_AGENT,
 } from './scraper-utils';
+import { extractJobContent } from './content-extractor';
 
 /**
  * Playwright scraper configuration options
@@ -185,28 +186,37 @@ export async function scrapeWithPlaywright(
     // Extract title
     const title = await page.title();
 
-    // Try to extract content from main content areas
-    let content = '';
-    for (const selector of CONTENT_SELECTORS) {
-      try {
-        const element = await page.$(selector);
-        if (element) {
-          const text = await (element as any).textContent();
-          if (text && text.trim().length > 200) {
-            content = text;
-            break;
-          }
-        }
-      } catch {
-        // Continue to next selector
-      }
-    }
+    // Get HTML content for smart extraction
+    const html = await page.content();
 
-    // If no content found, fallback to body
+    // Use smart content extractor to get main job content
+    // This removes navigation/footer and finds the best content block
+    let content = extractJobContent(html, validatedUrl);
+
+    // If extractor didn't find good content, fallback to body text
     if (!content || content.trim().length < 100) {
-      const bodyElement = await page.$('body');
-      if (bodyElement) {
-        content = (await bodyElement.textContent()) || '';
+      // Fallback: try selectors directly
+      for (const selector of CONTENT_SELECTORS) {
+        try {
+          const element = await page.$(selector);
+          if (element) {
+            const text = await (element as any).textContent();
+            if (text && text.trim().length > 200) {
+              content = text;
+              break;
+            }
+          }
+        } catch {
+          // Continue to next selector
+        }
+      }
+
+      // Final fallback to body
+      if (!content || content.trim().length < 100) {
+        const bodyElement = await page.$('body');
+        if (bodyElement) {
+          content = (await bodyElement.textContent()) || '';
+        }
       }
     }
 

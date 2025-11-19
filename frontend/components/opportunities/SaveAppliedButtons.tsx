@@ -73,14 +73,14 @@ export default function SaveAppliedButtons({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 w-full min-w-0">
       {/* Save Button */}
       <Button
         onClick={handleSave}
         disabled={saveApplyMutation.isPending}
         variant={status === 'saved' ? 'default' : 'outline'}
         size="sm"
-        className={`flex items-center gap-1.5 ${
+        className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 max-w-full md:flex-initial ${
           status === 'saved' 
             ? 'bg-purple-600 hover:bg-purple-700 text-white' 
             : 'hover:bg-purple-50'
@@ -88,9 +88,9 @@ export default function SaveAppliedButtons({
         title={status === 'saved' ? 'Remove from saved' : 'Save for later'}
       >
         <Bookmark 
-          className={`w-4 h-4 ${status === 'saved' ? 'fill-current' : ''}`} 
+          className={`w-4 h-4 flex-shrink-0 ${status === 'saved' ? 'fill-current' : ''}`} 
         />
-        <span className="hidden sm:inline text-xs">
+        <span className="hidden md:inline text-xs whitespace-nowrap">
           {status === 'saved' ? 'Saved' : 'Save'}
         </span>
       </Button>
@@ -101,7 +101,7 @@ export default function SaveAppliedButtons({
         disabled={saveApplyMutation.isPending}
         variant={status === 'applied' ? 'default' : 'outline'}
         size="sm"
-        className={`flex items-center gap-1.5 ${
+        className={`flex items-center justify-center gap-1.5 flex-1 min-w-0 max-w-full md:flex-initial ${
           status === 'applied' 
             ? 'bg-green-600 hover:bg-green-700 text-white' 
             : 'hover:bg-green-50'
@@ -109,9 +109,9 @@ export default function SaveAppliedButtons({
         title={status === 'applied' ? 'Remove from applied' : 'Mark as applied'}
       >
         <CheckCircle2 
-          className={`w-4 h-4 ${status === 'applied' ? 'fill-current' : ''}`} 
+          className={`w-4 h-4 flex-shrink-0 ${status === 'applied' ? 'fill-current' : ''}`} 
         />
-        <span className="hidden sm:inline text-xs">
+        <span className="hidden md:inline text-xs whitespace-nowrap">
           {status === 'applied' ? 'Applied' : 'Apply'}
         </span>
       </Button>

@@ -1,8 +1,10 @@
 'use client'
 
 import { format } from 'date-fns'
-import { Calendar, MapPin, Briefcase } from 'lucide-react'
+import { Calendar, MapPin, Briefcase, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 import { CompanyLogo } from '@/components/ui/CompanyLogo'
 import SaveAppliedButtons from './SaveAppliedButtons'
 import AddToCalendarButton from './AddToCalendarButton'
@@ -41,19 +43,28 @@ const typeLabels = {
 }
 
 export default function OpportunityCard({ opportunity, onStatusChange }: Readonly<OpportunityCardProps>) {
+  const router = useRouter()
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Only navigate if clicking on the card content, not on buttons
+    const target = e.target as HTMLElement
+    // Don't navigate if clicking on buttons, links, or elements marked with data-no-navigate
+    if (
+      target.closest('button') || 
+      target.closest('a') || 
+      target.closest('[data-no-navigate]')
+    ) {
+      return
+    }
+    router.push(`/opportunities/${opportunity.id}`)
+  }
+
   return (
-    <Link 
-      href={`/opportunities/${opportunity.id}`}
-      className="block group"
-      onClick={(e) => {
-        // Don't navigate if clicking on action buttons
-        const target = e.target as HTMLElement
-        if (target.closest('button') || target.closest('a[href^="http"]')) {
-          e.preventDefault()
-        }
-      }}
+    <div 
+      className="block group cursor-pointer"
+      onClick={handleCardClick}
     >
-      <div className="bg-card rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-border hover:border-purple-500 dark:hover:border-purple-400 hover:-translate-y-1 cursor-pointer h-full flex flex-col">
+      <div className="bg-card rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-border hover:border-purple-500 dark:hover:border-purple-400 hover:-translate-y-1 h-full flex flex-col">
         {/* Company Logo */}
         <CompanyLogo
           companyName={opportunity.company_name}
@@ -118,35 +129,40 @@ export default function OpportunityCard({ opportunity, onStatusChange }: Readonl
           </span>
         </div>
 
-        {/* Save/Applied Buttons */}
-        <div className="mb-3" onClick={(e) => e.stopPropagation()}>
-          <SaveAppliedButtons
-            opportunityId={opportunity.id}
-            currentStatus={opportunity.userStatus || null}
-            onStatusChange={onStatusChange}
-          />
-        </div>
+        {/* Action Buttons Row - Save, Apply, Calendar, Share */}
+        {/* Use grid on mobile for equal columns, flex on desktop */}
+        <div 
+          className="grid grid-cols-4 gap-2 mb-3 md:flex md:items-center md:gap-2 overflow-hidden mt-auto" 
+          data-no-navigate
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Save/Applied Buttons - spans 2 columns on mobile */}
+          <div className="col-span-2 md:col-span-1 md:flex md:items-center md:gap-2 min-w-0">
+            <SaveAppliedButtons
+              opportunityId={opportunity.id}
+              currentStatus={opportunity.userStatus || null}
+              onStatusChange={onStatusChange}
+            />
+          </div>
 
-        {/* Action Buttons */}
-        <div className="space-y-2 mt-auto" onClick={(e) => e.stopPropagation()}>
-          <div className="flex gap-2">
-            {/* Add to Calendar Button */}
-            <div className="flex-1">
-              <AddToCalendarButton
-                opportunity={{
-                  id: opportunity.id,
-                  company_name: opportunity.company_name,
-                  job_title: opportunity.job_title,
-                  deadline: opportunity.deadline,
-                  location: opportunity.location,
-                  url: opportunity.url
-                }}
-                size="sm"
-                className="w-full"
-              />
-            </div>
+          {/* Add to Calendar Button */}
+          <div className="col-span-1 min-w-0">
+            <AddToCalendarButton
+              opportunity={{
+                id: opportunity.id,
+                company_name: opportunity.company_name,
+                job_title: opportunity.job_title,
+                deadline: opportunity.deadline,
+                location: opportunity.location,
+                url: opportunity.url
+              }}
+              size="sm"
+              className="w-full md:w-auto"
+            />
+          </div>
 
-            {/* Share Button */}
+          {/* Share Button */}
+          <div className="col-span-1 min-w-0">
             <SocialShareButton
               opportunity={{
                 opportunity_type: opportunity.opportunity_type,
@@ -155,11 +171,22 @@ export default function OpportunityCard({ opportunity, onStatusChange }: Readonl
               }}
               pageUrl={typeof window !== 'undefined' ? `${window.location.origin}/opportunities/${opportunity.id}` : ''}
               size="sm"
-              className="flex-1"
+              className="w-full md:w-auto"
             />
           </div>
         </div>
+
+        {/* View Details Button */}
+        <div data-no-navigate onClick={(e) => e.stopPropagation()}>
+          <Link href={`/opportunities/${opportunity.id}`}>
+            <Button variant="outline" className="w-full group">
+              <span className="hidden sm:inline">View Details</span>
+              <span className="sm:hidden">Details</span>
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </div>
       </div>
-    </Link>
+    </div>
   )
 }

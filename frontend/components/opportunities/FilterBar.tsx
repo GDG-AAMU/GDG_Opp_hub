@@ -153,10 +153,10 @@ export default function FilterBar({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+    <div className="bg-card rounded-lg shadow-sm border border-border p-4 mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         {/* Filter By Label */}
-        <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+        <span className="text-sm font-semibold text-foreground whitespace-nowrap">
           Filter by:
         </span>
 
@@ -170,8 +170,8 @@ export default function FilterBar({
                 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border
                 transition-all duration-200
                 ${selectedTypes.length > 0
-                  ? 'bg-purple-50 border-purple-300 text-purple-700 hover:bg-purple-100'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40'
+                  : 'bg-card border-border text-foreground hover:bg-accent'
                 }
               `}
             >
@@ -180,19 +180,19 @@ export default function FilterBar({
             </button>
 
             {openDropdown === 'type' && (
-              <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+              <div className="absolute top-full left-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-2 z-50">
                 {TYPE_OPTIONS.map((option) => (
                   <label
                     key={option.value}
-                    className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                    className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={selectedTypes.includes(option.value as OpportunityType)}
                       onChange={() => handleToggleType(option.value as OpportunityType)}
-                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      className="w-4 h-4 text-purple-600 border-border rounded focus:ring-purple-500"
                     />
-                    <span className="ml-3 text-sm text-gray-700">{option.label}</span>
+                    <span className="ml-3 text-sm text-foreground">{option.label}</span>
                   </label>
                 ))}
               </div>
@@ -207,8 +207,8 @@ export default function FilterBar({
                 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border
                 transition-all duration-200
                 ${selectedMajors.length > 0
-                  ? 'bg-purple-50 border-purple-300 text-purple-700 hover:bg-purple-100'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40'
+                  : 'bg-card border-border text-foreground hover:bg-accent'
                 }
               `}
             >
@@ -217,19 +217,19 @@ export default function FilterBar({
             </button>
 
             {openDropdown === 'major' && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 max-h-80 overflow-y-auto">
+              <div className="absolute top-full left-0 mt-2 w-64 bg-card rounded-lg shadow-lg border border-border py-2 z-50 max-h-80 overflow-y-auto">
                 {MAJORS.map((major) => (
                   <label
                     key={major}
-                    className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                    className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={selectedMajors.includes(major)}
                       onChange={() => handleToggleMajor(major)}
-                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      className="w-4 h-4 text-purple-600 border-border rounded focus:ring-purple-500"
                     />
-                    <span className="ml-3 text-sm text-gray-700">{major}</span>
+                    <span className="ml-3 text-sm text-foreground">{major}</span>
                   </label>
                 ))}
               </div>
@@ -244,8 +244,8 @@ export default function FilterBar({
                 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border
                 transition-all duration-200
                 ${selectedRoles.length > 0
-                  ? 'bg-purple-50 border-purple-300 text-purple-700 hover:bg-purple-100'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40'
+                  : 'bg-card border-border text-foreground hover:bg-accent'
                 }
               `}
             >
@@ -254,19 +254,19 @@ export default function FilterBar({
             </button>
 
             {openDropdown === 'role' && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 max-h-80 overflow-y-auto">
+              <div className="absolute top-full left-0 mt-2 w-64 bg-card rounded-lg shadow-lg border border-border py-2 z-50 max-h-80 overflow-y-auto">
                 {ROLE_TYPES.map((role) => (
                   <label
                     key={role}
-                    className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                    className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={selectedRoles.includes(role)}
                       onChange={() => handleToggleRole(role)}
-                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      className="w-4 h-4 text-purple-600 border-border rounded focus:ring-purple-500"
                     />
-                    <span className="ml-3 text-sm text-gray-700">{role}</span>
+                    <span className="ml-3 text-sm text-foreground">{role}</span>
                   </label>
                 ))}
               </div>
@@ -281,8 +281,8 @@ export default function FilterBar({
                 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border
                 transition-all duration-200
                 ${selectedSponsorship !== 'any'
-                  ? 'bg-purple-50 border-purple-300 text-purple-700 hover:bg-purple-100'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40'
+                  : 'bg-card border-border text-foreground hover:bg-accent'
                 }
               `}
             >
@@ -291,20 +291,20 @@ export default function FilterBar({
             </button>
 
             {openDropdown === 'sponsorship' && (
-              <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+              <div className="absolute top-full left-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-2 z-50">
                 {SPONSORSHIP_OPTIONS.map((option) => (
                   <label
                     key={option.value}
-                    className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                    className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer"
                   >
                     <input
                       type="radio"
                       name="sponsorship"
                       checked={selectedSponsorship === option.value}
                       onChange={() => onSponsorshipChange(option.value as SponsorshipFilter)}
-                      className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+                      className="w-4 h-4 text-purple-600 border-border focus:ring-purple-500"
                     />
-                    <span className="ml-3 text-sm text-gray-700">{option.label}</span>
+                    <span className="ml-3 text-sm text-foreground">{option.label}</span>
                   </label>
                 ))}
               </div>
@@ -319,8 +319,8 @@ export default function FilterBar({
                 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border
                 transition-all duration-200
                 ${selectedCitizenship !== 'any'
-                  ? 'bg-purple-50 border-purple-300 text-purple-700 hover:bg-purple-100'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40'
+                  : 'bg-card border-border text-foreground hover:bg-accent'
                 }
               `}
             >
@@ -329,20 +329,20 @@ export default function FilterBar({
             </button>
 
             {openDropdown === 'citizenship' && (
-              <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+              <div className="absolute top-full left-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-2 z-50">
                 {CITIZENSHIP_OPTIONS.map((option) => (
                   <label
                     key={option.value}
-                    className="flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                    className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer"
                   >
                     <input
                       type="radio"
                       name="citizenship"
                       checked={selectedCitizenship === option.value}
                       onChange={() => onCitizenshipChange(option.value as CitizenshipFilter)}
-                      className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+                      className="w-4 h-4 text-purple-600 border-border focus:ring-purple-500"
                     />
-                    <span className="ml-3 text-sm text-gray-700">{option.label}</span>
+                    <span className="ml-3 text-sm text-foreground">{option.label}</span>
                   </label>
                 ))}
               </div>
@@ -356,7 +356,7 @@ export default function FilterBar({
             variant="ghost"
             size="sm"
             onClick={handleClearFilters}
-            className="text-gray-600 hover:text-purple-600 flex items-center gap-1"
+            className="text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-1"
           >
             <X className="h-4 w-4" />
             Clear All
@@ -366,14 +366,14 @@ export default function FilterBar({
 
       {/* Active Filters Summary */}
       {hasActiveFilters && (
-        <div className="mt-3 pt-3 border-t border-gray-200">
+        <div className="mt-3 pt-3 border-t border-border">
           <div className="flex flex-wrap gap-2">
             {selectedTypes.map((type) => {
               const option = TYPE_OPTIONS.find(opt => opt.value === type)
               return (
                 <span
                   key={type}
-                  className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded-full"
+                  className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full"
                 >
                   {option?.label}
                   <button

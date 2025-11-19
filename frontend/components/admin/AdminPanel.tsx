@@ -76,8 +76,8 @@ const typeLabels: Record<OpportunityType, string> = {
 }
 
 const statusChipClasses: Record<"active" | "expired", string> = {
-  active: "bg-green-100 text-green-700",
-  expired: "bg-red-100 text-red-700",
+  active: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300",
+  expired: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300",
 }
 
 const getSubmittedByName = (opportunity: Opportunity) => {
@@ -362,7 +362,7 @@ export default function AdminPanel() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <Loader2 className="h-8 w-8 animate-spin text-purple-600 mb-3" />
-        <p className="text-gray-600">Preparing admin controls...</p>
+        <p className="text-foreground">Preparing admin controls...</p>
       </div>
     )
   }
@@ -385,8 +385,8 @@ export default function AdminPanel() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm text-gray-500">Admin access granted</p>
-          <h2 className="text-2xl font-bold text-gray-900">Opportunities Control Center</h2>
+          <p className="text-sm text-muted-foreground">Admin access granted</p>
+          <h2 className="text-2xl font-bold text-foreground">Opportunities Control Center</h2>
         </div>
         <Button variant="outline" onClick={handleManualRefresh} className="flex items-center gap-2">
           <RefreshCcw className="h-4 w-4" />
@@ -425,7 +425,7 @@ export default function AdminPanel() {
           return (
             <div
               key={card.label}
-              className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
+              className="rounded-2xl border border-border bg-card p-5 shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <div
@@ -434,13 +434,13 @@ export default function AdminPanel() {
                   <Icon className="h-5 w-5" />
                 </div>
                 {statsLoading && (
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 )}
               </div>
-              <p className="mt-6 text-3xl font-semibold text-gray-900">
+              <p className="mt-6 text-3xl font-semibold text-foreground">
                 {card.value}
               </p>
-              <p className="text-sm text-gray-500">{card.label}</p>
+              <p className="text-sm text-muted-foreground">{card.label}</p>
             </div>
           )
         })}
@@ -458,18 +458,18 @@ export default function AdminPanel() {
         </div>
       )}
 
-      <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">
+            <h3 className="text-xl font-semibold text-foreground">
               Opportunities
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Manage every opportunity in one place. Search, filter, edit, or retire listings.
             </p>
           </div>
           {lastRefreshed && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Last synced {formatDistanceToNow(lastRefreshed, { addSuffix: true })}
             </p>
           )}
@@ -480,7 +480,7 @@ export default function AdminPanel() {
             <Label htmlFor="search">Search</Label>
             <div className="flex flex-col gap-2 sm:flex-row">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="search"
                   placeholder="Search by company or title"
@@ -564,9 +564,9 @@ export default function AdminPanel() {
         </div>
 
         <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-100 text-sm">
+          <table className="min-w-full divide-y divide-border text-sm">
             <thead>
-              <tr className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <tr className="text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <th className="px-4 py-3">Opportunity</th>
                 <th className="px-4 py-3">Type</th>
                 <th className="px-4 py-3">Status</th>
@@ -576,10 +576,10 @@ export default function AdminPanel() {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border">
               {tableLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="h-5 w-5 animate-spin text-purple-600" />
                       <span>Loading opportunities...</span>
@@ -591,7 +591,7 @@ export default function AdminPanel() {
                   <td colSpan={7} className="px-4 py-8">
                     <div className="flex flex-col items-center gap-3 text-center">
                       <AlertTriangle className="h-8 w-8 text-red-500" />
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-foreground">
                         {tableError}
                       </p>
                       <Button variant="outline" onClick={() => fetchOpportunities(currentPage)}>
@@ -603,22 +603,22 @@ export default function AdminPanel() {
               ) : opportunities.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center">
-                    <p className="text-gray-500">No opportunities found for the current filters.</p>
+                    <p className="text-muted-foreground">No opportunities found for the current filters.</p>
                   </td>
                 </tr>
               ) : (
                 opportunities.map((opportunity) => (
-                  <tr key={opportunity.id} className="hover:bg-gray-50/75">
+                  <tr key={opportunity.id} className="hover:bg-accent/50">
                     <td className="px-4 py-4">
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-foreground">
                         {opportunity.job_title || "Untitled role"}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         {opportunity.company_name}
                       </p>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="inline-flex rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+                      <span className="inline-flex rounded-full bg-purple-100 dark:bg-purple-900/30 px-3 py-1 text-xs font-semibold text-purple-700 dark:text-purple-300">
                         {typeLabels[opportunity.opportunity_type]}
                       </span>
                     </td>
@@ -629,13 +629,13 @@ export default function AdminPanel() {
                         {opportunity.status === "active" ? "Active" : "Expired"}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-gray-700">
+                    <td className="px-4 py-4 text-foreground">
                       {formatDate(opportunity.deadline)}
                     </td>
-                    <td className="px-4 py-4 text-gray-700">
+                    <td className="px-4 py-4 text-foreground">
                       {formatDate(opportunity.created_at)}
                     </td>
-                    <td className="px-4 py-4 text-gray-700">
+                    <td className="px-4 py-4 text-foreground">
                       {getSubmittedByName(opportunity)}
                     </td>
                     <td className="px-4 py-4">
@@ -644,7 +644,7 @@ export default function AdminPanel() {
                           variant="ghost"
                           size="sm"
                           asChild
-                          className="text-gray-600 hover:text-purple-600"
+                          className="text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400"
                         >
                           <Link href={`/opportunities/${opportunity.id}`}>
                             <Eye className="mr-1 h-4 w-4" />
@@ -654,7 +654,7 @@ export default function AdminPanel() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-gray-600 hover:text-purple-600"
+                          className="text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400"
                           onClick={() => openEditDialog(opportunity)}
                         >
                           <Edit className="mr-1 h-4 w-4" />
@@ -680,7 +680,7 @@ export default function AdminPanel() {
 
         {opportunities.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Showing {(pagination?.offset || 0) + 1}-
               {Math.min(
                 (pagination?.offset || 0) + PAGE_SIZE,
@@ -698,7 +698,7 @@ export default function AdminPanel() {
                 <ChevronLeft className="mr-1 h-4 w-4" />
                 Previous
               </Button>
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-foreground">
                 Page {currentPage} of {totalPages}
               </span>
               <Button
@@ -719,13 +719,13 @@ export default function AdminPanel() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">
+            <h3 className="text-xl font-semibold text-foreground">
               Recent Submissions
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Latest 10 opportunities submitted by the community
             </p>
           </div>
@@ -733,37 +733,37 @@ export default function AdminPanel() {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {recentSubmissions.length === 0 ? (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               No recent submissions available.
             </p>
           ) : (
             recentSubmissions.map((opportunity) => (
               <div
                 key={opportunity.id}
-                className="rounded-xl border border-gray-100 bg-gray-50 p-4"
+                className="rounded-xl border border-border bg-muted p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       {formatDistanceToNow(new Date(opportunity.created_at ?? ""), {
                         addSuffix: true,
                       })}
                     </p>
-                    <h4 className="text-lg font-semibold text-gray-900">
+                    <h4 className="text-lg font-semibold text-foreground">
                       {opportunity.job_title || "Untitled role"}
                     </h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-foreground">
                       {opportunity.company_name}
                     </p>
                   </div>
-                  <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+                  <span className="rounded-full bg-purple-100 dark:bg-purple-900/30 px-3 py-1 text-xs font-semibold text-purple-700 dark:text-purple-300">
                     {typeLabels[opportunity.opportunity_type]}
                   </span>
                 </div>
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-600">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-foreground">
                   <p>
                     Submitted by{" "}
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-foreground">
                       {getSubmittedByName(opportunity)}
                     </span>
                   </p>
