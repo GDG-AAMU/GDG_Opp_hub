@@ -6,11 +6,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 import { useEffect, useState } from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, CheckCircle2, Bookmark } from "lucide-react"
 import EditOpportunityModal from "@/components/admin/EditOpportunityModal"
 import AddToCalendarButton from "./AddToCalendarButton"
 import SocialShareButton from "./SocialShareButton"
 import { CompanyLogo } from "@/components/ui/CompanyLogo"
+import { useSaveApplyOpportunity } from "@/hooks/useOpportunityMutations"
 
 interface OpportunityDetailsProps {
   opportunity: Opportunity
@@ -28,10 +29,55 @@ export default function OpportunityDetails({
   const [isDeleting, setIsDeleting] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [appliedStatus, setAppliedStatus] = useState<'applied' | null>(
+    opportunity.userStatus === 'applied' ? 'applied' : null
+  )
+  const [savedStatus, setSavedStatus] = useState<'saved' | null>(
+    opportunity.userStatus === 'saved' ? 'saved' : null
+  )
+  const saveApplyMutation = useSaveApplyOpportunity()
 
   useEffect(() => {
     setCurrentOpportunity(opportunity)
+    setAppliedStatus(opportunity.userStatus === 'applied' ? 'applied' : null)
+    setSavedStatus(opportunity.userStatus === 'saved' ? 'saved' : null)
   }, [opportunity])
+
+  const handleMarkAsApplied = async () => {
+    if (saveApplyMutation.isPending) return
+
+    const newStatus = appliedStatus === 'applied' ? null : 'applied'
+
+    try {
+      await saveApplyMutation.mutateAsync({
+        opportunityId: currentOpportunity.id,
+        status: newStatus
+      })
+
+      setAppliedStatus(newStatus)
+      // Cache invalidation is handled by the mutation hook
+    } catch (error) {
+      // Error toast is handled by mutation hook
+    }
+  }
+
+  const handleSave = async () => {
+    if (saveApplyMutation.isPending) return
+
+    const newStatus = savedStatus === 'saved' ? null : 'saved'
+
+    try {
+      await saveApplyMutation.mutateAsync({
+        opportunityId: currentOpportunity.id,
+        status: newStatus
+      })
+
+      setSavedStatus(newStatus)
+      // Cache invalidation is handled by the mutation hook
+    } catch (error) {
+      // Error toast is handled by mutation hook
+    }
+  }
 
   // Check if deadline is within 7 days
   const isDeadlineApproaching = () => {
@@ -116,7 +162,7 @@ export default function OpportunityDetails({
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-blue-500 via-green-500 to-yellow-500"></div>
         <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-red-500 via-blue-500 via-green-500 to-yellow-500"></div>
         <div className="absolute top-0 bottom-0 right-0 w-1 bg-gradient-to-b from-red-500 via-blue-500 via-green-500 to-yellow-500"></div>
-        
+
         <div className="bg-card rounded-lg shadow-md p-8 space-y-6 border border-border m-1">
         {/* Header Section */}
         <div>
@@ -133,7 +179,7 @@ export default function OpportunityDetails({
           <div className="flex items-start justify-between gap-4 mb-2">
             <h1 className="text-4xl font-bold flex-1 text-foreground">{currentOpportunity.company_name}</h1>
 
-            {/* Icon buttons */}
+            {/* Action icons - Top Right */}
             <div className="flex gap-2 flex-wrap">
               {/* Add to Calendar Button */}
               <AddToCalendarButton
@@ -300,6 +346,53 @@ export default function OpportunityDetails({
             </div>
           </div>
         )}
+
+        {/* Action Buttons - Centered at Bottom */}
+        <div className="flex items-center justify-center gap-3 pt-6 border-t border-border">
+          {/* Save Button */}
+          <Button
+            onClick={handleSave}
+            disabled={saveApplyMutation.isPending}
+            variant={savedStatus === 'saved' ? 'default' : 'outline'}
+            size="default"
+            className={`flex items-center gap-2 ${
+              savedStatus === 'saved'
+                ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                : 'hover:bg-purple-50'
+            }`}
+            title={savedStatus === 'saved' ? 'Remove from saved' : 'Save for later'}
+          >
+            <Bookmark
+              className={`w-4 h-4 ${savedStatus === 'saved' ? 'fill-current' : ''}`}
+            />
+            <span className="text-sm">
+              {savedStatus === 'saved' ? 'Saved' : 'Save'}
+            </span>
+          </Button>
+
+          {/* Mark as Applied Button */}
+          <Button
+            onClick={handleMarkAsApplied}
+            disabled={saveApplyMutation.isPending}
+            size="default"
+            className={`flex items-center gap-2 ${
+              appliedStatus === 'applied'
+                ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border-0'
+                : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0'
+            }`}
+          >
+            <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+              appliedStatus === 'applied' ? 'border-white bg-white' : 'border-white bg-transparent'
+            }`}>
+              {appliedStatus === 'applied' && (
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+            {appliedStatus === 'applied' ? 'Marked as Applied' : 'Mark as Applied'}
+          </Button>
+        </div>
         </div>
       </div>
 

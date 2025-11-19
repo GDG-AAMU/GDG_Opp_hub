@@ -56,8 +56,10 @@ export function useOpportunity(id: string | null): UseOpportunityReturn {
     queryKey,
     queryFn,
     enabled: !!id, // Only fetch if ID is provided
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Always consider data stale to allow refetch on invalidation
     gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnMount: true, // Refetch when component mounts
   })
 
   const error = queryError ? (queryError as Error).message : null
