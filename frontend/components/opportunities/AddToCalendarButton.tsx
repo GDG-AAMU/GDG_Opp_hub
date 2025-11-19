@@ -47,20 +47,19 @@ export default function AddToCalendarButton({
     }
   }
 
-  if (!opportunity.deadline) {
-    return null
-  }
+  const hasDeadline = !!opportunity.deadline
 
   return (
     <Button
       onClick={handleAddToCalendar}
       variant={variant}
       size={size}
-      className={`flex items-center gap-1.5 ${className}`}
-      title="Add deadline to calendar"
+      disabled={!hasDeadline}
+      className={`flex items-center justify-center gap-1.5 min-w-0 max-w-full ${className}`}
+      title={hasDeadline ? "Add deadline to calendar" : "No deadline available"}
     >
-      <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
-      <span className="hidden sm:inline">Add to Calendar</span>
+      <Calendar className="w-4 h-4 flex-shrink-0" />
+      <span className="hidden md:inline text-xs whitespace-nowrap">Calendar</span>
     </Button>
   )
 }

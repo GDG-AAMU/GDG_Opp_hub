@@ -1,21 +1,9 @@
 /**
- * Smart Scraper with LinkedIn/Facebook Detection
- * Automatically detects restricted sites and provides fallback options
+ * Smart Scraper with Dynamic Block Detection
+ * Tries scraping first, detects if blocked, then prompts for manual content
  */
 
 import { scrapeUrl } from './web-scraper';
-
-/**
- * Sites that require authentication or have aggressive bot detection
- */
-const RESTRICTED_SITES = [
-  'linkedin.com',
-  'facebook.com',
-  'fb.com',
-  'twitter.com',
-  'x.com',
-  'instagram.com',
-];
 
 /**
  * Options for smart scraping
@@ -38,34 +26,50 @@ export interface SmartScrapeResult {
   error?: string;
   metadata?: {
     url: string;
-    isRestricted: boolean;
+    isBlocked: boolean; // Changed from isRestricted to isBlocked
     scrapeMethod?: string;
     fallbackChain?: string[];
   };
 }
 
 /**
- * Checks if a URL is from a restricted site
+ * Checks if an error indicates the site is blocked/restricted
  */
-export function isRestrictedSite(url: string): boolean {
-  try {
-    const urlObj = new URL(url);
-    const hostname = urlObj.hostname.toLowerCase();
-    return RESTRICTED_SITES.some(site => hostname.includes(site));
-  } catch {
-    return false;
-  }
+function isBlockedError(error: string | undefined): boolean {
+  if (!error) return false
+
+  const lowerError = error.toLowerCase()
+  
+  // Check for access denied patterns
+  const blockedPatterns = [
+    'access denied',
+    'access_denied',
+    '401',
+    '403',
+    'forbidden',
+    'unauthorized',
+    'login required',
+    'sign in required',
+    'authentication required',
+    'blocked',
+    'bot detection',
+    'captcha',
+    'rate limited',
+    '429',
+  ]
+
+  return blockedPatterns.some(pattern => lowerError.includes(pattern))
 }
 
 /**
- * Smart scraper that handles restricted sites automatically
+ * Smart scraper with dynamic block detection
  *
  * Strategy:
- * 1. Check if URL is from restricted site (LinkedIn, Facebook, etc.)
- * 2. If restricted and no manual content: Return requiresManual=true
- * 3. If restricted with manual content: Use manual content
- * 4. If not restricted: Try auto-scraping
- * 5. If auto-scrape fails: Return requiresManual=true
+ * 1. Try auto-scraping first (no hardcoded restrictions)
+ * 2. If scraping succeeds: Return content
+ * 3. If scraping fails with blocked error: Return requiresManual=true
+ * 4. If user provided manual content: Use it regardless of scraping result
+ * 5. If other error: Return requiresManual=true as fallback
  *
  * @param options - Scraping options
  * @returns Smart scrape result
@@ -75,41 +79,16 @@ export async function smartScrape(
 ): Promise<SmartScrapeResult> {
   const { url, manualContent, timeout } = options;
 
-  // Check if site is restricted
-  const isRestricted = isRestrictedSite(url);
+  // If user provided manual content, we can use it directly
+  // But still try scraping first to see if it works
+  const hasManualContent = manualContent && manualContent.trim().length > 50
 
-  // If restricted site
-  if (isRestricted) {
-    // If user provided manual content, use it
-    if (manualContent && manualContent.trim().length > 50) {
-      return {
-        success: true,
-        content: manualContent,
-        method: 'manual-paste',
-        metadata: {
-          url,
-          isRestricted: true,
-        },
-      };
-    }
-
-    // Otherwise, require manual paste
-    return {
-      success: false,
-      requiresManual: true,
-      error: 'This site requires manual content paste (LinkedIn, Facebook, etc.)',
-      metadata: {
-        url,
-        isRestricted: true,
-      },
-    };
-  }
-
-  // Try auto-scraping for non-restricted sites
+  // Try auto-scraping first (dynamic detection)
   try {
     const scrapeResult = await scrapeUrl(url, { timeout });
 
     if (scrapeResult.success) {
+      // Scraping succeeded - use scraped content
       return {
         success: true,
         content: scrapeResult.content,
@@ -117,23 +96,55 @@ export async function smartScrape(
         method: 'auto-scrape',
         metadata: {
           url,
-          isRestricted: false,
+          isBlocked: false,
           scrapeMethod: scrapeResult.method,
           fallbackChain: scrapeResult.fallbackChain,
         },
       };
     }
 
-    // Auto-scrape failed
-    // If user provided manual content as fallback, use it
-    if (manualContent && manualContent.trim().length > 50) {
+    // Scraping failed - check if it's a blocked error
+    const isBlocked = isBlockedError(scrapeResult.error)
+
+    // If user provided manual content, use it (even if scraping failed)
+    if (hasManualContent) {
       return {
         success: true,
-        content: manualContent,
+        content: manualContent!.trim(),
         method: 'manual-paste',
         metadata: {
           url,
-          isRestricted: false,
+          isBlocked: isBlocked,
+        },
+      };
+    }
+
+    // No manual content - require it if blocked, or if scraping failed
+    return {
+      success: false,
+      requiresManual: true,
+      error: isBlocked
+        ? 'This site appears to be blocked or requires authentication. Please paste the job description manually.'
+        : `Auto-scraping failed: ${scrapeResult.error}. Please paste the content manually.`,
+      metadata: {
+        url,
+        isBlocked: isBlocked,
+      },
+    };
+  } catch (error) {
+    // Exception during scraping
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    const isBlocked = isBlockedError(errorMessage)
+
+    // If user provided manual content, use it
+    if (hasManualContent) {
+      return {
+        success: true,
+        content: manualContent!.trim(),
+        method: 'manual-paste',
+        metadata: {
+          url,
+          isBlocked: isBlocked,
         },
       };
     }
@@ -142,54 +153,34 @@ export async function smartScrape(
     return {
       success: false,
       requiresManual: true,
-      error: `Auto-scraping failed: ${scrapeResult.error}. Please paste the content manually.`,
+      error: isBlocked
+        ? 'This site appears to be blocked or requires authentication. Please paste the job description manually.'
+        : `Scraping error: ${errorMessage}. Please paste the content manually.`,
       metadata: {
         url,
-        isRestricted: false,
-      },
-    };
-  } catch (error) {
-    // Exception during scraping
-    // If user provided manual content, use it
-    if (manualContent && manualContent.trim().length > 50) {
-      return {
-        success: true,
-        content: manualContent,
-        method: 'manual-paste',
-        metadata: {
-          url,
-          isRestricted: false,
-        },
-      };
-    }
-
-    // Otherwise, return error
-    return {
-      success: false,
-      requiresManual: true,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-      metadata: {
-        url,
-        isRestricted: false,
+        isBlocked: isBlocked,
       },
     };
   }
 }
 
 /**
- * Get user-friendly message for restricted sites
+ * Legacy function for backward compatibility
+ * Now uses dynamic detection instead of hardcoded list
+ */
+export function isRestrictedSite(url: string): boolean {
+  // This function is kept for backward compatibility
+  // But it now returns false - we use dynamic detection instead
+  // The actual detection happens in smartScrape()
+  return false
+}
+
+/**
+ * Get user-friendly message for blocked sites
  */
 export function getRestrictedSiteMessage(url: string): string | null {
-  if (url.includes('linkedin.com')) {
-    return 'LinkedIn requires login and blocks scrapers. Please copy and paste the job description.';
-  }
-  if (url.includes('facebook.com') || url.includes('fb.com')) {
-    return 'Facebook requires login. Please copy and paste the job posting content.';
-  }
-  if (url.includes('twitter.com') || url.includes('x.com')) {
-    return 'Twitter/X has limited public access. Please copy and paste the post content.';
-  }
-  return null;
+  // Generic message since we use dynamic detection
+  return 'This site appears to be blocked or requires authentication. Please copy and paste the job description manually.';
 }
 
 /**

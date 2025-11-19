@@ -42,18 +42,8 @@ const opportunityTypeLabels: Record<string, string> = {
   scholarship: 'Scholarship',
 }
 
-// Check if URL is from a restricted site
-const RESTRICTED_SITES = ['linkedin.com', 'facebook.com', 'fb.com', 'twitter.com', 'x.com', 'instagram.com']
-
-function isRestrictedSite(url: string): boolean {
-  try {
-    const urlObj = new URL(url)
-    const hostname = urlObj.hostname.toLowerCase()
-    return RESTRICTED_SITES.some(site => hostname.includes(site))
-  } catch {
-    return false
-  }
-}
+// Note: We no longer use hardcoded restricted sites
+// The API will try scraping first and detect if blocked dynamically
 
 export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -80,14 +70,9 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
   const opportunityType = watch('opportunity_type')
   const url = watch('url')
 
-  // Check if URL requires manual content
-  useEffect(() => {
-    if (url && isRestrictedSite(url)) {
-      setRequiresManual(true)
-    } else {
-      setRequiresManual(false)
-    }
-  }, [url])
+  // Note: We no longer pre-check for restricted sites
+  // The API will try scraping first and return requiresManual if blocked
+  // Manual content field will show if user gets requiresManual response
 
   const onSubmit = async (data: SubmitOpportunityFormData) => {
     // Validate manual content if required
@@ -98,9 +83,9 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
 
     setIsSubmitting(true)
     try {
-      // Include manual content if provided
+      // Include manual content if provided (user can provide it proactively or after being prompted)
       const requestBody: any = { ...data }
-      if (requiresManual && manualContent.trim().length >= 50) {
+      if (manualContent && manualContent.trim().length >= 50) {
         requestBody.manualContent = manualContent.trim()
       }
 
@@ -113,12 +98,6 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
       })
 
       const result = await response.json()
-
-      // Log parsed fields for debugging
-      if (result.metadata?.parsedFields) {
-        console.log('📊 Parsed Fields:', result.metadata.parsedFields)
-        console.log('📏 Scraped Content Length:', result.metadata.scrapedContentLength, 'chars')
-      }
 
       if (!response.ok) {
         // Check if manual content is required
