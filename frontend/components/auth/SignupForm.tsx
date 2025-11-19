@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { Loader2, Chrome } from 'lucide-react'
@@ -16,7 +16,25 @@ import { signupSchema, SignupFormData } from '@/lib/validations/auth'
 export default function SignupForm() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { signUp, signInWithGoogle } = useAuth()
+  const errorShownRef = useRef(false)
+
+  // Check for OAuth error (only show once)
+  useEffect(() => {
+    if (errorShownRef.current) return
+
+    const error = searchParams.get('error')
+    const message = searchParams.get('message')
+    
+    if (error === 'invalid_domain' && message) {
+      toast.error(decodeURIComponent(message), { duration: 6000, id: 'oauth-error' })
+      errorShownRef.current = true
+    } else if (error === 'auth_failed') {
+      toast.error('Authentication failed. Please try again.', { id: 'oauth-error' })
+      errorShownRef.current = true
+    }
+  }, [searchParams])
 
   const {
     register,
