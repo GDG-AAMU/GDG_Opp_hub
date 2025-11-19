@@ -110,7 +110,14 @@ export default function OpportunityDetails({
   return (
     <>
       {/* Details Card */}
-      <div className="bg-white rounded-lg shadow-md p-8 space-y-6">
+      <div className="relative rounded-lg overflow-hidden">
+        {/* Colorful gradient border */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-blue-500 via-green-500 to-yellow-500"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-blue-500 via-green-500 to-yellow-500"></div>
+        <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-red-500 via-blue-500 via-green-500 to-yellow-500"></div>
+        <div className="absolute top-0 bottom-0 right-0 w-1 bg-gradient-to-b from-red-500 via-blue-500 via-green-500 to-yellow-500"></div>
+        
+        <div className="bg-card rounded-lg shadow-md p-8 space-y-6 border border-border m-1">
         {/* Header Section */}
         <div>
           {/* Company Logo */}
@@ -124,7 +131,7 @@ export default function OpportunityDetails({
 
           {/* Top row with company name and action icons */}
           <div className="flex items-start justify-between gap-4 mb-2">
-            <h1 className="text-4xl font-bold flex-1">{currentOpportunity.company_name}</h1>
+            <h1 className="text-4xl font-bold flex-1 text-foreground">{currentOpportunity.company_name}</h1>
 
             {/* Icon buttons */}
             <div className="flex gap-2 flex-wrap">
@@ -166,15 +173,15 @@ export default function OpportunityDetails({
             </div>
           </div>
 
-          <h2 className="text-2xl font-semibold text-gray-700 mb-3">{currentOpportunity.job_title}</h2>
+          <h2 className="text-2xl font-semibold text-foreground mb-3">{currentOpportunity.job_title}</h2>
 
           {/* Type Badge */}
           <div className="flex items-center gap-3 mb-4">
-            <span className="inline-block px-4 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+            <span className="inline-block px-4 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-semibold">
               {currentOpportunity.opportunity_type}
             </span>
             {currentOpportunity.role_type && (
-              <span className="inline-block px-4 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+              <span className="inline-block px-4 py-1 bg-muted text-muted-foreground rounded-full text-sm">
                 {currentOpportunity.role_type}
               </span>
             )}
@@ -184,12 +191,12 @@ export default function OpportunityDetails({
           {(currentOpportunity.offers_sponsorship === false || currentOpportunity.requires_us_citizenship === true) && (
             <div className="flex flex-wrap gap-2 mb-4">
               {currentOpportunity.offers_sponsorship === false && (
-                <span className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-red-50 text-red-700 border border-red-200">
+                <span className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
                   🛂 Does NOT offer sponsorship
                 </span>
               )}
               {currentOpportunity.requires_us_citizenship === true && (
-                <span className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-red-50 text-red-700 border border-red-200">
+                <span className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
                   🇺🇸 Requires U.S. Citizenship
                 </span>
               )}
@@ -197,21 +204,21 @@ export default function OpportunityDetails({
           )}
 
           {/* Key Information Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg border border-border">
             {currentOpportunity.location && (
               <div>
-                <p className="text-sm text-gray-500">Location</p>
-                <p className="font-medium">{currentOpportunity.location}</p>
+                <p className="text-sm text-muted-foreground">Location</p>
+                <p className="font-medium text-foreground">{currentOpportunity.location}</p>
               </div>
             )}
 
             {currentOpportunity.deadline && (
               <div>
-                <p className="text-sm text-gray-500">Deadline</p>
-                <p className={`font-medium ${isDeadlineApproaching() ? 'text-red-600 font-bold' : ''}`}>
+                <p className="text-sm text-muted-foreground">Deadline</p>
+                <p className={`font-medium text-foreground ${isDeadlineApproaching() ? 'text-destructive font-bold' : ''}`}>
                   {formatDate(currentOpportunity.deadline)}
                   {isDeadlineApproaching() && (
-                    <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                    <span className="ml-2 text-xs bg-destructive/10 dark:bg-destructive/20 text-destructive px-2 py-1 rounded">
                       Closing Soon!
                     </span>
                   )}
@@ -221,8 +228,8 @@ export default function OpportunityDetails({
 
             {(currentOpportunity.submitted_by || currentOpportunity.users) && (
               <div>
-                <p className="text-sm text-gray-500">Submitted By</p>
-                <p className="font-medium">
+                <p className="text-sm text-muted-foreground">Submitted By</p>
+                <p className="font-medium text-foreground">
                   {currentOpportunity.users?.name
                     ? currentOpportunity.users.name
                     : typeof currentOpportunity.submitted_by === 'object' && currentOpportunity.submitted_by !== null && 'name' in currentOpportunity.submitted_by
@@ -234,8 +241,8 @@ export default function OpportunityDetails({
 
             {currentOpportunity.created_at && (
               <div>
-                <p className="text-sm text-gray-500">Posted On</p>
-                <p className="font-medium">{formatDate(currentOpportunity.created_at)}</p>
+                <p className="text-sm text-muted-foreground">Posted On</p>
+                <p className="font-medium text-foreground">{formatDate(currentOpportunity.created_at)}</p>
               </div>
             )}
           </div>
@@ -243,15 +250,15 @@ export default function OpportunityDetails({
 
         {/* Description */}
         <div>
-          <h2 className="text-xl font-semibold mb-2">Description</h2>
-          <p className="text-gray-700 whitespace-pre-wrap">{currentOpportunity.description || 'No description available.'}</p>
+          <h2 className="text-xl font-semibold mb-2 text-foreground">Description</h2>
+          <p className="text-foreground whitespace-pre-wrap">{currentOpportunity.description || 'No description available.'}</p>
         </div>
 
         {/* Requirements */}
         <div>
-          <h2 className="text-xl font-semibold mb-2">Requirements/Qualifications</h2>
+          <h2 className="text-xl font-semibold mb-2 text-foreground">Requirements/Qualifications</h2>
           {currentOpportunity.requirements ? (
-            <ul className="list-disc list-inside space-y-2 text-gray-700">
+            <ul className="list-disc list-inside space-y-2 text-foreground">
               {(() => {
                 // Try splitting by newlines first
                 let items = currentOpportunity.requirements.split('\n').filter(line => line.trim())
@@ -277,22 +284,23 @@ export default function OpportunityDetails({
               })()}
             </ul>
           ) : (
-            <p className="text-gray-700">No requirements specified.</p>
+            <p className="text-foreground">No requirements specified.</p>
           )}
         </div>
         {/* Relevant Majors */}
         {relevantMajors && relevantMajors.length > 0 && (
           <div>
-            <h2 className="text-xl font-semibold mb-2">Relevant Majors</h2>
+            <h2 className="text-xl font-semibold mb-2 text-foreground">Relevant Majors</h2>
             <div className="flex flex-wrap gap-2">
               {relevantMajors.map((major: string, index: number) => (
-                <span key={index} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                <span key={index} className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-sm">
                   {major}
                 </span>
               ))}
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* Action Buttons */}
@@ -364,7 +372,7 @@ export default function OpportunityDetails({
               This will remove the opportunity and cannot be undone. You can re-create it later if needed.
             </DialogDescription>
           </DialogHeader>
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 text-sm text-amber-800 dark:text-amber-300">
             <p className="font-semibold">Are you sure?</p>
             <p>
               {currentOpportunity.job_title || "This opportunity"} at{" "}

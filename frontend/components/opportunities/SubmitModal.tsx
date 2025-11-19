@@ -179,7 +179,7 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
           {/* URL Field */}
           <div className="space-y-2">
             <Label htmlFor="url">
-              Opportunity URL <span className="text-red-500">*</span>
+              Opportunity URL <span className="text-destructive">*</span>
             </Label>
             <Input
               id="url"
@@ -187,10 +187,10 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
               placeholder="https://example.com/job-posting"
               {...register('url')}
               disabled={isSubmitting}
-              className={errors.url ? 'border-red-500' : ''}
+              className={errors.url ? 'border-destructive' : ''}
             />
             {errors.url && (
-              <p className="text-sm text-red-600">{errors.url.message}</p>
+              <p className="text-sm text-destructive">{errors.url.message}</p>
             )}
           </div>
 
@@ -205,20 +205,20 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
               disabled={isSubmitting}
             />
             {errors.company_name && (
-              <p className="text-sm text-red-600">{errors.company_name.message}</p>
+              <p className="text-sm text-destructive">{errors.company_name.message}</p>
             )}
           </div>
 
           {/* Manual Content Field (for restricted sites) */}
           {requiresManual && (
-            <div className="space-y-2 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="space-y-2 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
               <div className="flex items-start gap-2 mb-2">
-                <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <Info className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <Label htmlFor="manualContent" className="text-amber-900 font-semibold">
+                  <Label htmlFor="manualContent" className="text-amber-900 dark:text-amber-300 font-semibold">
                     Manual Content Required
                   </Label>
-                  <p className="text-sm text-amber-700 mt-1">
+                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
                     {url.includes('linkedin.com') 
                       ? 'LinkedIn requires login and blocks automated scraping. Please copy and paste the job description below.'
                       : 'This site cannot be automatically scraped. Please copy and paste the job posting content below.'}
@@ -232,10 +232,10 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
                 placeholder="Paste the job description, requirements, location, deadline, and other details here..."
                 disabled={isSubmitting}
                 rows={8}
-                className="w-full px-3 py-2 border border-amber-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-sm placeholder:text-muted-foreground"
               />
               {manualContent.trim().length > 0 && manualContent.trim().length < 50 && (
-                <p className="text-xs text-amber-600">
+                <p className="text-xs text-amber-600 dark:text-amber-400">
                   Please provide at least 50 characters of content.
                 </p>
               )}
@@ -245,7 +245,7 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
           {/* Opportunity Type Field */}
           <div className="space-y-2">
             <Label htmlFor="opportunity_type">
-              Opportunity Type <span className="text-red-500">*</span>
+              Opportunity Type <span className="text-destructive">*</span>
             </Label>
             <Select
               value={opportunityType}
@@ -254,7 +254,7 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
             >
               <SelectTrigger 
                 id="opportunity_type"
-                className={errors.opportunity_type ? 'border-red-500' : ''}
+                className={errors.opportunity_type ? 'border-destructive' : ''}
               >
                 <SelectValue placeholder="Select opportunity type" />
               </SelectTrigger>
@@ -267,21 +267,21 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
               </SelectContent>
             </Select>
             {errors.opportunity_type && (
-              <p className="text-sm text-red-600">{errors.opportunity_type.message}</p>
+              <p className="text-sm text-destructive">{errors.opportunity_type.message}</p>
             )}
           </div>
 
           {/* Loading State Indicator */}
           {isSubmitting && (
-            <div className="flex items-center justify-center gap-2 p-4 bg-purple-50 rounded-lg border border-purple-200">
-              <Loader2 className="h-5 w-5 animate-spin text-purple-600" />
+            <div className="flex items-center justify-center gap-2 p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-800">
+              <Loader2 className="h-5 w-5 animate-spin text-purple-600 dark:text-purple-400" />
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-purple-600" />
-                <span className="text-sm font-medium text-purple-900">
+                <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                <span className="text-sm font-medium text-purple-900 dark:text-purple-300">
                   Parsing with AI...
                 </span>
               </div>
-              <p className="text-xs text-purple-700 mt-1">
+              <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
                 This may take 5-10 seconds
               </p>
             </div>

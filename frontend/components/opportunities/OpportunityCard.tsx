@@ -43,122 +43,134 @@ const typeLabels = {
 
 export default function OpportunityCard({ opportunity, onStatusChange }: Readonly<OpportunityCardProps>) {
   return (
-    <div className="bg-card rounded-lg shadow-md hover:shadow-xl transition-all duration-200 p-6 border border-border hover:border-purple-500 dark:hover:border-purple-400">
-      {/* Company Logo */}
-      <CompanyLogo
-        companyName={opportunity.company_name}
-        url={opportunity.url}
-        size={64}
-        className="mb-4"
-      />
+    <Link 
+      href={`/opportunities/${opportunity.id}`}
+      className="block group"
+      onClick={(e) => {
+        // Don't navigate if clicking on action buttons
+        const target = e.target as HTMLElement
+        if (target.closest('button') || target.closest('a[href^="http"]')) {
+          e.preventDefault()
+        }
+      }}
+    >
+      <div className="bg-card rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-border hover:border-purple-500 dark:hover:border-purple-400 hover:-translate-y-1 cursor-pointer h-full flex flex-col">
+        {/* Company Logo */}
+        <CompanyLogo
+          companyName={opportunity.company_name}
+          url={opportunity.url}
+          size={64}
+          className="mb-4"
+        />
 
-      {/* Company Name */}
-      <h3 className="text-lg font-semibold text-foreground mb-2">
-        {opportunity.company_name}
-      </h3>
+        {/* Company Name */}
+        <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+          {opportunity.company_name}
+        </h3>
 
-      {/* Job Title */}
-      <h4 className="text-md text-muted-foreground mb-3">
-        {opportunity.job_title}
-      </h4>
+        {/* Job Title */}
+        <h4 className="text-md text-muted-foreground mb-3">
+          {opportunity.job_title}
+        </h4>
 
-      {/* Type Badge */}
-      <div className="flex items-center mb-2">
-        <Briefcase className="w-4 h-4 mr-2 flex-shrink-0 text-muted-foreground" />
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${typeColors[opportunity.opportunity_type]}`}>
-          {typeLabels[opportunity.opportunity_type]}
-        </span>
+        {/* Sponsorship & Citizenship Badges */}
+        {(opportunity.offers_sponsorship === false || opportunity.requires_us_citizenship === true) && (
+          <div className="flex flex-wrap gap-2 mb-3" onClick={(e) => e.stopPropagation()}>
+            {opportunity.offers_sponsorship === false && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                🛂 Does NOT offer sponsorship
+              </span>
+            )}
+            {opportunity.requires_us_citizenship === true && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                🇺🇸 Requires U.S. Citizenship
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Type Badge */}
+        <div className="flex items-center mb-2">
+          <Briefcase className="w-4 h-4 mr-2 flex-shrink-0 text-muted-foreground" />
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${typeColors[opportunity.opportunity_type]}`}>
+            {typeLabels[opportunity.opportunity_type]}
+          </span>
+        </div>
+
+        {/* Location */}
+        {opportunity.location && (
+          <div className="flex items-center text-muted-foreground mb-2">
+            <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span className="text-sm">{opportunity.location}</span>
+          </div>
+        )}
+
+        {/* Deadline - Always show, more prominent */}
+        <div className="flex items-center mb-4">
+          <Calendar className="w-4 h-4 mr-2 flex-shrink-0 text-purple-600 dark:text-purple-400" />
+          <span className="text-sm font-medium">
+            {opportunity.deadline ? (
+              <span className="text-foreground">
+                Deadline: {format(new Date(opportunity.deadline), 'MMM dd, yyyy')}
+              </span>
+            ) : (
+              <span className="text-muted-foreground italic">No deadline specified</span>
+            )}
+          </span>
+        </div>
+
+        {/* Action Buttons Row - Save, Apply, Calendar, Share */}
+        {/* Use grid on mobile for equal columns, flex on desktop */}
+        <div className="grid grid-cols-4 gap-2 mb-3 md:flex md:items-center md:gap-2 overflow-hidden mt-auto" onClick={(e) => e.stopPropagation()}>
+          {/* Save/Applied Buttons - spans 2 columns on mobile */}
+          <div className="col-span-2 md:col-span-1 md:flex md:items-center md:gap-2 min-w-0">
+            <SaveAppliedButtons
+              opportunityId={opportunity.id}
+              currentStatus={opportunity.userStatus || null}
+              onStatusChange={onStatusChange}
+            />
+          </div>
+
+          {/* Add to Calendar Button */}
+          <div className="col-span-1 min-w-0">
+            <AddToCalendarButton
+              opportunity={{
+                id: opportunity.id,
+                company_name: opportunity.company_name,
+                job_title: opportunity.job_title,
+                deadline: opportunity.deadline,
+                location: opportunity.location,
+                url: opportunity.url
+              }}
+              size="sm"
+              className="w-full md:w-auto"
+            />
+          </div>
+
+          {/* Share Button */}
+          <div className="col-span-1 min-w-0">
+            <SocialShareButton
+              opportunity={{
+                opportunity_type: opportunity.opportunity_type,
+                job_title: opportunity.job_title,
+                company_name: opportunity.company_name
+              }}
+              pageUrl={typeof window !== 'undefined' ? `${window.location.origin}/opportunities/${opportunity.id}` : ''}
+              size="sm"
+              className="w-full md:w-auto"
+            />
+          </div>
+        </div>
+
+        {/* View Details Button */}
+        <div onClick={(e) => e.stopPropagation()}>
+          <Button variant="outline" className="w-full group">
+            <span className="hidden sm:inline">View Details</span>
+            <span className="sm:hidden">Details</span>
+            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </div>
       </div>
-
-      {/* Location */}
-      {opportunity.location && (
-        <div className="flex items-center text-muted-foreground mb-2">
-          <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
-          <span className="text-sm">{opportunity.location}</span>
-        </div>
-      )}
-
-      {/* Deadline - Always show, more prominent */}
-      <div className="flex items-center mb-4">
-        <Calendar className="w-4 h-4 mr-2 flex-shrink-0 text-purple-600 dark:text-purple-400" />
-        <span className="text-sm font-medium">
-          {opportunity.deadline ? (
-            <span className="text-foreground">
-              Deadline: {format(new Date(opportunity.deadline), 'MMM dd, yyyy')}
-            </span>
-          ) : (
-            <span className="text-muted-foreground italic">No deadline specified</span>
-          )}
-        </span>
-      </div>
-
-      {/* Sponsorship & Citizenship Badges */}
-      {(opportunity.offers_sponsorship === false || opportunity.requires_us_citizenship === true) && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {opportunity.offers_sponsorship === false && (
-            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-              🛂 Does NOT offer sponsorship
-            </span>
-          )}
-          {opportunity.requires_us_citizenship === true && (
-            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-              🇺🇸 Requires U.S. Citizenship
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Action Buttons Row - Save, Apply, Calendar, Share */}
-      {/* Use grid on mobile for equal columns, flex on desktop */}
-      <div className="grid grid-cols-4 gap-2 mb-3 md:flex md:items-center md:gap-2 overflow-hidden">
-        {/* Save/Applied Buttons - spans 2 columns on mobile */}
-        <div className="col-span-2 md:col-span-1 md:flex md:items-center md:gap-2 min-w-0">
-          <SaveAppliedButtons
-            opportunityId={opportunity.id}
-            currentStatus={opportunity.userStatus || null}
-            onStatusChange={onStatusChange}
-          />
-        </div>
-
-        {/* Add to Calendar Button */}
-        <div className="col-span-1 min-w-0">
-          <AddToCalendarButton
-            opportunity={{
-              id: opportunity.id,
-              company_name: opportunity.company_name,
-              job_title: opportunity.job_title,
-              deadline: opportunity.deadline,
-              location: opportunity.location,
-              url: opportunity.url
-            }}
-            size="sm"
-            className="w-full md:w-auto"
-          />
-        </div>
-
-        {/* Share Button */}
-        <div className="col-span-1 min-w-0">
-          <SocialShareButton
-            opportunity={{
-              opportunity_type: opportunity.opportunity_type,
-              job_title: opportunity.job_title,
-              company_name: opportunity.company_name
-            }}
-            pageUrl={typeof window !== 'undefined' ? `${window.location.origin}/opportunities/${opportunity.id}` : ''}
-            size="sm"
-            className="w-full md:w-auto"
-          />
-        </div>
-      </div>
-
-      {/* View Details Button */}
-      <Link href={`/opportunities/${opportunity.id}`} className="block">
-        <Button variant="outline" className="w-full group">
-          <span className="hidden sm:inline">View Details</span>
-          <span className="sm:hidden">Details</span>
-          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-        </Button>
-      </Link>
-    </div>
+    </Link>
   )
 }
