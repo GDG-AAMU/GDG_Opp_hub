@@ -94,38 +94,6 @@ gdg-opportunities-platform/
 └── README.md
 ```
 
-## 🗄️ Database Schema
-
-### Users Table
-```sql
-- id (uuid, primary key)
-- email (text, unique)
-- name (text)
-- major (text, nullable)
-- role (enum: 'student', 'admin')
-- created_at (timestamp)
-- updated_at (timestamp)
-```
-
-### Opportunities Table
-```sql
-- id (uuid, primary key)
-- url (text, unique, indexed)
-- company_name (text)
-- job_title (text)
-- opportunity_type (enum: 'internship', 'full_time', 'research', 'fellowship', 'scholarship')
-- role_type (text)
-- relevant_majors (jsonb)
-- deadline (date, nullable)
-- requirements (text)
-- location (text)
-- description (text)
-- submitted_by (uuid, foreign key)
-- status (enum: 'active', 'expired')
-- created_at (timestamp)
-- expired_at (timestamp, nullable)
-- ai_parsed_data (jsonb)
-```
 
 ## ✨ Core Features
 
@@ -370,12 +338,6 @@ This is a GDG AAMU club project. Contributions are welcome from club members.
 ## 📄 License
 
 This project is for internal GDG AAMU club use.
-
-## 👥 Team
-
-- **Project Lead**: GDG AAMU President
-- **Frontend Team**: [Your frontend developers]
-- **Backend Team**: [Your backend developers]
 
 ## 📞 Contact
 
