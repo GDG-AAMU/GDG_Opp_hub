@@ -27,18 +27,6 @@ export default function Home() {
     { name: "Scholarships", href: "/dashboard?type=scholarship" },
   ]
 
-  // Helper function to map display type to query parameter
-  const getTypeQueryParam = (displayType: string): string => {
-    const typeMap: Record<string, string> = {
-      "Internships": "internship",
-      "Full-time": "full_time",
-      "Research": "research",
-      "Fellowships": "fellowship",
-      "Scholarships": "scholarship",
-    }
-    return typeMap[displayType] || "internship"
-  }
-
   const featuredOpportunities = [
     {
       id: 1,
@@ -46,23 +34,20 @@ export default function Home() {
       title: "Software Engineering Internship",
       description: "Join our team as a software engineering intern and work on cutting-edge projects. Gain hands-on experience with modern technologies.",
       image: "💻",
-      hasLink: true,
     },
     {
       id: 2,
       type: "Internships",
-      title: "Mechanical Engineering Internship",
-      description: "Gain hands-on experience in mechanical engineering design, analysis, and manufacturing. Work on real-world projects and collaborate with experienced engineers.",
+      title: "Electrical Engineering Internship",
+      description: "Gain hands-on experience in electrical engineering design, analysis, and manufacturing. Work on real-world projects and collaborate with experienced engineers.",
       image: "⚙️",
-      hasLink: false, // No specific ME opportunities yet
     },
     {
       id: 3,
       type: "Research",
-      title: "Biomedical Research Fellowship",
-      description: "Conduct groundbreaking research in biomedical engineering. Collaborate with leading researchers in state-of-the-art labs.",
+      title: "Research Opportunities",
+      description: "Explore cutting-edge research opportunities across various scientific fields. Collaborate with leading researchers and contribute to groundbreaking discoveries.",
       image: "🔬",
-      hasLink: true,
     },
     {
       id: 4,
@@ -70,7 +55,6 @@ export default function Home() {
       title: "Global Leadership Scholarship",
       description: "Merit-based scholarship for outstanding students pursuing leadership roles. Full tuition coverage and mentorship program.",
       image: "🎓",
-      hasLink: true,
     },
   ]
 
@@ -201,22 +185,9 @@ export default function Home() {
                   <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                     {opportunity.title}
                   </h3>
-                  <p className="text-muted-foreground mb-4 text-sm sm:text-base line-clamp-3">
+                  <p className="text-muted-foreground text-sm sm:text-base line-clamp-3">
                     {opportunity.description}
                   </p>
-                  {opportunity.hasLink === false ? (
-                    <div className="inline-flex items-center text-muted-foreground text-sm sm:text-base italic">
-                      <span>No opportunities yet. Be the first to share!</span>
-                    </div>
-                  ) : (
-                    <Link
-                      href={`/dashboard?type=${getTypeQueryParam(opportunity.type)}`}
-                      className="inline-flex items-center text-purple-600 dark:text-purple-400 font-semibold hover:text-purple-700 dark:hover:text-purple-300 transition-colors group/link text-sm sm:text-base"
-                    >
-                      Learn More
-                      <ArrowRight className="ml-2 w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
-                    </Link>
-                  )}
                 </div>
               </div>
             ))}
