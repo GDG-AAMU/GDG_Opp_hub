@@ -55,29 +55,29 @@ export default function MyApplicationsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div className="min-h-screen bg-background">
         <Navbar />
 
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Applications</h1>
-            <p className="text-gray-600">Manage your saved and applied opportunities</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">My Applications</h1>
+            <p className="text-muted-foreground">Manage your saved and applied opportunities</p>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-6 border-b border-gray-200">
+          <div className="flex gap-2 mb-6 border-b border-border">
             <button
               onClick={() => setActiveTab('saved')}
               className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors border-b-2 ${
                 activeTab === 'saved'
-                  ? 'border-purple-600 text-purple-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-purple-600 dark:border-purple-400 text-purple-600 dark:text-purple-400'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               <Bookmark className="w-5 h-5" />
               <span>Saved</span>
               {savedCount > 0 && (
-                <span className="ml-1 px-2 py-0.5 text-xs font-semibold bg-purple-100 text-purple-700 rounded-full">
+                <span className="ml-1 px-2 py-0.5 text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
                   {savedCount}
                 </span>
               )}
@@ -86,14 +86,14 @@ export default function MyApplicationsPage() {
               onClick={() => setActiveTab('applied')}
               className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors border-b-2 ${
                 activeTab === 'applied'
-                  ? 'border-green-600 text-green-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-green-600 dark:border-green-400 text-green-600 dark:text-green-400'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               <CheckCircle2 className="w-5 h-5" />
               <span>Applied</span>
               {appliedCount > 0 && (
-                <span className="ml-1 px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-700 rounded-full">
+                <span className="ml-1 px-2 py-0.5 text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
                   {appliedCount}
                 </span>
               )}
@@ -104,16 +104,16 @@ export default function MyApplicationsPage() {
           {loading ? (
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading opportunities...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-purple-400 mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading opportunities...</p>
               </div>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="text-center max-w-md">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-red-900 mb-2">Error</h3>
-                  <p className="text-red-700 mb-4">{error}</p>
+                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-destructive mb-2">Error</h3>
+                  <p className="text-destructive mb-4">{error}</p>
                   <Button onClick={() => invalidateCache()} variant="outline">
                     Try Again
                   </Button>
@@ -123,16 +123,16 @@ export default function MyApplicationsPage() {
           ) : opportunities.length === 0 ? (
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="text-center max-w-md">
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-8">
+                <div className="bg-card border border-border rounded-lg p-8">
                   {activeTab === 'saved' ? (
-                    <Bookmark className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <Bookmark className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                   ) : (
-                    <CheckCircle2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <CheckCircle2 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                   )}
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
                     No {activeTab === 'saved' ? 'Saved' : 'Applied'} Opportunities
                   </h3>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-muted-foreground mb-4">
                     {activeTab === 'saved'
                       ? "You haven't saved any opportunities yet. Start browsing and save opportunities you're interested in!"
                       : "You haven't marked any opportunities as applied yet. When you apply to an opportunity, it will appear here."}

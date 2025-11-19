@@ -79,8 +79,11 @@ export default function Home() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative w-full bg-gradient-to-r from-purple-600 via-purple-500 to-blue-500 text-white overflow-hidden">
-        <div className="hidden md:block absolute inset-0 opacity-10">
+      <section className="relative w-full bg-gradient-to-r from-purple-800 via-purple-700 to-blue-800 dark:from-purple-900/30 dark:via-purple-800/30 dark:to-blue-900/30 text-white dark:text-foreground overflow-hidden">
+        {/* Colorful gradient border */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-blue-500 via-green-500 to-yellow-500 z-20"></div>
+        
+        <div className="hidden md:block absolute inset-0 opacity-10 dark:opacity-5">
           <div className="absolute top-20 right-20 w-24 h-24">
             <Lightbulb className="w-full h-full" />
           </div>
@@ -100,19 +103,19 @@ export default function Home() {
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight px-2">
               Discover Your Next Opportunity
             </h1>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-purple-100 max-w-2xl mx-auto px-4">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-purple-200 dark:text-muted-foreground max-w-2xl mx-auto px-4">
               Explore internships, research roles, fellowships, and scholarships all in one place.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center pt-2 sm:pt-4 px-4">
               <Link 
                 href="/dashboard"
-                className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-purple-600 font-semibold rounded-lg hover:bg-purple-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm sm:text-base"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white/90 dark:bg-white/90 text-purple-700 dark:text-purple-700 font-semibold rounded-lg hover:bg-white dark:hover:bg-white transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm sm:text-base border border-purple-600 dark:border-purple-400"
               >
                 Browse Opportunities
               </Link>
               <Link 
                 href="/dashboard"
-                className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-purple-600 transition-all duration-300 text-sm sm:text-base"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border border-purple-600 dark:border-purple-400 text-white dark:text-foreground font-semibold rounded-lg hover:bg-white/10 dark:hover:bg-accent/50 hover:border-purple-500 dark:hover:border-purple-300 transition-all duration-300 text-sm sm:text-base"
               >
                 Learn More
               </Link>
