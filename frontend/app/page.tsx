@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Navbar from "@/components/layout/Navbar"
 import Footer from "@/components/layout/Footer"
 import Link from "next/link"
@@ -7,7 +8,7 @@ import Image from "next/image"
 import { motion } from "framer-motion"
 import { 
   Zap, 
-  Users, 
+  Calendar,
   Briefcase, 
   Lightbulb, 
   Beaker, 
@@ -16,12 +17,58 @@ import {
   ArrowRight
 } from "lucide-react"
 
+interface StatsData {
+  newThisWeek: number
+  deadlinesThisMonth: number
+  activeListings: number
+}
+
 export default function Home() {
-  const stats = [
-    { icon: Zap, value: "12,345+", label: "Total Opportunities" },
-    { icon: Users, value: "50,000+", label: "Active Users" },
-    { icon: Briefcase, value: "15+", label: "Opportunity Types" },
-  ]
+  const [statsData, setStatsData] = useState<StatsData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/stats")
+        if (response.ok) {
+          const data = await response.json()
+          setStatsData(data)
+        }
+      } catch (error) {
+        console.error("Failed to fetch stats:", error)
+        // Set default values on error
+        setStatsData({
+          newThisWeek: 0,
+          deadlinesThisMonth: 0,
+          activeListings: 0,
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
+
+  // Format number with commas
+  const formatNumber = (num: number | null | undefined): string => {
+    if (num === null || num === undefined) return "0"
+    return num.toLocaleString("en-US")
+  }
+
+  // Build stats array with real data
+  const stats = statsData
+    ? [
+        { icon: Zap, value: formatNumber(statsData.newThisWeek), label: "New This Week" },
+        { icon: Calendar, value: formatNumber(statsData.deadlinesThisMonth), label: "Deadlines This Month" },
+        { icon: Briefcase, value: formatNumber(statsData.activeListings), label: "Active Listings" },
+      ]
+    : [
+        { icon: Zap, value: isLoading ? "—" : "0", label: "New This Week" },
+        { icon: Calendar, value: isLoading ? "—" : "0", label: "Deadlines This Month" },
+        { icon: Briefcase, value: isLoading ? "—" : "0", label: "Active Listings" },
+      ]
 
   const opportunityTypes = [
     { name: "Internships", href: "/dashboard?type=internship" },
