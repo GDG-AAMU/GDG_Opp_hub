@@ -4,12 +4,15 @@ import Link from "next/link"
 import Image from "next/image"
 import { Briefcase, Menu, X } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { createClient } from "@/lib/supabase/client"
 import ProfileDropdown from "./ProfileDropdown"
 import { ThemeToggle } from "@/components/theme/ThemeToggle"
+import toast from "react-hot-toast"
 
 export default function Navbar() {
+  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
@@ -73,7 +76,7 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm relative">
       {/* Colorful gradient line at the top */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-blue-500 via-green-500 to-yellow-500"></div>
-      
+
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
@@ -223,6 +226,22 @@ export default function Navbar() {
                 >
                   Settings
                 </Link>
+                <button
+                  onClick={async () => {
+                    setIsMenuOpen(false)
+                    try {
+                      const supabase = createClient()
+                      await supabase.auth.signOut()
+                      toast.success('Logged out successfully!')
+                      router.push('/login')
+                    } catch (error: any) {
+                      toast.error(error.message || 'Failed to log out')
+                    }
+                  }}
+                  className="block w-full text-left px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-colors duration-200"
+                >
+                  Log Out
+                </button>
               </>
             ) : (
               <>
