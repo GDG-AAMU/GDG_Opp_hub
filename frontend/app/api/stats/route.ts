@@ -1,11 +1,30 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const supabase = createClient()
+    // Use service role key to bypass RLS for public stats
+    // This is safe because we're only returning counts, not sensitive data
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Missing Supabase environment variables")
+      return NextResponse.json({
+        newThisWeek: 0,
+        deadlinesThisMonth: 0,
+        activeListings: 0,
+      })
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
 
     // Calculate date ranges
     const now = new Date()
