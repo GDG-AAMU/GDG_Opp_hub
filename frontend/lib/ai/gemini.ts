@@ -278,6 +278,9 @@ Instructions:
    - Example: "Explore Program Internship" -> role_type: "Software Engineering" (if it's for SWE)
    - Example: "Software Engineering Manager Intern" -> role_type: "Software Engineering Management"
 5. relevant_majors: Extract list of relevant academic majors or fields of study. Look for mentions of degrees, majors, or fields
+   - Format each major with proper Title Case capitalization (e.g., "Computer Science", "Software Engineering", "Electrical Engineering")
+   - Convert lowercase majors like "computer science" to "Computer Science"
+   - Convert uppercase majors like "COMPUTER SCIENCE" to "Computer Science"
 6. deadline: Extract application deadline in YYYY-MM-DD format. Parse dates like "December 15, 2025" as "2025-12-15". Look for "deadline", "apply by", "closing date" keywords
 7. requirements: Extract ALL requirements EXACTLY as written in the posting. DO NOT rewrite, rephrase, or restructure them.
    - Copy the exact wording from "Required Qualifications" and "Preferred Qualifications" sections
@@ -438,6 +441,14 @@ Result:
   "offers_sponsorship": true
 }
 Reason: job_title is the EXACT title from the posting, NOT "Software Engineering Intern". role_type is the broader category.
+
+Example 14 - MAJOR CAPITALIZATION:
+Text: "Majors: computer science, software engineering, computer engineering, or related field"
+Result:
+{
+  "relevant_majors": ["Computer Science", "Software Engineering", "Computer Engineering"]
+}
+Reason: All majors formatted with proper Title Case capitalization, NOT lowercase.
 
 Return the JSON now:`
 }
