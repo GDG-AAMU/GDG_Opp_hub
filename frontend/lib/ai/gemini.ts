@@ -260,14 +260,20 @@ Extract the following fields and return as JSON:
 
 Instructions:
 1. company_name: Extract the company or organization name. Look in page title, headers, or URL if not explicitly stated.
-2. job_title: Extract the job/position title. Look for titles like "Software Engineer", "Intern", "Research Assistant", etc.
+2. job_title: Extract the EXACT job/position title as written in the posting. DO NOT simplify, shorten, or interpret it.
+   - Examples: "Explore Program Internship Opportunities: First-Year Students" should stay as is, NOT be simplified to "Software Engineer Intern"
+   - "Software Engineering Manager Intern - Core Platform and Tools" should stay as is, NOT be shortened
+   - Extract the complete, verbatim title from the job posting header or title field
 3. opportunity_type: Classify as one of: internship, full_time, research, fellowship, or scholarship
    - Use "internship" for summer internships, co-ops, intern positions, "intern" keywords
    - Use "full_time" for full-time jobs, permanent positions, "full-time" keywords
    - Use "research" for research positions, research assistantships, "research" keywords
    - Use "fellowship" for fellowship programs
    - Use "scholarship" for scholarships, grants
-4. role_type: Extract the role category (e.g., "Software Engineering", "Product Management", "Data Science", "Marketing", etc.) from job title or description
+4. role_type: Extract or infer the general role category (e.g., "Software Engineering", "Product Management", "Data Science", "Marketing", etc.).
+   - This is different from job_title - it's the broader category
+   - Example: "Explore Program Internship" -> role_type: "Software Engineering" (if it's for SWE)
+   - Example: "Software Engineering Manager Intern" -> role_type: "Software Engineering Management"
 5. relevant_majors: Extract list of relevant academic majors or fields of study. Look for mentions of degrees, majors, or fields
 6. deadline: Extract application deadline in YYYY-MM-DD format. Parse dates like "December 15, 2025" as "2025-12-15". Look for "deadline", "apply by", "closing date" keywords
 7. requirements: Extract ALL key requirements including education, experience, skills, qualifications. Format as a newline-separated list where EACH requirement is on its own line. Example format:
