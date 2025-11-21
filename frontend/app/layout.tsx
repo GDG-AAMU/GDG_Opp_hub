@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { Toaster } from "react-hot-toast"
 import { QueryProvider } from "@/providers/QueryProvider"
 import FeedbackButton from "@/components/feedback/FeedbackButton"
 import { ThemeProvider } from "@/components/theme/ThemeProvider"
+import { ThemedToaster } from "@/components/ui/themed-toaster"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
           <ThemeProvider defaultTheme="system" storageKey="gdg-theme">
             {children}
             <FeedbackButton />
-            <Toaster position="top-center" />
+            <ThemedToaster />
           </ThemeProvider>
         </QueryProvider>
       </body>
