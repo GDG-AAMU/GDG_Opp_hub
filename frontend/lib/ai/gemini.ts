@@ -261,9 +261,12 @@ Extract the following fields and return as JSON:
 Instructions:
 1. company_name: Extract the company or organization name. Look in page title, headers, or URL if not explicitly stated.
 2. job_title: Extract the EXACT job/position title as written in the posting. DO NOT simplify, shorten, or interpret it.
+   - Look for the main job title in the page header, title tag, or "Job description" section heading
    - Examples: "Explore Program Internship Opportunities: First-Year Students" should stay as is, NOT be simplified to "Software Engineer Intern"
    - "Software Engineering Manager Intern - Core Platform and Tools" should stay as is, NOT be shortened
+   - If the title includes location (e.g., "Redmond"), include it: "Explore Program Internship Opportunities: First-Year Students, Redmond"
    - Extract the complete, verbatim title from the job posting header or title field
+   - CRITICAL: Do NOT use generic descriptions like "Software Engineering Intern" when a specific program name exists (e.g., "Explore Program")
 3. opportunity_type: Classify as one of: internship, full_time, research, fellowship, or scholarship
    - Use "internship" for summer internships, co-ops, intern positions, "intern" keywords
    - Use "full_time" for full-time jobs, permanent positions, "full-time" keywords
@@ -282,7 +285,11 @@ Instructions:
    - Separate different requirements with \\n (newline character)
    - Do NOT combine multiple requirements into one long sentence
    - Include preferred qualifications as separate lines if available
-8. location: Extract job location (city, state, country, or "Remote"). Look for location mentions, "based in", "located in", or remote indicators
+8. location: Extract the COMPLETE job location with as much detail as provided (city, state, country, or "Remote").
+   - Example: "United States, Washington, Redmond" NOT just "United States"
+   - Example: "San Francisco, California, United States" NOT just "United States"
+   - Include all location details found in the posting
+   - Look for location mentions in headers, "based in", "located in", or remote indicators
 9. description: Extract a comprehensive job description. Include what the role involves, responsibilities, and what the company is looking for. If full description isn't available, create a brief summary based on available information.
 10. offers_sponsorship: CAREFULLY detect if visa/work sponsorship is offered or NOT offered
 
@@ -410,6 +417,16 @@ Example 12 - MAJOR TECH COMPANY (No explicit statement):
 Text: "Microsoft is hiring Software Engineers. Must be enrolled in a US university."
 Result: offers_sponsorship: true, requires_us_citizenship: false
 Reason: No explicit "no sponsorship" statement found, so default to TRUE
+
+Example 13 - EXACT JOB TITLE (Microsoft Explore):
+Text: "Explore Program Internship Opportunities: First-Year Students, Redmond. Profession: Software Engineering."
+Result:
+{
+  "job_title": "Explore Program Internship Opportunities: First-Year Students, Redmond",
+  "role_type": "Software Engineering",
+  "offers_sponsorship": true
+}
+Reason: job_title is the EXACT title from the posting, NOT "Software Engineering Intern". role_type is the broader category.
 
 Return the JSON now:`
 }
