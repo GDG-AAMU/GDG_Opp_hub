@@ -80,23 +80,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Sync to Google Sheets (async, don't wait for it)
-    // This runs in the background and won't fail the feedback submission
-    appendFeedbackToSheet({
-      id: data.id,
-      user_name: userName,
-      user_email: userEmail,
-      feedback_type: data.feedback_type,
-      subject: data.subject,
-      description: data.description,
-      page_url: data.page_url,
-      status: data.status,
-      created_at: data.created_at || new Date().toISOString(),
-    }).catch((err) => {
-      console.error('Failed to sync feedback to Google Sheets:', err)
-    })
-
-    return NextResponse.json({
+    // Return success immediately
+    const response = NextResponse.json({
       success: true,
       message: 'Feedback submitted successfully',
       data: {
@@ -105,6 +90,26 @@ export async function POST(request: NextRequest) {
         created_at: data.created_at,
       },
     })
+
+    // Sync to Google Sheets in background (fire and forget)
+    // This runs after the response is sent, won't block the user
+    setImmediate(() => {
+      appendFeedbackToSheet({
+        id: data.id,
+        user_name: userName,
+        user_email: userEmail,
+        feedback_type: data.feedback_type,
+        subject: data.subject,
+        description: data.description,
+        page_url: data.page_url,
+        status: data.status,
+        created_at: data.created_at || new Date().toISOString(),
+      }).catch((err) => {
+        console.error('Failed to sync feedback to Google Sheets:', err)
+      })
+    })
+
+    return response
   } catch (error) {
     console.error('Error in POST /api/feedback:', error)
     return NextResponse.json(
