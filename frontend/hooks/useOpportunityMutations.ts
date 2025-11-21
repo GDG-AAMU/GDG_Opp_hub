@@ -85,12 +85,17 @@ export function useUpdateOpportunity() {
       }
       toast.error(err instanceof Error ? err.message : "Failed to update opportunity")
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       toast.success("Opportunity updated successfully")
+      // Invalidate all related caches
+      queryClient.invalidateQueries({ queryKey: ["opportunities"] })
+      queryClient.invalidateQueries({ queryKey: ["opportunity", variables.id] })
+      queryClient.invalidateQueries({ queryKey: ["user-opportunities"] })
     },
     onSettled: () => {
       // Refetch to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: ["opportunities"] })
+      queryClient.invalidateQueries({ queryKey: ["user-opportunities"] })
     },
   })
 }
@@ -149,12 +154,84 @@ export function useDeleteOpportunity() {
       }
       toast.error(err instanceof Error ? err.message : "Failed to delete opportunity")
     },
-    onSuccess: () => {
+    onSuccess: (data, id) => {
       toast.success("Opportunity deleted successfully")
+      // Invalidate all related caches
+      queryClient.invalidateQueries({ queryKey: ["opportunities"] })
+      queryClient.invalidateQueries({ queryKey: ["opportunity", id] })
+      queryClient.invalidateQueries({ queryKey: ["user-opportunities"] })
     },
-    onSettled: () => {
+    onSettled: (data, error, id) => {
       // Refetch to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: ["opportunities"] })
+      queryClient.invalidateQueries({ queryKey: ["opportunity", id] })
+      queryClient.invalidateQueries({ queryKey: ["user-opportunities"] })
+    },
+  })
+}
+
+// Save/Apply opportunity mutation
+export function useSaveApplyOpportunity() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      opportunityId,
+      status,
+    }: {
+      opportunityId: string
+      status: 'saved' | 'applied' | null
+    }) => {
+      if (status === null) {
+        // Remove status
+        const response = await fetch(`/api/user-opportunities?opportunityId=${opportunityId}`, {
+          method: 'DELETE'
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Failed to remove status')
+        }
+
+        return { success: true }
+      } else {
+        // Set status
+        const response = await fetch('/api/user-opportunities', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            opportunityId,
+            status
+          })
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Failed to ${status === 'saved' ? 'save' : 'apply to'} opportunity`)
+        }
+
+        return response.json()
+      }
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate all related caches
+      queryClient.invalidateQueries({ queryKey: ["user-opportunities"] })
+      queryClient.invalidateQueries({ queryKey: ["opportunities"] }) // For counts on dashboard
+      queryClient.invalidateQueries({ queryKey: ["opportunity", variables.opportunityId] }) // For details page
+      
+      // Show success message
+      if (variables.status === null) {
+        toast.success('Removed successfully')
+      } else if (variables.status === 'saved') {
+        toast.success('Saved for later')
+      } else {
+        toast.success('Marked as applied')
+      }
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to update status')
     },
   })
 }

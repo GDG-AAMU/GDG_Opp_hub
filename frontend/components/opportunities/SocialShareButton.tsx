@@ -57,11 +57,11 @@ export default function SocialShareButton({
       onClick={handleShare}
       variant={variant}
       size={size}
-      className={`flex items-center gap-1.5 ${className}`}
+      className={`flex items-center justify-center gap-1.5 min-w-0 max-w-full ${className}`}
       title="Copy link to share"
     >
-      <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-      <span className="hidden sm:inline">Share</span>
+      <Share2 className="w-4 h-4 flex-shrink-0" />
+      <span className="hidden md:inline text-xs whitespace-nowrap">Share</span>
     </Button>
   )
 }

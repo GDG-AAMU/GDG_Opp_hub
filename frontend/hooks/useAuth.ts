@@ -66,13 +66,18 @@ const signUp = async (data: SignupFormData) => {
 
   const signInWithGoogle = async () => {
     const redirectUrl = globalThis.window === undefined
-      ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`
-      : `${globalThis.window.location.origin}/dashboard`
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`
+      : `${globalThis.window.location.origin}/api/auth/callback`
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
+        queryParams: {
+          // Hint Google to show only @aamu.edu accounts (if user has multiple)
+          hd: 'aamu.edu',
+          prompt: 'select_account',
+        },
       },
     })
 

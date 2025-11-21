@@ -12,6 +12,7 @@ import {
   DEFAULT_TIMEOUT,
   DEFAULT_USER_AGENT,
 } from './scraper-utils';
+import { extractJobContent } from './content-extractor';
 
 /**
  * Puppeteer scraper configuration options
@@ -153,26 +154,35 @@ export async function scrapeWithPuppeteer(
     // Extract title
     const title = await page.title();
 
-    // Try to extract content from main content areas
-    let content = '';
-    for (const selector of CONTENT_SELECTORS) {
-      try {
-        const element = await page.$(selector);
-        if (element) {
-          const text = await page.evaluate((el: any) => el?.textContent || '', element);
-          if (text && text.trim().length > 200) {
-            content = text;
-            break;
-          }
-        }
-      } catch {
-        // Continue to next selector
-      }
-    }
+    // Get HTML content for smart extraction
+    const html = await page.content();
 
-    // If no content found, fallback to body
+    // Use smart content extractor to get main job content
+    // This removes navigation/footer and finds the best content block
+    let content = extractJobContent(html, validatedUrl);
+
+    // If extractor didn't find good content, fallback to body text
     if (!content || content.trim().length < 100) {
-      content = await page.evaluate(() => document.body.textContent || '');
+      // Fallback: try selectors directly
+      for (const selector of CONTENT_SELECTORS) {
+        try {
+          const element = await page.$(selector);
+          if (element) {
+            const text = await page.evaluate((el: any) => el?.textContent || '', element);
+            if (text && text.trim().length > 200) {
+              content = text;
+              break;
+            }
+          }
+        } catch {
+          // Continue to next selector
+        }
+      }
+
+      // Final fallback to body
+      if (!content || content.trim().length < 100) {
+        content = await page.evaluate(() => document.body.textContent || '');
+      }
     }
 
     // Clean the content

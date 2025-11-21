@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import { Toaster } from "react-hot-toast"
 import { QueryProvider } from "@/providers/QueryProvider"
 import FeedbackButton from "@/components/feedback/FeedbackButton"
+import { ThemeProvider } from "@/components/theme/ThemeProvider"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -10,6 +11,11 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "GDG Opportunities Hub",
   description: "Discover and submit job opportunities, internships, research positions, fellowships, and scholarships",
+  icons: {
+    icon: "/assets/gdg_logo.png",
+    shortcut: "/assets/gdg_logo.png",
+    apple: "/assets/gdg_logo.png",
+  },
 }
 
 interface RootLayoutProps {
@@ -21,9 +27,11 @@ export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <QueryProvider>
-          {children}
-          <FeedbackButton />
-          <Toaster position="top-center" />
+          <ThemeProvider defaultTheme="system" storageKey="gdg-theme">
+            {children}
+            <FeedbackButton />
+            <Toaster position="top-center" />
+          </ThemeProvider>
         </QueryProvider>
       </body>
     </html>

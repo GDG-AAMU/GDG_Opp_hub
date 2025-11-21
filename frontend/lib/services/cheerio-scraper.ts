@@ -14,6 +14,7 @@ import {
   DEFAULT_USER_AGENT,
   ScraperError,
 } from './scraper-utils';
+import { extractJobContent } from './content-extractor';
 
 /**
  * Scraper configuration options
@@ -144,35 +145,29 @@ async function fetchHtml(
 
 /**
  * Extracts and cleans content from HTML
+ * Uses smart content extractor to remove navigation/footer
  * @param html - The HTML content
+ * @param url - The URL being scraped (for site-specific selectors)
  * @returns Cleaned text content
  */
-function extractContent(html: string): { content: string; title?: string } {
+function extractContent(html: string, url?: string): { content: string; title?: string } {
   const $ = cheerio.load(html);
 
   // Extract title
   const title = $('title').text().trim() || $('h1').first().text().trim();
 
-  // Remove unwanted elements
-  REMOVE_SELECTORS.forEach(selector => {
-    $(selector).remove();
-  });
+  // Use smart content extractor to get main job content
+  // This removes navigation/footer and finds the best content block
+  const extractedContent = extractJobContent(html, url);
 
-  // Try to find main content using selectors
-  let content = '';
-  for (const selector of CONTENT_SELECTORS) {
-    const element = $(selector).first();
-    if (element.length > 0) {
-      content = element.text();
-      // If we found substantial content, use it
-      if (content.trim().length > 200) {
-        break;
-      }
-    }
-  }
-
-  // If no content found, fallback to body
+  // If extractor found good content, use it
+  // Otherwise fallback to cleaned body text
+  let content = extractedContent;
   if (!content || content.trim().length < 100) {
+    // Fallback: remove noise and get body text
+    REMOVE_SELECTORS.forEach(selector => {
+      $(selector).remove();
+    });
     content = $('body').text();
   }
 
@@ -202,8 +197,8 @@ export async function scrapeWithCheerio(
     // Fetch HTML
     const html = await fetchHtml(validatedUrl, options);
 
-    // Extract content
-    const { content, title } = extractContent(html);
+    // Extract content (pass URL for site-specific selectors)
+    const { content, title } = extractContent(html, validatedUrl);
 
     // Verify we got meaningful content
     if (!content || content.length < 50) {

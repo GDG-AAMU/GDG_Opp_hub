@@ -388,8 +388,8 @@ export default function AdminPanel() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm text-gray-500">Admin access granted</p>
-          <h2 className="text-2xl font-bold text-gray-900">Admin Dashboard</h2>
+          <p className="text-sm text-muted-foreground">Admin access granted</p>
+          <h2 className="text-2xl font-bold text-foreground">Admin Dashboard</h2>
         </div>
         {activeTab === 'opportunities' && (
           <Button variant="outline" onClick={handleManualRefresh} className="flex items-center gap-2">
