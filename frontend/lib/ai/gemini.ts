@@ -304,6 +304,9 @@ Instructions:
 
    IMPORTANT NOTES:
    * "Equal Opportunity Employer", "EEO", "EOE", "AA/EEO" statements do NOT indicate anything about sponsorship - ignore these completely
+   * APPLICATION SCREENING QUESTIONS asking "will you require sponsorship?" or "do you need sponsorship?" are NOT the same as "we don't offer sponsorship" - ignore these questions
+   * Questions like "will you now or in the future require sponsorship?" are standard screening questions and do NOT mean sponsorship is unavailable
+   * Only explicit statements like "we cannot sponsor" or "sponsorship not available" should be treated as negative indicators
    * If BOTH positive and negative indicators exist, the negative (no sponsorship) takes precedence
    * DEFAULT BEHAVIOR: If no clear negative indicators are found, default to TRUE (assume sponsorship is available unless explicitly stated otherwise)
    * Only set to FALSE if you find explicit evidence that sponsorship is NOT offered
@@ -391,6 +394,16 @@ Result: offers_sponsorship: false, requires_us_citizenship: false
 Example 10 - GREEN CARD HOLDERS OK:
 Text: "Open to U.S. citizens and Green Card holders only."
 Result: offers_sponsorship: false, requires_us_citizenship: false
+
+Example 11 - SCREENING QUESTION (Default to TRUE):
+Text: "Will you now or in the future require the company's sponsorship for an immigration-related employment benefit (i.e., a work visa, work permit, etc.)?"
+Result: offers_sponsorship: true, requires_us_citizenship: false
+Reason: This is just a screening question, NOT a statement that they don't offer sponsorship
+
+Example 12 - MAJOR TECH COMPANY (No explicit statement):
+Text: "Microsoft is hiring Software Engineers. Must be enrolled in a US university."
+Result: offers_sponsorship: true, requires_us_citizenship: false
+Reason: No explicit "no sponsorship" statement found, so default to TRUE
 
 Return the JSON now:`
 }
