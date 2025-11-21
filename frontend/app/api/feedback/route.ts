@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { appendFeedbackToSheet } from '@/lib/google-sheets'
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,6 +8,22 @@ export async function POST(request: NextRequest) {
 
     // Get user (optional - can be anonymous)
     const { data: { user } } = await supabase.auth.getUser()
+
+    // Get user profile if authenticated
+    let userName = 'Anonymous'
+    let userEmail = null
+    if (user) {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('name, email')
+        .eq('id', user.id)
+        .single()
+
+      if (profile) {
+        userName = profile.name || user.email?.split('@')[0] || 'Anonymous'
+        userEmail = profile.email
+      }
+    }
 
     const body = await request.json()
     const { feedback_type, subject, description, page_url } = body
@@ -62,6 +79,22 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // Sync to Google Sheets (async, don't wait for it)
+    // This runs in the background and won't fail the feedback submission
+    appendFeedbackToSheet({
+      id: data.id,
+      user_name: userName,
+      user_email: userEmail,
+      feedback_type: data.feedback_type,
+      subject: data.subject,
+      description: data.description,
+      page_url: data.page_url,
+      status: data.status,
+      created_at: data.created_at || new Date().toISOString(),
+    }).catch((err) => {
+      console.error('Failed to sync feedback to Google Sheets:', err)
+    })
 
     return NextResponse.json({
       success: true,
