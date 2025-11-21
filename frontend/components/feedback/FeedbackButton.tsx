@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { MessageSquare } from 'lucide-react'
 import FeedbackModal from './FeedbackModal'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function FeedbackButton() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showPulse, setShowPulse] = useState(false)
+  const { user } = useAuth()
 
   // Show pulse animation on first visit
   useEffect(() => {
@@ -21,6 +23,11 @@ export default function FeedbackButton() {
       }, 5000)
     }
   }, [])
+
+  // Only show feedback button if user is authenticated
+  if (!user) {
+    return null
+  }
 
   return (
     <>

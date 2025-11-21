@@ -6,24 +6,25 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createClient()
 
-    // Get user (optional - can be anonymous)
-    const { data: { user } } = await supabase.auth.getUser()
+    // Get user - authentication required
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    // Get user profile if authenticated
-    let userName = 'Anonymous'
-    let userEmail = null
-    if (user) {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('name, email')
-        .eq('id', user.id)
-        .single()
-
-      if (profile) {
-        userName = profile.name || user.email?.split('@')[0] || 'Anonymous'
-        userEmail = profile.email
-      }
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in to submit feedback.' },
+        { status: 401 }
+      )
     }
+
+    // Get user profile
+    const { data: profile } = await supabase
+      .from('users')
+      .select('name, email')
+      .eq('id', user.id)
+      .single()
+
+    const userName = profile?.name || user.email?.split('@')[0] || 'User'
+    const userEmail = profile?.email || user.email || null
 
     const body = await request.json()
     const { feedback_type, subject, description, page_url } = body
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('feedback')
       .insert({
-        user_id: user?.id || null,
+        user_id: user.id,
         feedback_type: feedback_type || 'general',
         subject: subject.trim(),
         description: description.trim(),
