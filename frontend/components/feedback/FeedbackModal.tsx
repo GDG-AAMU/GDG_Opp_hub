@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -120,7 +122,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             <Label htmlFor="subject">
               Subject <span className="text-red-500">*</span>
             </Label>
-            <input
+            <Input
               id="subject"
               type="text"
               value={subject}
@@ -128,9 +130,9 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               placeholder="Brief summary of your feedback"
               maxLength={200}
               required
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="mt-1"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {subject.length}/200 characters
             </p>
           </div>
@@ -140,7 +142,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             <Label htmlFor="description">
               Description <span className="text-red-500">*</span>
             </Label>
-            <textarea
+            <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -148,9 +150,9 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               maxLength={2000}
               required
               rows={5}
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+              className="mt-1 resize-none"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {description.length}/2000 characters
             </p>
           </div>

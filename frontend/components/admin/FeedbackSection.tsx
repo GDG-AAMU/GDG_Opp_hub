@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'react-hot-toast'
 import { formatDistanceToNow } from 'date-fns'
 import {
@@ -103,7 +103,7 @@ export default function FeedbackSection() {
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackItem | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
-  const fetchFeedback = async () => {
+  const fetchFeedback = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams({
@@ -132,11 +132,11 @@ export default function FeedbackSection() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [statusFilter, typeFilter, searchTerm, pagination.limit, pagination.offset])
 
   useEffect(() => {
     fetchFeedback()
-  }, [statusFilter, typeFilter, searchTerm, pagination.offset])
+  }, [fetchFeedback])
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this feedback?')) {
