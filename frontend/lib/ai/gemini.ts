@@ -279,18 +279,26 @@ Instructions:
    - Example: "Software Engineering Manager Intern" -> role_type: "Software Engineering Management"
 5. relevant_majors: Extract list of relevant academic majors or fields of study. Look for mentions of degrees, majors, or fields
 6. deadline: Extract application deadline in YYYY-MM-DD format. Parse dates like "December 15, 2025" as "2025-12-15". Look for "deadline", "apply by", "closing date" keywords
-7. requirements: Extract ALL key requirements including education, experience, skills, qualifications. Format as a newline-separated list where EACH requirement is on its own line. Example format:
-   "First requirement here\nSecond requirement here\nThird requirement here"
-   - Each line should be a distinct requirement or qualification
+7. requirements: Extract ALL requirements EXACTLY as written in the posting. DO NOT rewrite, rephrase, or restructure them.
+   - Copy the exact wording from "Required Qualifications" and "Preferred Qualifications" sections
+   - Format as newline-separated list: "First requirement here\nSecond requirement here\nThird requirement here"
+   - Each line should be a distinct requirement or qualification AS WRITTEN in the original posting
    - Separate different requirements with \\n (newline character)
    - Do NOT combine multiple requirements into one long sentence
-   - Include preferred qualifications as separate lines if available
+   - Do NOT rewrite requirements to sound "better" - keep the original wording
+   - Include both required and preferred qualifications as separate lines
+   - Example: If posting says "Currently pursuing full time Bachelor's degree" -> use that EXACT text, NOT "Bachelor's degree required"
 8. location: Extract the COMPLETE job location with as much detail as provided (city, state, country, or "Remote").
    - Example: "United States, Washington, Redmond" NOT just "United States"
    - Example: "San Francisco, California, United States" NOT just "United States"
    - Include all location details found in the posting
    - Look for location mentions in headers, "based in", "located in", or remote indicators
-9. description: Extract a comprehensive job description. Include what the role involves, responsibilities, and what the company is looking for. If full description isn't available, create a brief summary based on available information.
+9. description: Extract the job description EXACTLY as written in the posting. DO NOT rewrite or paraphrase.
+   - Copy text from "Overview", "Description", "Responsibilities", or similar sections
+   - Preserve the original wording and structure from the posting
+   - If there are multiple sections (Overview, Responsibilities, etc.), combine them with line breaks
+   - Only summarize if the description is extremely long (>500 words) - otherwise use exact text
+   - Do NOT add your own interpretation or rewrite in "better" language
 10. offers_sponsorship: CAREFULLY detect if visa/work sponsorship is offered or NOT offered
 
    Set to TRUE (offers sponsorship) if you find ANY of these phrases:
@@ -357,14 +365,17 @@ Instructions:
 
 Rules:
 - Return ONLY valid JSON, no markdown, no code blocks, no explanations
+- CRITICAL: Extract information VERBATIM from the posting - DO NOT rewrite, rephrase, or restructure content
+- Your role is to EXTRACT, not to REWRITE or IMPROVE the text
+- Preserve the exact wording from the job posting for all fields (except formatting requirements like dates)
 - Be AGGRESSIVE in extracting information - look for any clues in the content
 - If information is partially available, extract what you can find
-- For requirements: Format as newline-separated list with \\n between each requirement. Each line = one requirement. DO NOT create one long paragraph.
-- For description: Provide a comprehensive description (3-5 sentences) if possible, or at least 2 sentences
+- For requirements: Format as newline-separated list with \\n between each requirement. Each line = one requirement. Use EXACT wording from posting.
+- For description: Use EXACT text from posting. Only summarize if extremely long (>500 words).
 - Use null ONLY if absolutely no information can be found for a field
-- For dates, always use YYYY-MM-DD format
+- For dates, always use YYYY-MM-DD format (this is the ONLY field where reformatting is allowed)
 - For relevant_majors, return an array even if only one major is found
-- Be thorough and extract as much information as possible
+- Be thorough and extract as much information as possible WITHOUT changing the original meaning or wording
 
 EXAMPLES FOR SPONSORSHIP & CITIZENSHIP DETECTION:
 
