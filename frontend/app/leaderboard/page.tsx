@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trophy, Users, TrendingUp, Calendar, Flame, Award, Info, X } from 'lucide-react'
+import { Trophy, Users, TrendingUp, Calendar, Flame, Award, Info, X, UserCircle } from 'lucide-react'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 
@@ -33,9 +33,9 @@ interface Contributor {
   recent_posts: number
   first_post_date: string | null
   opportunity_types: string[]
-  tier: 'bronze' | 'silver' | 'gold' | 'platinum'
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum' | null
   badges: Badge[]
-  rank: number
+  rank: number | null
 }
 
 const tierConfig = {
@@ -48,7 +48,6 @@ const tierConfig = {
     textColor: 'text-amber-700 dark:text-amber-400',
     badgeBg: 'bg-amber-100 dark:bg-amber-900/40',
     rankBg: 'bg-amber-500',
-    accentColor: 'amber'
   },
   silver: {
     label: 'Silver',
@@ -59,7 +58,6 @@ const tierConfig = {
     textColor: 'text-slate-600 dark:text-slate-300',
     badgeBg: 'bg-slate-100 dark:bg-slate-800/50',
     rankBg: 'bg-slate-500',
-    accentColor: 'slate'
   },
   gold: {
     label: 'Gold',
@@ -70,7 +68,6 @@ const tierConfig = {
     textColor: 'text-yellow-600 dark:text-yellow-400',
     badgeBg: 'bg-yellow-100 dark:bg-yellow-900/40',
     rankBg: 'bg-yellow-500',
-    accentColor: 'yellow'
   },
   platinum: {
     label: 'Platinum',
@@ -81,8 +78,15 @@ const tierConfig = {
     textColor: 'text-purple-600 dark:text-purple-400',
     badgeBg: 'bg-purple-100 dark:bg-purple-900/40',
     rankBg: 'bg-gradient-to-r from-purple-500 to-indigo-600',
-    accentColor: 'purple'
   }
+}
+
+// Config for users with no posts (no tier)
+const noTierConfig = {
+  gradient: 'from-gray-300 to-gray-400',
+  bgGradient: 'bg-card',
+  borderColor: 'border-l-gray-300 dark:border-l-gray-600',
+  textColor: 'text-gray-500 dark:text-gray-400',
 }
 
 function getInitials(name: string): string {
@@ -130,6 +134,8 @@ export default function LeaderboardPage() {
   // Calculate stats
   const totalPosts = contributors.reduce((sum, c) => sum + c.post_count, 0)
   const totalRecentPosts = contributors.reduce((sum, c) => sum + c.recent_posts, 0)
+  const rankedContributors = contributors.filter(c => c.post_count > 0)
+  const membersWithoutPosts = contributors.filter(c => c.post_count === 0)
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -169,7 +175,7 @@ export default function LeaderboardPage() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-foreground">{contributors.length}</div>
-                <div className="text-sm text-muted-foreground">Contributors</div>
+                <div className="text-sm text-muted-foreground">Members</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -306,133 +312,179 @@ export default function LeaderboardPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
                 <Users className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">No contributors yet</h3>
-              <p className="text-muted-foreground">Be the first to post an opportunity and appear on the leaderboard!</p>
+              <h3 className="text-xl font-semibold text-foreground mb-2">No members yet</h3>
+              <p className="text-muted-foreground">Be the first to join and start posting opportunities!</p>
             </div>
           ) : (
-            <div className="space-y-4 max-w-5xl mx-auto">
-              {contributors.map((contributor, index) => {
-                const config = tierConfig[contributor.tier]
-                const isTopThree = index < 3
+            <div className="space-y-8 max-w-5xl mx-auto">
+              {/* Ranked Contributors (users with posts) */}
+              {rankedContributors.length > 0 && (
+                <div className="space-y-4">
+                  {rankedContributors.map((contributor, index) => {
+                    const config = tierConfig[contributor.tier!]
+                    const isTopThree = contributor.rank !== null && contributor.rank <= 3
 
-                return (
-                  <motion.div
-                    key={contributor.id}
-                    initial={{ opacity: 0, x: -30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{
-                      duration: 0.5,
-                      delay: index * 0.05,
-                      ease: 'easeOut'
-                    }}
-                    className={`${config.bgGradient} rounded-xl border-l-4 ${config.borderColor} shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden`}
-                  >
-                    <div className="p-4 sm:p-6">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                        {/* Rank & Avatar */}
-                        <div className="flex items-center gap-4">
-                          {/* Rank Badge */}
-                          <div className={`flex-shrink-0 w-10 h-10 rounded-full ${config.rankBg} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
-                            {isTopThree ? (
-                              <span>{index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}</span>
-                            ) : (
-                              <span className="text-sm">#{contributor.rank}</span>
-                            )}
-                          </div>
+                    return (
+                      <motion.div
+                        key={contributor.id}
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{
+                          duration: 0.5,
+                          delay: index * 0.05,
+                          ease: 'easeOut'
+                        }}
+                        className={`${config.bgGradient} rounded-xl border-l-4 ${config.borderColor} shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden`}
+                      >
+                        <div className="p-4 sm:p-6">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                            {/* Rank & Avatar */}
+                            <div className="flex items-center gap-4">
+                              {/* Rank Badge */}
+                              <div className={`flex-shrink-0 w-10 h-10 rounded-full ${config.rankBg} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
+                                {isTopThree ? (
+                                  <span>{contributor.rank === 1 ? '🥇' : contributor.rank === 2 ? '🥈' : '🥉'}</span>
+                                ) : (
+                                  <span className="text-sm">#{contributor.rank}</span>
+                                )}
+                              </div>
 
-                          {/* Avatar */}
-                          {contributor.avatar_url ? (
-                            <Image
-                              src={contributor.avatar_url}
-                              alt={contributor.name}
-                              width={64}
-                              height={64}
-                              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-md"
-                            />
-                          ) : (
-                            <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${config.gradient} flex items-center justify-center text-white font-bold text-xl border-2 border-white dark:border-gray-700 shadow-md`}>
-                              {getInitials(contributor.name)}
-                            </div>
-                          )}
-
-                          {/* Name & Tier */}
-                          <div>
-                            <h3 className="font-bold text-lg text-foreground">{contributor.name}</h3>
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2 py-0.5 ${config.badgeBg} ${config.textColor} text-xs font-semibold rounded-full`}>
-                                {config.label}
-                              </span>
-                              {contributor.recent_posts > 0 && (
-                                <span className="flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400">
-                                  <Flame className="w-3 h-3" />
-                                  Active
-                                </span>
+                              {/* Avatar */}
+                              {contributor.avatar_url ? (
+                                <Image
+                                  src={contributor.avatar_url}
+                                  alt={contributor.name}
+                                  width={64}
+                                  height={64}
+                                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-md"
+                                />
+                              ) : (
+                                <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${config.gradient} flex items-center justify-center text-white font-bold text-xl border-2 border-white dark:border-gray-700 shadow-md`}>
+                                  {getInitials(contributor.name)}
+                                </div>
                               )}
+
+                              {/* Name & Tier */}
+                              <div>
+                                <h3 className="font-bold text-lg text-foreground">{contributor.name}</h3>
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-2 py-0.5 ${config.badgeBg} ${config.textColor} text-xs font-semibold rounded-full`}>
+                                    {config.label}
+                                  </span>
+                                  {contributor.recent_posts > 0 && (
+                                    <span className="flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400">
+                                      <Flame className="w-3 h-3" />
+                                      Active
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Stats */}
+                            <div className="flex-1 grid grid-cols-3 gap-4 sm:gap-8 sm:ml-auto sm:max-w-md">
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-foreground">{contributor.post_count}</div>
+                                <div className="text-xs text-muted-foreground">Total Posts</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-foreground">{contributor.recent_posts}</div>
+                                <div className="text-xs text-muted-foreground">This Week</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-sm font-semibold text-foreground flex items-center justify-center gap-1">
+                                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                                  {formatDate(contributor.first_post_date)}
+                                </div>
+                                <div className="text-xs text-muted-foreground">First Post</div>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Stats */}
-                        <div className="flex-1 grid grid-cols-3 gap-4 sm:gap-8 sm:ml-auto sm:max-w-md">
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-foreground">{contributor.post_count}</div>
-                            <div className="text-xs text-muted-foreground">Total Posts</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-foreground">{contributor.recent_posts}</div>
-                            <div className="text-xs text-muted-foreground">This Week</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-sm font-semibold text-foreground flex items-center justify-center gap-1">
-                              <Calendar className="w-4 h-4 text-muted-foreground" />
-                              {formatDate(contributor.first_post_date)}
-                            </div>
-                            <div className="text-xs text-muted-foreground">First Post</div>
-                          </div>
-                        </div>
-                      </div>
+                          {/* Badges & Types Row */}
+                          <div className="mt-4 pt-4 border-t border-border/50 flex flex-col sm:flex-row sm:items-center gap-3">
+                            {/* Badges */}
+                            {contributor.badges.length > 0 && (
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Award className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                {contributor.badges.map((badge) => (
+                                  <span
+                                    key={badge.id}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-background/80 rounded-full text-xs border border-border"
+                                    title={badge.description}
+                                  >
+                                    <span>{badge.icon}</span>
+                                    <span className="text-foreground font-medium">{badge.name}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
 
-                      {/* Badges & Types Row */}
-                      <div className="mt-4 pt-4 border-t border-border/50 flex flex-col sm:flex-row sm:items-center gap-3">
-                        {/* Badges */}
-                        {contributor.badges.length > 0 && (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Award className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                            {contributor.badges.map((badge) => (
-                              <span
-                                key={badge.id}
-                                className="inline-flex items-center gap-1 px-2 py-1 bg-background/80 rounded-full text-xs border border-border"
-                                title={badge.description}
-                              >
-                                <span>{badge.icon}</span>
-                                <span className="text-foreground font-medium">{badge.name}</span>
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Opportunity Types */}
-                        {contributor.opportunity_types.length > 0 && (
-                          <div className="sm:ml-auto flex items-center gap-2 flex-wrap">
-                            <span className="text-xs text-muted-foreground">Posts in:</span>
-                            {contributor.opportunity_types.slice(0, 4).map((type) => (
-                              <span
-                                key={type}
-                                className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded-full"
-                              >
-                                {formatTypeLabel(type)}
-                              </span>
-                            ))}
-                            {contributor.opportunity_types.length > 4 && (
-                              <span className="text-xs text-muted-foreground">+{contributor.opportunity_types.length - 4} more</span>
+                            {/* Opportunity Types */}
+                            {contributor.opportunity_types.length > 0 && (
+                              <div className="sm:ml-auto flex items-center gap-2 flex-wrap">
+                                <span className="text-xs text-muted-foreground">Posts in:</span>
+                                {contributor.opportunity_types.slice(0, 4).map((type) => (
+                                  <span
+                                    key={type}
+                                    className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded-full"
+                                  >
+                                    {formatTypeLabel(type)}
+                                  </span>
+                                ))}
+                                {contributor.opportunity_types.length > 4 && (
+                                  <span className="text-xs text-muted-foreground">+{contributor.opportunity_types.length - 4} more</span>
+                                )}
+                              </div>
                             )}
                           </div>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Members without posts */}
+              {membersWithoutPosts.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <UserCircle className="w-5 h-5" />
+                    <h3 className="text-sm font-medium">Other Members ({membersWithoutPosts.length})</h3>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {membersWithoutPosts.map((member, index) => (
+                      <motion.div
+                        key={member.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          duration: 0.4,
+                          delay: (rankedContributors.length * 0.05) + (index * 0.02),
+                          ease: 'easeOut'
+                        }}
+                        className={`${noTierConfig.bgGradient} rounded-lg border ${noTierConfig.borderColor} p-3 text-center hover:shadow-sm transition-all`}
+                      >
+                        {member.avatar_url ? (
+                          <Image
+                            src={member.avatar_url}
+                            alt={member.name}
+                            width={48}
+                            height={48}
+                            className="w-12 h-12 rounded-full object-cover mx-auto mb-2 border border-border"
+                          />
+                        ) : (
+                          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${noTierConfig.gradient} flex items-center justify-center text-white font-semibold text-sm mx-auto mb-2`}>
+                            {getInitials(member.name)}
+                          </div>
                         )}
-                      </div>
-                    </div>
-                  </motion.div>
-                )
-              })}
+                        <p className="text-sm font-medium text-foreground truncate">{member.name}</p>
+                        <p className="text-xs text-muted-foreground">No posts yet</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

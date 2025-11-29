@@ -3,12 +3,13 @@ import { createClient } from "@supabase/supabase-js"
 
 export const dynamic = 'force-dynamic'
 
-// Tier thresholds
-const getTier = (postCount: number): 'bronze' | 'silver' | 'gold' | 'platinum' => {
+// Tier thresholds - null means no tier (0 posts)
+const getTier = (postCount: number): 'bronze' | 'silver' | 'gold' | 'platinum' | null => {
   if (postCount >= 20) return 'platinum'
   if (postCount >= 10) return 'gold'
   if (postCount >= 5) return 'silver'
-  return 'bronze'
+  if (postCount >= 1) return 'bronze'
+  return null
 }
 
 // Badge definitions
@@ -40,9 +41,9 @@ export interface Contributor {
   recent_posts: number
   first_post_date: string | null
   opportunity_types: string[]
-  tier: 'bronze' | 'silver' | 'gold' | 'platinum'
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum' | null
   badges: Badge[]
-  rank: number
+  rank: number | null
 }
 
 export async function GET() {
@@ -61,6 +62,17 @@ export async function GET() {
         persistSession: false
       }
     })
+
+    // Fetch ALL users
+    const { data: allUsers, error: usersError } = await supabase
+      .from('users')
+      .select('id, name, avatar_url, created_at')
+      .order('created_at', { ascending: true })
+
+    if (usersError) {
+      console.error("Failed to fetch users:", usersError)
+      return NextResponse.json({ contributors: [] })
+    }
 
     // Get all opportunities with timestamps and types
     const { data: opportunities, error } = await supabase
@@ -114,57 +126,56 @@ export async function GET() {
       userStats.set(opp.submitted_by, existing)
     }
 
-    // Sort by post count
-    const sortedUserIds = Array.from(userStats.entries())
-      .sort((a, b) => b[1].postCount - a[1].postCount)
-      .map(([userId]) => userId)
-
-    if (sortedUserIds.length === 0) {
-      return NextResponse.json({ contributors: [] })
-    }
-
-    // Fetch user details
-    const { data: users, error: usersError } = await supabase
-      .from('users')
-      .select('id, name, avatar_url')
-      .in('id', sortedUserIds)
-
-    if (usersError) {
-      console.error("Failed to fetch users:", usersError)
-      return NextResponse.json({ contributors: [] })
-    }
-
-    // Build contributor list with badges
-    const contributors: Contributor[] = sortedUserIds.map((userId, index) => {
-      const user = users?.find(u => u.id === userId)
-      const stats = userStats.get(userId)!
-      const rank = index + 1
-
-      // Calculate badges
-      const badges: Badge[] = []
-
-      if (stats.postCount >= 1) badges.push(BADGES.first_post)
-      if (stats.postCount >= 5) badges.push(BADGES.five_posts)
-      if (stats.postCount >= 10) badges.push(BADGES.ten_posts)
-      if (stats.postCount >= 20) badges.push(BADGES.twenty_posts)
-      if (rank <= 10) badges.push(BADGES.early_adopter)
-      if (stats.recentPosts >= 3) badges.push(BADGES.streak_week)
-      if (stats.types.size >= 3) badges.push(BADGES.diverse_poster)
-      if (rank <= 3) badges.push(BADGES.top_contributor)
+    // Build contributor list for ALL users
+    const contributors: Contributor[] = (allUsers || []).map((user) => {
+      const stats = userStats.get(user.id)
 
       return {
-        id: userId,
-        name: user?.name || 'Anonymous',
-        avatar_url: user?.avatar_url || null,
-        post_count: stats.postCount,
-        recent_posts: stats.recentPosts,
-        first_post_date: stats.firstPostDate,
-        opportunity_types: Array.from(stats.types),
-        tier: getTier(stats.postCount),
-        badges,
-        rank
+        id: user.id,
+        name: user.name || 'Anonymous',
+        avatar_url: user.avatar_url || null,
+        post_count: stats?.postCount || 0,
+        recent_posts: stats?.recentPosts || 0,
+        first_post_date: stats?.firstPostDate || null,
+        opportunity_types: stats ? Array.from(stats.types) : [],
+        tier: getTier(stats?.postCount || 0),
+        badges: [] as Badge[],
+        rank: null as number | null
       }
     })
+
+    // Sort: users with posts first (by post count desc), then users without posts (by name)
+    contributors.sort((a, b) => {
+      if (a.post_count > 0 && b.post_count === 0) return -1
+      if (a.post_count === 0 && b.post_count > 0) return 1
+      if (a.post_count > 0 && b.post_count > 0) {
+        return b.post_count - a.post_count
+      }
+      // Both have 0 posts, sort by name
+      return a.name.localeCompare(b.name)
+    })
+
+    // Assign ranks and badges only to users with posts
+    let currentRank = 1
+    for (const contributor of contributors) {
+      if (contributor.post_count > 0) {
+        contributor.rank = currentRank
+
+        // Calculate badges
+        const badges: Badge[] = []
+        if (contributor.post_count >= 1) badges.push(BADGES.first_post)
+        if (contributor.post_count >= 5) badges.push(BADGES.five_posts)
+        if (contributor.post_count >= 10) badges.push(BADGES.ten_posts)
+        if (contributor.post_count >= 20) badges.push(BADGES.twenty_posts)
+        if (currentRank <= 10) badges.push(BADGES.early_adopter)
+        if (contributor.recent_posts >= 3) badges.push(BADGES.streak_week)
+        if (contributor.opportunity_types.length >= 3) badges.push(BADGES.diverse_poster)
+        if (currentRank <= 3) badges.push(BADGES.top_contributor)
+
+        contributor.badges = badges
+        currentRank++
+      }
+    }
 
     return NextResponse.json({ contributors })
   } catch (error) {
