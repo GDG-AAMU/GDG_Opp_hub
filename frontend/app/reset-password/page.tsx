@@ -17,6 +17,19 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
+  // Force light mode for reset password page
+  useEffect(() => {
+    const root = document.documentElement
+    const originalClasses = root.className
+
+    root.classList.remove('dark')
+    root.classList.add('light')
+
+    return () => {
+      root.className = originalClasses
+    }
+  }, [])
+
   // Verify the session on mount
   useEffect(() => {
     const verifySession = async () => {
