@@ -6,16 +6,17 @@ import Footer from "@/components/layout/Footer"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { 
-  Zap, 
+import {
+  Zap,
   Calendar,
-  Briefcase, 
-  Lightbulb, 
-  Beaker, 
-  Rocket, 
+  Briefcase,
+  Lightbulb,
+  Beaker,
+  Rocket,
   Cog,
   ArrowRight
 } from "lucide-react"
+import TopContributors from "@/components/home/TopContributors"
 
 interface StatsData {
   newThisWeek: number
@@ -326,6 +327,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Top Contributors Section */}
+      <TopContributors />
 
       <Footer />
     </div>
