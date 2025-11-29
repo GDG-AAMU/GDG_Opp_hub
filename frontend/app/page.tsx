@@ -16,7 +16,6 @@ import {
   Cog,
   ArrowRight
 } from "lucide-react"
-import TopContributors from "@/components/home/TopContributors"
 
 interface StatsData {
   newThisWeek: number
@@ -327,9 +326,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Top Contributors Section */}
-      <TopContributors />
 
       <Footer />
     </div>

@@ -55,10 +55,9 @@ export async function GET() {
       }
     }
 
-    // Get user IDs with at least 1 post, sorted by count
+    // Get user IDs with at least 1 post, sorted by count (no limit - return all)
     const sortedUserIds = Array.from(postCounts.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
       .map(([userId]) => userId)
 
     if (sortedUserIds.length === 0) {

@@ -99,11 +99,17 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex gap-4 items-center">
             <ThemeToggle />
-            <Link 
-              href="/about" 
+            <Link
+              href="/about"
               className="text-foreground hover:text-purple-600 font-medium transition-colors duration-200"
             >
               About
+            </Link>
+            <Link
+              href="/leaderboard"
+              className="text-foreground hover:text-purple-600 font-medium transition-colors duration-200"
+            >
+              Leaderboard
             </Link>
             {user ? (
               <>
@@ -186,6 +192,13 @@ export default function Navbar() {
               onClick={() => setIsMenuOpen(false)}
             >
               About
+            </Link>
+            <Link
+              href="/leaderboard"
+              className="block px-4 py-2 text-foreground hover:text-purple-600 hover:bg-accent rounded-lg font-medium transition-colors duration-200"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Leaderboard
             </Link>
             {user ? (
               <>
