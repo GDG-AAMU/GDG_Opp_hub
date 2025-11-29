@@ -65,7 +65,7 @@ export async function GET() {
     // Get all opportunities with timestamps and types
     const { data: opportunities, error } = await supabase
       .from('opportunities')
-      .select('submitted_by, created_at, type')
+      .select('submitted_by, created_at, opportunity_type')
       .order('created_at', { ascending: true })
 
     if (error) {
@@ -107,8 +107,8 @@ export async function GET() {
         }
       }
 
-      if (opp.type) {
-        existing.types.add(opp.type)
+      if (opp.opportunity_type) {
+        existing.types.add(opp.opportunity_type)
       }
 
       userStats.set(opp.submitted_by, existing)

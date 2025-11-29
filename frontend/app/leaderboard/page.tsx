@@ -2,10 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { motion } from 'framer-motion'
-import { Trophy, Users, TrendingUp, Calendar, Flame, Award } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Trophy, Users, TrendingUp, Calendar, Flame, Award, Info, X } from 'lucide-react'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
+
+const BADGE_INFO = [
+  { icon: '🎯', name: 'First Steps', description: 'Post your first opportunity' },
+  { icon: '⭐', name: 'Rising Star', description: 'Post 5 opportunities' },
+  { icon: '🌟', name: 'Dedicated', description: 'Post 10 opportunities' },
+  { icon: '🏆', name: 'Champion', description: 'Post 20 opportunities' },
+  { icon: '🚀', name: 'Early Adopter', description: 'Among first 10 contributors' },
+  { icon: '🔥', name: 'On Fire', description: '3+ posts this week' },
+  { icon: '🌈', name: 'Diverse', description: 'Post 3+ different types' },
+  { icon: '👑', name: 'Top Contributor', description: 'Reach top 3' },
+]
 
 interface Badge {
   id: string
@@ -96,6 +107,7 @@ function formatTypeLabel(type: string): string {
 export default function LeaderboardPage() {
   const [contributors, setContributors] = useState<Contributor[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [showBadgeInfo, setShowBadgeInfo] = useState(false)
 
   useEffect(() => {
     const fetchContributors = async () => {
@@ -150,7 +162,7 @@ export default function LeaderboardPage() {
       {/* Stats Overview */}
       <section className="py-6 bg-muted/30 border-b border-border">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex flex-wrap justify-center gap-8 sm:gap-16">
+          <div className="flex flex-wrap justify-center items-center gap-8 sm:gap-16">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-full bg-purple-100 dark:bg-purple-900/30">
                 <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -178,9 +190,73 @@ export default function LeaderboardPage() {
                 <div className="text-sm text-muted-foreground">This Week</div>
               </div>
             </div>
+            {/* Badge Info Button */}
+            <button
+              onClick={() => setShowBadgeInfo(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-border hover:bg-accent transition-colors text-sm font-medium text-foreground"
+            >
+              <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <span>Badges</span>
+              <Info className="w-3.5 h-3.5 text-muted-foreground" />
+            </button>
           </div>
         </div>
       </section>
+
+      {/* Badge Info Modal */}
+      <AnimatePresence>
+        {showBadgeInfo && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowBadgeInfo(false)}
+              className="fixed inset-0 bg-black/50 z-50"
+            />
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md mx-4"
+            >
+              <div className="bg-card rounded-xl shadow-xl border border-border overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    <h3 className="font-semibold text-foreground">Available Badges</h3>
+                  </div>
+                  <button
+                    onClick={() => setShowBadgeInfo(false)}
+                    className="p-1.5 rounded-lg hover:bg-accent transition-colors"
+                  >
+                    <X className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                </div>
+                {/* Badge List */}
+                <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
+                  {BADGE_INFO.map((badge) => (
+                    <div
+                      key={badge.name}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                    >
+                      <span className="text-2xl">{badge.icon}</span>
+                      <div>
+                        <div className="font-medium text-foreground">{badge.name}</div>
+                        <div className="text-sm text-muted-foreground">{badge.description}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Tier Legend */}
       <section className="py-6 bg-background border-b border-border">
@@ -359,36 +435,6 @@ export default function LeaderboardPage() {
               })}
             </div>
           )}
-        </div>
-      </section>
-
-      {/* Badge Legend */}
-      <section className="py-8 bg-muted/30 border-t border-border">
-        <div className="container mx-auto px-4 sm:px-6">
-          <h3 className="text-lg font-semibold text-foreground text-center mb-6">Available Badges</h3>
-          <div className="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
-            {[
-              { icon: '🎯', name: 'First Steps', description: 'Post your first opportunity' },
-              { icon: '⭐', name: 'Rising Star', description: 'Post 5 opportunities' },
-              { icon: '🌟', name: 'Dedicated', description: 'Post 10 opportunities' },
-              { icon: '🏆', name: 'Champion', description: 'Post 20 opportunities' },
-              { icon: '🚀', name: 'Early Adopter', description: 'Among first 10 contributors' },
-              { icon: '🔥', name: 'On Fire', description: '3+ posts this week' },
-              { icon: '🌈', name: 'Diverse', description: 'Post 3+ different types' },
-              { icon: '👑', name: 'Top Contributor', description: 'Reach top 3' },
-            ].map((badge) => (
-              <div
-                key={badge.name}
-                className="flex items-center gap-2 px-3 py-2 bg-card rounded-lg border border-border"
-              >
-                <span className="text-lg">{badge.icon}</span>
-                <div>
-                  <div className="text-sm font-medium text-foreground">{badge.name}</div>
-                  <div className="text-xs text-muted-foreground">{badge.description}</div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
