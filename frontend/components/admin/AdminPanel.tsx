@@ -78,8 +78,8 @@ const typeLabels: Record<OpportunityType, string> = {
 }
 
 const statusChipClasses: Record<"active" | "expired", string> = {
-  active: "bg-green-100 text-green-700",
-  expired: "bg-red-100 text-red-700",
+  active: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  expired: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 }
 
 const getSubmittedByName = (opportunity: Opportunity) => {
@@ -365,16 +365,16 @@ export default function AdminPanel() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <Loader2 className="h-8 w-8 animate-spin text-purple-600 mb-3" />
-        <p className="text-gray-600">Preparing admin controls...</p>
+        <p className="text-muted-foreground">Preparing admin controls...</p>
       </div>
     )
   }
 
   if (accessError) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-        <p className="font-semibold text-red-700 mb-2">Access Error</p>
-        <p className="text-red-600 mb-4">{accessError}</p>
+      <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-center">
+        <p className="font-semibold text-red-700 dark:text-red-400 mb-2">Access Error</p>
+        <p className="text-red-600 dark:text-red-300 mb-4">{accessError}</p>
         <Button onClick={() => router.refresh()}>Try Again</Button>
       </div>
     )
@@ -400,7 +400,7 @@ export default function AdminPanel() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-border">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('opportunities')}
@@ -408,7 +408,7 @@ export default function AdminPanel() {
               flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors
               ${activeTab === 'opportunities'
                 ? 'border-purple-600 text-purple-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
               }
             `}
           >
@@ -421,7 +421,7 @@ export default function AdminPanel() {
               flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors
               ${activeTab === 'feedback'
                 ? 'border-purple-600 text-purple-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
               }
             `}
           >
@@ -466,7 +466,7 @@ export default function AdminPanel() {
           return (
             <div
               key={card.label}
-              className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
+              className="rounded-2xl border border-border bg-card p-5 shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <div
@@ -475,21 +475,21 @@ export default function AdminPanel() {
                   <Icon className="h-5 w-5" />
                 </div>
                 {statsLoading && (
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 )}
               </div>
-              <p className="mt-6 text-3xl font-semibold text-gray-900">
+              <p className="mt-6 text-3xl font-semibold text-foreground">
                 {card.value}
               </p>
-              <p className="text-sm text-gray-500">{card.label}</p>
+              <p className="text-sm text-muted-foreground">{card.label}</p>
             </div>
           )
         })}
       </section>
 
       {statsError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-red-700">
+        <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
             <AlertTriangle className="h-5 w-5" />
             <span>{statsError}</span>
           </div>
@@ -499,18 +499,18 @@ export default function AdminPanel() {
         </div>
       )}
 
-      <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">
+            <h3 className="text-xl font-semibold text-foreground">
               Opportunities
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Manage every opportunity in one place. Search, filter, edit, or retire listings.
             </p>
           </div>
           {lastRefreshed && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Last synced {formatDistanceToNow(lastRefreshed, { addSuffix: true })}
             </p>
           )}
@@ -605,9 +605,9 @@ export default function AdminPanel() {
         </div>
 
         <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-100 text-sm">
+          <table className="min-w-full divide-y divide-border text-sm">
             <thead>
-              <tr className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <tr className="text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <th className="px-4 py-3">Opportunity</th>
                 <th className="px-4 py-3">Type</th>
                 <th className="px-4 py-3">Status</th>
@@ -617,10 +617,10 @@ export default function AdminPanel() {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border">
               {tableLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="h-5 w-5 animate-spin text-purple-600" />
                       <span>Loading opportunities...</span>
@@ -632,7 +632,7 @@ export default function AdminPanel() {
                   <td colSpan={7} className="px-4 py-8">
                     <div className="flex flex-col items-center gap-3 text-center">
                       <AlertTriangle className="h-8 w-8 text-red-500" />
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-foreground">
                         {tableError}
                       </p>
                       <Button variant="outline" onClick={() => fetchOpportunities(currentPage)}>
@@ -644,22 +644,22 @@ export default function AdminPanel() {
               ) : opportunities.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center">
-                    <p className="text-gray-500">No opportunities found for the current filters.</p>
+                    <p className="text-muted-foreground">No opportunities found for the current filters.</p>
                   </td>
                 </tr>
               ) : (
                 opportunities.map((opportunity) => (
-                  <tr key={opportunity.id} className="hover:bg-gray-50/75">
+                  <tr key={opportunity.id} className="hover:bg-muted/50">
                     <td className="px-4 py-4">
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-foreground">
                         {opportunity.job_title || "Untitled role"}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         {opportunity.company_name}
                       </p>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="inline-flex rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+                      <span className="inline-flex rounded-full bg-purple-100 dark:bg-purple-900/30 px-3 py-1 text-xs font-semibold text-purple-700 dark:text-purple-400">
                         {typeLabels[opportunity.opportunity_type]}
                       </span>
                     </td>
@@ -670,13 +670,13 @@ export default function AdminPanel() {
                         {opportunity.status === "active" ? "Active" : "Expired"}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-gray-700">
+                    <td className="px-4 py-4 text-muted-foreground">
                       {formatDate(opportunity.deadline)}
                     </td>
-                    <td className="px-4 py-4 text-gray-700">
+                    <td className="px-4 py-4 text-muted-foreground">
                       {formatDate(opportunity.created_at)}
                     </td>
-                    <td className="px-4 py-4 text-gray-700">
+                    <td className="px-4 py-4 text-muted-foreground">
                       {getSubmittedByName(opportunity)}
                     </td>
                     <td className="px-4 py-4">
@@ -685,7 +685,7 @@ export default function AdminPanel() {
                           variant="ghost"
                           size="sm"
                           asChild
-                          className="text-gray-600 hover:text-purple-600"
+                          className="text-muted-foreground hover:text-purple-600"
                         >
                           <Link href={`/opportunities/${opportunity.id}`}>
                             <Eye className="mr-1 h-4 w-4" />
@@ -695,7 +695,7 @@ export default function AdminPanel() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-gray-600 hover:text-purple-600"
+                          className="text-muted-foreground hover:text-purple-600"
                           onClick={() => openEditDialog(opportunity)}
                         >
                           <Edit className="mr-1 h-4 w-4" />
@@ -704,7 +704,7 @@ export default function AdminPanel() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-red-600 hover:text-red-700"
+                          className="text-red-600 hover:text-red-400"
                           onClick={() => openDeleteDialog(opportunity)}
                         >
                           <Trash2 className="mr-1 h-4 w-4" />
@@ -721,7 +721,7 @@ export default function AdminPanel() {
 
         {opportunities.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Showing {(pagination?.offset || 0) + 1}-
               {Math.min(
                 (pagination?.offset || 0) + PAGE_SIZE,
@@ -739,7 +739,7 @@ export default function AdminPanel() {
                 <ChevronLeft className="mr-1 h-4 w-4" />
                 Previous
               </Button>
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-foreground">
                 Page {currentPage} of {totalPages}
               </span>
               <Button
@@ -760,13 +760,13 @@ export default function AdminPanel() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">
+            <h3 className="text-xl font-semibold text-foreground">
               Recent Submissions
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Latest 10 opportunities submitted by the community
             </p>
           </div>
@@ -774,37 +774,37 @@ export default function AdminPanel() {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {recentSubmissions.length === 0 ? (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               No recent submissions available.
             </p>
           ) : (
             recentSubmissions.map((opportunity) => (
               <div
                 key={opportunity.id}
-                className="rounded-xl border border-gray-100 bg-gray-50 p-4"
+                className="rounded-xl border border-border bg-muted/50 p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       {formatDistanceToNow(new Date(opportunity.created_at ?? ""), {
                         addSuffix: true,
                       })}
                     </p>
-                    <h4 className="text-lg font-semibold text-gray-900">
+                    <h4 className="text-lg font-semibold text-foreground">
                       {opportunity.job_title || "Untitled role"}
                     </h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {opportunity.company_name}
                     </p>
                   </div>
-                  <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+                  <span className="rounded-full bg-purple-100 dark:bg-purple-900/30 px-3 py-1 text-xs font-semibold text-purple-700 dark:text-purple-400">
                     {typeLabels[opportunity.opportunity_type]}
                   </span>
                 </div>
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-600">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
                   <p>
                     Submitted by{" "}
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-foreground">
                       {getSubmittedByName(opportunity)}
                     </span>
                   </p>
@@ -847,7 +847,7 @@ export default function AdminPanel() {
               This will mark the opportunity as expired immediately. You can re-activate it later if needed.
             </DialogDescription>
           </DialogHeader>
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 text-sm text-amber-800 dark:text-amber-300">
             <p className="font-semibold">Are you sure?</p>
             <p>
               {opportunityToDelete?.job_title || "This opportunity"} at{" "}

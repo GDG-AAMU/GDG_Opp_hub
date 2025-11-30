@@ -312,28 +312,52 @@ Instructions:
    * "sponsorship for work authorization", "immigration sponsorship"
    * "sponsor eligible candidates", "sponsorship may be available"
 
-   Set to FALSE (does NOT offer sponsorship) if you find ANY of these phrases:
+   Set to FALSE (does NOT offer sponsorship) ONLY if you find EXPLICIT statements like:
    * "no sponsorship", "sponsorship not available", "sponsorship not provided", "sponsorship not offered"
    * "cannot sponsor", "does not sponsor", "will not sponsor", "unable to sponsor", "not able to sponsor"
-   * "must be authorized to work", "must have authorization to work", "must possess authorization to work"
-   * "must have work authorization", "work authorization required", "current work authorization required"
-   * "must be legally authorized to work", "legally authorized to work", "currently authorized to work"
-   * "must be eligible to work without sponsorship", "eligible to work without company sponsorship"
+   * "we do not provide visa sponsorship", "visa sponsorship is not available"
+   * "sponsorship will not be provided", "unable to provide sponsorship"
+   * "must be eligible to work WITHOUT sponsorship", "work without company sponsorship"
    * "must possess work authorization that does not require sponsorship"
    * "authorized to work without sponsorship", "no visa sponsorship", "without need for sponsorship"
    * "must be able to work without sponsorship", "able to work legally without sponsorship"
-   * "employment eligibility verification required", "I-9 employment eligibility" (when combined with work auth language)
-   * "permanently authorized to work", "permanent work authorization required"
-   * "US work authorization required", "valid US work authorization"
+
+   NEUTRAL PHRASES - Do NOT treat these as "no sponsorship" because they apply to EVERYONE including visa holders:
+   * "must be authorized to work" - H1B, OPT, and CPT holders ARE authorized to work
+   * "legally authorized to work" - visa holders ARE legally authorized
+   * "work authorization required" - sponsorship PROVIDES work authorization
+   * "employment eligibility verification" - standard I-9 form for ALL employees
+   * "valid work authorization" - visas ARE valid work authorization
+   * "currently authorized to work" - current visa holders ARE currently authorized
+   * "must have work authorization" - this does NOT exclude sponsored workers
+
+   KEY INSIGHT: Companies that sponsor visas still require "work authorization" because the visa IS the authorization.
+   The key difference is between:
+   - "must have work authorization" (NEUTRAL - includes sponsored workers)
+   - "must have work authorization WITHOUT sponsorship" (NO SPONSORSHIP - explicit exclusion)
 
    IMPORTANT NOTES:
    * "Equal Opportunity Employer", "EEO", "EOE", "AA/EEO" statements do NOT indicate anything about sponsorship - ignore these completely
-   * APPLICATION SCREENING QUESTIONS asking "will you require sponsorship?" or "do you need sponsorship?" are NOT the same as "we don't offer sponsorship" - ignore these questions
-   * Questions like "will you now or in the future require sponsorship?" are standard screening questions and do NOT mean sponsorship is unavailable
-   * Only explicit statements like "we cannot sponsor" or "sponsorship not available" should be treated as negative indicators
-   * If BOTH positive and negative indicators exist, the negative (no sponsorship) takes precedence
-   * DEFAULT BEHAVIOR: If no clear negative indicators are found, default to TRUE (assume sponsorship is available unless explicitly stated otherwise)
-   * Only set to FALSE if you find explicit evidence that sponsorship is NOT offered
+
+   * CRITICAL - SCREENING QUESTIONS ARE NOT POLICY STATEMENTS:
+     - Questions like "will you require sponsorship?" or "do you need sponsorship?" are APPLICATION SCREENING QUESTIONS
+     - These are standard questions companies ask ALL applicants to collect data
+     - Just because a company ASKS about sponsorship needs does NOT mean they DON'T offer sponsorship
+     - Many companies that DO offer sponsorship still ask these questions to plan ahead
+     - IGNORE ALL SCREENING QUESTIONS when determining sponsorship availability
+     - Examples to IGNORE: "Will you now or in the future require sponsorship?", "Do you need visa sponsorship?", "Are you authorized to work in the US?"
+
+   * Only EXPLICIT POLICY STATEMENTS should affect the sponsorship field:
+     - "We cannot provide sponsorship" = FALSE (explicit policy)
+     - "Sponsorship is not available" = FALSE (explicit policy)
+     - "We do not sponsor visas" = FALSE (explicit policy)
+     - "Will you need sponsorship?" = IGNORE (screening question, not policy)
+     - "Are you currently authorized to work?" = IGNORE (screening question, not policy)
+
+   * If BOTH positive and negative POLICY indicators exist, the negative (no sponsorship) takes precedence
+   * DEFAULT BEHAVIOR: If no clear negative POLICY statement is found, default to TRUE (assume sponsorship is available)
+   * Only set to FALSE if you find EXPLICIT policy statements that sponsorship is NOT offered
+   * When in doubt about whether something is a question vs a statement, default to TRUE
 
 11. requires_us_citizenship: CAREFULLY detect if U.S. citizenship is required or NOT required
 

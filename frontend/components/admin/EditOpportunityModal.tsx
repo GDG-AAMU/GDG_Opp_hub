@@ -212,7 +212,7 @@ export default function EditOpportunityModal({
                 disabled={isSubmitting}
               />
               {errors.company_name && (
-                <p className="text-sm text-red-600">
+                <p className="text-sm text-red-600 dark:text-red-400">
                   {errors.company_name.message}
                 </p>
               )}
@@ -226,7 +226,7 @@ export default function EditOpportunityModal({
                 disabled={isSubmitting}
               />
               {errors.job_title && (
-                <p className="text-sm text-red-600">
+                <p className="text-sm text-red-600 dark:text-red-400">
                   {errors.job_title.message}
                 </p>
               )}
@@ -259,7 +259,7 @@ export default function EditOpportunityModal({
                 )}
               />
               {errors.opportunity_type && (
-                <p className="text-sm text-red-600">
+                <p className="text-sm text-red-600 dark:text-red-400">
                   {errors.opportunity_type.message}
                 </p>
               )}
@@ -287,7 +287,7 @@ export default function EditOpportunityModal({
                 )}
               />
               {errors.status && (
-                <p className="text-sm text-red-600">
+                <p className="text-sm text-red-600 dark:text-red-400">
                   {errors.status.message}
                 </p>
               )}
@@ -304,7 +304,7 @@ export default function EditOpportunityModal({
         disabled={isSubmitting}
       />
       {errors.deadline && (
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-red-600 dark:text-red-400">
           {errors.deadline.message}
         </p>
       )}
@@ -324,7 +324,7 @@ export default function EditOpportunityModal({
         ))}
       </datalist>
       {errors.role_type && (
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-red-600 dark:text-red-400">
           {errors.role_type.message}
         </p>
       )}
@@ -339,7 +339,7 @@ export default function EditOpportunityModal({
               disabled={isSubmitting}
             />
             {errors.location && (
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-red-600 dark:text-red-400">
                 {errors.location.message}
               </p>
             )}
@@ -349,12 +349,12 @@ export default function EditOpportunityModal({
             <Label htmlFor="requirements">Requirements</Label>
             <textarea
               id="requirements"
-              className="min-h-[80px] w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
+              className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
               {...register("requirements")}
               disabled={isSubmitting}
             />
             {errors.requirements && (
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-red-600 dark:text-red-400">
                 {errors.requirements.message}
               </p>
             )}
@@ -364,12 +364,12 @@ export default function EditOpportunityModal({
             <Label htmlFor="description">Description</Label>
             <textarea
               id="description"
-              className="min-h-[120px] w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
+              className="min-h-[120px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
               {...register("description")}
               disabled={isSubmitting}
             />
             {errors.description && (
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-red-600 dark:text-red-400">
                 {errors.description.message}
               </p>
             )}
@@ -396,8 +396,8 @@ export default function EditOpportunityModal({
                 Add Major
               </Button>
             </div>
-            <p className="text-xs text-gray-500">
-              Press Enter or click “Add” to include a major. Click on a tag to
+            <p className="text-xs text-muted-foreground">
+              Press Enter or click &quot;Add&quot; to include a major. Click on a tag to
               remove it.
             </p>
 
@@ -408,10 +408,10 @@ export default function EditOpportunityModal({
                     type="button"
                     key={major}
                     onClick={() => handleRemoveMajor(major)}
-                    className="group inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-800 transition hover:bg-purple-200"
+                    className="group inline-flex items-center gap-1 rounded-full bg-purple-100 dark:bg-purple-900/30 px-3 py-1 text-xs font-medium text-purple-800 dark:text-purple-300 transition hover:bg-purple-200 dark:hover:bg-purple-900/50"
                   >
                     {major}
-                    <span className="text-purple-500 group-hover:text-purple-800">
+                    <span className="text-purple-500 group-hover:text-purple-800 dark:group-hover:text-purple-300">
                       ×
                     </span>
                   </button>
@@ -420,7 +420,7 @@ export default function EditOpportunityModal({
             )}
 
             <div className="space-y-1">
-              <p className="text-xs font-semibold text-gray-500">
+              <p className="text-xs font-semibold text-muted-foreground">
                 Quick suggestions
               </p>
               <div className="flex flex-wrap gap-2">
@@ -436,8 +436,8 @@ export default function EditOpportunityModal({
                       onClick={() => handleAddMajor(major)}
                       className={`rounded-full border px-3 py-1 text-xs ${
                         isSelected
-                          ? "border-purple-500 bg-purple-50 text-purple-700"
-                          : "border-gray-200 bg-white text-gray-600 hover:border-purple-200"
+                          ? "border-purple-500 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                          : "border-border bg-card text-muted-foreground hover:border-purple-200 dark:hover:border-purple-700"
                       }`}
                       disabled={isSubmitting}
                     >
@@ -449,7 +449,7 @@ export default function EditOpportunityModal({
             </div>
 
             {errors.relevant_majors && (
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-red-600 dark:text-red-400">
                 {errors.relevant_majors.message}
               </p>
             )}

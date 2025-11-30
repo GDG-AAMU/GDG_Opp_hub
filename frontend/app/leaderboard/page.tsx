@@ -282,7 +282,7 @@ export default function LeaderboardPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-sm mx-4"
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 mx-auto max-w-sm"
             >
               <div className="bg-card rounded-xl shadow-xl border border-border overflow-hidden">
                 {/* Header */}
@@ -345,7 +345,7 @@ export default function LeaderboardPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md mx-4"
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 mx-auto max-w-md"
             >
               <div className="bg-card rounded-xl shadow-xl border border-border overflow-hidden">
                 {/* Header */}
@@ -400,7 +400,7 @@ export default function LeaderboardPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 50 }}
               transition={{ type: 'spring', damping: 15, stiffness: 300 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-sm mx-4"
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 mx-auto max-w-sm"
             >
               <div className="bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
                 {/* Confetti/celebration header */}
@@ -471,7 +471,7 @@ export default function LeaderboardPage() {
       </section>
 
       {/* Contributors List */}
-      <section className="flex-1 py-8 sm:py-12">
+      <section className="flex-1 py-8 sm:py-12 min-h-[400px]">
         <div className="container mx-auto px-4 sm:px-6">
           {/* Search and Filters */}
           <div className="max-w-4xl mx-auto mb-6">
