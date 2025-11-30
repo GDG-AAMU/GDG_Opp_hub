@@ -67,16 +67,16 @@ const typeLabels: Record<FeedbackType, string> = {
 }
 
 const typeColors: Record<FeedbackType, string> = {
-  bug: 'bg-red-100 text-red-700',
-  feature_request: 'bg-blue-100 text-blue-700',
-  general: 'bg-gray-100 text-gray-700',
-  other: 'bg-purple-100 text-purple-700',
+  bug: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  feature_request: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  general: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+  other: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
 }
 
 const statusColors: Record<FeedbackStatus, string> = {
-  new: 'bg-yellow-100 text-yellow-700',
-  in_progress: 'bg-blue-100 text-blue-700',
-  resolved: 'bg-green-100 text-green-700',
+  new: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+  in_progress: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  resolved: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
 }
 
 const statusLabels: Record<FeedbackStatus, string> = {
@@ -184,36 +184,36 @@ export default function FeedbackSection() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold">Feedback Management</h2>
-        <p className="text-gray-600 mt-1">View and manage user feedback submissions</p>
+        <h2 className="text-2xl font-bold text-foreground">Feedback Management</h2>
+        <p className="text-muted-foreground mt-1">View and manage user feedback submissions</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600">Total Feedback</p>
-          <p className="text-2xl font-bold mt-1">{stats.total}</p>
+        <div className="bg-card p-4 rounded-lg border border-border">
+          <p className="text-sm text-muted-foreground">Total Feedback</p>
+          <p className="text-2xl font-bold mt-1 text-foreground">{stats.total}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600">New</p>
-          <p className="text-2xl font-bold mt-1 text-yellow-600">{stats.new}</p>
+        <div className="bg-card p-4 rounded-lg border border-border">
+          <p className="text-sm text-muted-foreground">New</p>
+          <p className="text-2xl font-bold mt-1 text-yellow-600 dark:text-yellow-400">{stats.new}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600">In Progress</p>
-          <p className="text-2xl font-bold mt-1 text-blue-600">{stats.in_progress}</p>
+        <div className="bg-card p-4 rounded-lg border border-border">
+          <p className="text-sm text-muted-foreground">In Progress</p>
+          <p className="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">{stats.in_progress}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <p className="text-sm text-gray-600">Resolved</p>
-          <p className="text-2xl font-bold mt-1 text-green-600">{stats.resolved}</p>
+        <div className="bg-card p-4 rounded-lg border border-border">
+          <p className="text-sm text-muted-foreground">Resolved</p>
+          <p className="text-2xl font-bold mt-1 text-green-600 dark:text-green-400">{stats.resolved}</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg border border-gray-200">
+      <div className="bg-card p-4 rounded-lg border border-border">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Status Filter */}
           <div>
-            <label className="text-sm font-medium mb-2 block">Status</label>
+            <label className="text-sm font-medium mb-2 block text-foreground">Status</label>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
                 <SelectValue />
@@ -229,7 +229,7 @@ export default function FeedbackSection() {
 
           {/* Type Filter */}
           <div>
-            <label className="text-sm font-medium mb-2 block">Type</label>
+            <label className="text-sm font-medium mb-2 block text-foreground">Type</label>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger>
                 <SelectValue />
@@ -246,9 +246,9 @@ export default function FeedbackSection() {
 
           {/* Search */}
           <div>
-            <label className="text-sm font-medium mb-2 block">Search</label>
+            <label className="text-sm font-medium mb-2 block text-foreground">Search</label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder="Search subject or description..."
@@ -262,32 +262,32 @@ export default function FeedbackSection() {
       </div>
 
       {/* Feedback List */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : feedback.length === 0 ? (
           <div className="text-center py-12">
-            <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No feedback found</p>
+            <MessageSquare className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+            <p className="text-muted-foreground">No feedback found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-muted/50 border-b border-border">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subject</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Subject</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">User</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-border">
                 {feedback.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
+                  <tr key={item.id} className="hover:bg-muted/50">
                     <td className="px-4 py-3">
                       <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${typeColors[item.feedback_type]}`}>
                         {typeIcons[item.feedback_type]}
@@ -295,13 +295,13 @@ export default function FeedbackSection() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-sm">{item.subject}</p>
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{item.description}</p>
+                      <p className="font-medium text-sm text-foreground">{item.subject}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{item.description}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-sm font-medium">{item.user_name}</p>
+                      <p className="text-sm font-medium text-foreground">{item.user_name}</p>
                       {item.user_email && (
-                        <p className="text-xs text-gray-500">{item.user_email}</p>
+                        <p className="text-xs text-muted-foreground">{item.user_email}</p>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -309,7 +309,7 @@ export default function FeedbackSection() {
                         {statusLabels[item.status]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
                       {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
                     </td>
                     <td className="px-4 py-3">
@@ -326,7 +326,7 @@ export default function FeedbackSection() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDelete(item.id)}
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-400 hover:bg-red-900/20"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

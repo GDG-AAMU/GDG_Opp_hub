@@ -141,7 +141,7 @@ export default function FeedbackDetailModal({ feedback, isOpen, onClose }: Feedb
         <div className="space-y-6 mt-4">
           {/* Type Badge */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 text-gray-700">
+            <div className="flex items-center gap-2 text-foreground">
               {typeIcons[feedback.feedback_type]}
               <span className="font-medium">{typeLabels[feedback.feedback_type]}</span>
             </div>
@@ -149,30 +149,30 @@ export default function FeedbackDetailModal({ feedback, isOpen, onClose }: Feedb
 
           {/* Subject */}
           <div>
-            <Label className="text-gray-600">Subject</Label>
-            <p className="mt-1 text-lg font-medium">{feedback.subject}</p>
+            <Label className="text-muted-foreground">Subject</Label>
+            <p className="mt-1 text-lg font-medium text-foreground">{feedback.subject}</p>
           </div>
 
           {/* Description */}
           <div>
-            <Label className="text-gray-600">Description</Label>
-            <div className="mt-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="whitespace-pre-wrap text-sm">{feedback.description}</p>
+            <Label className="text-muted-foreground">Description</Label>
+            <div className="mt-1 p-4 bg-muted/50 rounded-lg border border-border">
+              <p className="whitespace-pre-wrap text-sm text-foreground">{feedback.description}</p>
             </div>
           </div>
 
           {/* User Information */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-gray-600">Submitted By</Label>
-              <p className="mt-1 font-medium">{feedback.user_name}</p>
+              <Label className="text-muted-foreground">Submitted By</Label>
+              <p className="mt-1 font-medium text-foreground">{feedback.user_name}</p>
               {feedback.user_email && (
-                <p className="text-sm text-gray-500">{feedback.user_email}</p>
+                <p className="text-sm text-muted-foreground">{feedback.user_email}</p>
               )}
             </div>
             <div>
-              <Label className="text-gray-600">Submitted On</Label>
-              <p className="mt-1">
+              <Label className="text-muted-foreground">Submitted On</Label>
+              <p className="mt-1 text-foreground">
                 {format(new Date(feedback.created_at), 'MMM dd, yyyy HH:mm')}
               </p>
             </div>
@@ -181,12 +181,12 @@ export default function FeedbackDetailModal({ feedback, isOpen, onClose }: Feedb
           {/* Page URL */}
           {feedback.page_url && (
             <div>
-              <Label className="text-gray-600">Page URL</Label>
+              <Label className="text-muted-foreground">Page URL</Label>
               <a
                 href={feedback.page_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-1 flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
+                className="mt-1 flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm"
               >
                 <span className="truncate">{feedback.page_url}</span>
                 <ExternalLink className="w-4 h-4 flex-shrink-0" />
@@ -196,9 +196,9 @@ export default function FeedbackDetailModal({ feedback, isOpen, onClose }: Feedb
 
           {/* Resolution Info */}
           {feedback.status === 'resolved' && feedback.resolved_at && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <Label className="text-green-700">Resolved</Label>
-              <p className="mt-1 text-sm">
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <Label className="text-green-700 dark:text-green-400">Resolved</Label>
+              <p className="mt-1 text-sm text-green-700 dark:text-green-300">
                 Resolved by <span className="font-medium">{feedback.resolved_by_name || 'Unknown'}</span> on{' '}
                 {format(new Date(feedback.resolved_at), 'MMM dd, yyyy HH:mm')}
               </p>
@@ -206,7 +206,7 @@ export default function FeedbackDetailModal({ feedback, isOpen, onClose }: Feedb
           )}
 
           {/* Divider */}
-          <div className="border-t border-gray-200"></div>
+          <div className="border-t border-border"></div>
 
           {/* Status Update */}
           <div>
@@ -232,18 +232,18 @@ export default function FeedbackDetailModal({ feedback, isOpen, onClose }: Feedb
               onChange={(e) => setAdminNotes(e.target.value)}
               placeholder="Add internal notes about this feedback..."
               rows={4}
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+              className="mt-1 w-full px-3 py-2 border border-border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+          <div className="flex justify-between items-center pt-4 border-t border-border">
             <Button
               type="button"
               variant="outline"
               onClick={handleDelete}
               disabled={isSubmitting}
-              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+              className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300"
             >
               Delete Feedback
             </Button>

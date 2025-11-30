@@ -192,6 +192,9 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
             {errors.url && (
               <p className="text-sm text-destructive">{errors.url.message}</p>
             )}
+            <p className="text-xs text-muted-foreground">
+              Tip: If sharing from LinkedIn, look for the direct job link in the post for best results.
+            </p>
           </div>
 
           {/* Company Name Field (Optional) */}
@@ -219,9 +222,9 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
                     Manual Content Required
                   </Label>
                   <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                    {url.includes('linkedin.com') 
-                      ? 'LinkedIn requires login and blocks automated scraping. Please copy and paste the job description below.'
-                      : 'This site cannot be automatically scraped. Please copy and paste the job posting content below.'}
+                    {url.includes('linkedin.com')
+                      ? 'LinkedIn posts often contain a direct link to the job application. Check the post for the actual job link and submit that instead, or paste the job description below.'
+                      : 'This site requires login or blocks automated access. Keep the link above and paste the job posting content below.'}
                   </p>
                 </div>
               </div>
@@ -282,7 +285,7 @@ export default function SubmitModal({ open, onOpenChange, onSuccess }: SubmitMod
                 </span>
               </div>
               <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
-                This may take 5-10 seconds
+                This may take 10-15 seconds
               </p>
             </div>
           )}
