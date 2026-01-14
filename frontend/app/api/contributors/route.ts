@@ -86,25 +86,44 @@ export async function GET() {
     })
 
     // Fetch ALL users
+    console.log("[Contributors API] Fetching users...")
     const { data: allUsers, error: usersError } = await supabase
       .from('users')
       .select('id, name, avatar_url, created_at')
       .order('created_at', { ascending: true })
 
     if (usersError) {
-      console.error("Failed to fetch users:", usersError)
+      console.error("[Contributors API] Failed to fetch users:", usersError)
       return NextResponse.json({ contributors: [] })
     }
 
+    console.log(`[Contributors API] Found ${allUsers?.length || 0} users`)
+    if (allUsers && allUsers.length > 0) {
+      console.log("[Contributors API] User IDs:", allUsers.map(u => ({ id: u.id, name: u.name })))
+    }
+
     // Get all opportunities with timestamps and types
-    const { data: opportunities, error } = await supabase
+    console.log("[Contributors API] Fetching opportunities...")
+    const { data: opportunities, error: oppError } = await supabase
       .from('opportunities')
       .select('submitted_by, created_at, opportunity_type')
       .order('created_at', { ascending: true })
 
-    if (error) {
-      console.error("Failed to fetch opportunities:", error)
+    if (oppError) {
+      console.error("[Contributors API] Failed to fetch opportunities:", oppError)
+      console.error("[Contributors API] Error code:", oppError.code)
+      console.error("[Contributors API] Error message:", oppError.message)
+      console.error("[Contributors API] Full error:", JSON.stringify(oppError, null, 2))
       return NextResponse.json({ contributors: [] })
+    }
+
+    console.log(`[Contributors API] Found ${opportunities?.length || 0} opportunities`)
+    if (opportunities && opportunities.length > 0) {
+      console.log("[Contributors API] Sample opportunity:", opportunities[0])
+      console.log("[Contributors API] All submitted_by values:", opportunities.map(o => o.submitted_by))
+      console.log("[Contributors API] Unique submitted_by values:", [...new Set(opportunities.map(o => o.submitted_by))])
+    } else {
+      console.warn("[Contributors API] No opportunities found - this might be an RLS issue")
     }
 
     // Calculate date for "recent" posts (last 7 days)
@@ -112,6 +131,7 @@ export async function GET() {
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
 
     // Build detailed stats per user
+    console.log("[Contributors API] Building user stats...")
     const userStats = new Map<string, {
       postCount: number
       recentPosts: number
@@ -124,8 +144,14 @@ export async function GET() {
       activeWeeks: Set<string>
     }>()
 
-    for (const opp of opportunities || []) {
-      if (!opp.submitted_by) continue
+    const opportunitiesArray = opportunities || []
+    console.log(`[Contributors API] Processing ${opportunitiesArray.length} opportunities`)
+
+    for (const opp of opportunitiesArray) {
+      if (!opp.submitted_by) {
+        console.warn("[Contributors API] Opportunity missing submitted_by:", opp)
+        continue
+      }
 
       const existing = userStats.get(opp.submitted_by) || {
         postCount: 0,
@@ -177,9 +203,20 @@ export async function GET() {
       userStats.set(opp.submitted_by, existing)
     }
 
+    console.log(`[Contributors API] User stats built for ${userStats.size} users`)
+    console.log("[Contributors API] User stats:", Array.from(userStats.entries()).map(([id, stats]) => ({
+      userId: id,
+      postCount: stats.postCount
+    })))
+
     // Build contributor list for ALL users
+    console.log("[Contributors API] Building contributor list...")
     const contributors: Contributor[] = (allUsers || []).map((user) => {
       const stats = userStats.get(user.id)
+      
+      if (stats && stats.postCount > 0) {
+        console.log(`[Contributors API] User ${user.name} (${user.id}) has ${stats.postCount} posts`)
+      }
 
       return {
         id: user.id,
@@ -254,6 +291,14 @@ export async function GET() {
         currentRank++
       }
     }
+
+    const totalPosts = contributors.reduce((sum, c) => sum + c.post_count, 0)
+    const activeContributors = contributors.filter(c => c.post_count > 0).length
+    console.log(`[Contributors API] Final stats: ${activeContributors} contributors, ${totalPosts} total posts`)
+    console.log("[Contributors API] Contributors with posts:", contributors.filter(c => c.post_count > 0).map(c => ({
+      name: c.name,
+      post_count: c.post_count
+    })))
 
     return NextResponse.json({ contributors })
   } catch (error) {
