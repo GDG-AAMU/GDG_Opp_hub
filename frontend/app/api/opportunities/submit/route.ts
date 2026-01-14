@@ -307,7 +307,7 @@ export async function POST(request: NextRequest) {
             .replace(/\n\s*\n\s*\n+/g, '\n\n')
             // Clean up excessive spaces within lines, but preserve newlines
             .split('\n')
-            .map(line => line.trim().replace(/\s+/g, ' '))
+            .map((line: string) => line.trim().replace(/\s+/g, ' '))
             .join('\n')
           
           try {
