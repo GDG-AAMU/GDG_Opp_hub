@@ -259,50 +259,71 @@ Extract the following fields and return as JSON:
 }
 
 Instructions:
-1. company_name: Extract the company or organization name. Look in page title, headers, or URL if not explicitly stated.
-2. job_title: Extract the EXACT job/position title as written in the posting. DO NOT simplify, shorten, or interpret it.
+1. CRITICAL - HTML CLEANING: If the content contains HTML tags like <h1>, <p>, <ul>, <li>, <strong>, <em>, <a>, etc., you MUST strip them completely and return ONLY clean text. DO NOT include any HTML formatting in your response. Remove all tags and inline styles.
+
+2. company_name: Extract the company or organization name.
+   - Look in page title, headers, or URL if not explicitly stated
+   - For manual content, look at the VERY TOP of the text - company name is often the first line
+   - Check for patterns like "CompanyName\\nJob Title" at the start
+   - Look for explicit mentions like "Join [Company]", "About [Company]", "at [Company]"
+   - If you see a single word or short phrase at the very beginning before the job title, it's likely the company name
+
+3. job_title: Extract the EXACT job/position title as written in the posting. DO NOT simplify, shorten, or interpret it.
    - Look for the main job title in the page header, title tag, or "Job description" section heading
    - Examples: "Explore Program Internship Opportunities: First-Year Students" should stay as is, NOT be simplified to "Software Engineer Intern"
    - "Software Engineering Manager Intern - Core Platform and Tools" should stay as is, NOT be shortened
    - If the title includes location (e.g., "Redmond"), include it: "Explore Program Internship Opportunities: First-Year Students, Redmond"
    - Extract the complete, verbatim title from the job posting header or title field
    - CRITICAL: Do NOT use generic descriptions like "Software Engineering Intern" when a specific program name exists (e.g., "Explore Program")
-3. opportunity_type: Classify as one of: internship, full_time, research, fellowship, or scholarship
+
+4. opportunity_type: Classify as one of: internship, full_time, research, fellowship, or scholarship
    - Use "internship" for summer internships, co-ops, intern positions, "intern" keywords
    - Use "full_time" for full-time jobs, permanent positions, "full-time" keywords
    - Use "research" for research positions, research assistantships, "research" keywords
    - Use "fellowship" for fellowship programs
    - Use "scholarship" for scholarships, grants
-4. role_type: Extract or infer the general role category (e.g., "Software Engineering", "Product Management", "Data Science", "Marketing", etc.).
+
+5. role_type: Extract or infer the general role category (e.g., "Software Engineering", "Product Management", "Data Science", "Marketing", etc.).
    - This is different from job_title - it's the broader category
    - Example: "Explore Program Internship" -> role_type: "Software Engineering" (if it's for SWE)
    - Example: "Software Engineering Manager Intern" -> role_type: "Software Engineering Management"
-5. relevant_majors: Extract list of relevant academic majors or fields of study. Look for mentions of degrees, majors, or fields
+
+6. relevant_majors: Extract list of relevant academic majors or fields of study. Look for mentions of degrees, majors, or fields
    - Format each major with proper Title Case capitalization (e.g., "Computer Science", "Software Engineering", "Electrical Engineering")
    - Convert lowercase majors like "computer science" to "Computer Science"
    - Convert uppercase majors like "COMPUTER SCIENCE" to "Computer Science"
-6. deadline: Extract application deadline in YYYY-MM-DD format. Parse dates like "December 15, 2025" as "2025-12-15". Look for "deadline", "apply by", "closing date" keywords
-7. requirements: Extract ALL requirements EXACTLY as written in the posting. DO NOT rewrite, rephrase, or restructure them.
-   - Copy the exact wording from "Required Qualifications" and "Preferred Qualifications" sections
+
+7. deadline: Extract application deadline in YYYY-MM-DD format. Parse dates like "December 15, 2025" as "2025-12-15". Look for "deadline", "apply by", "closing date" keywords
+
+8. requirements: Extract ALL requirements EXACTLY as written in the posting. DO NOT rewrite, rephrase, or restructure them.
+   - Look for sections with ANY of these headings: "Requirements", "Qualifications", "Required Qualifications", "Preferred Qualifications", "Skills You'll Need", "Skills You'll Need To Bring", "What You'll Need", "What You'll Achieve", "What We're Looking For", "Who We're Looking For", "Minimum Qualifications", "Preferred Skills", "Required Skills", "Must Have", "Nice to Have", "Responsibilities"
+   - Copy the exact wording from these sections
    - Format as newline-separated list: "First requirement here\nSecond requirement here\nThird requirement here"
    - Each line should be a distinct requirement or qualification AS WRITTEN in the original posting
    - Separate different requirements with \\n (newline character)
    - Do NOT combine multiple requirements into one long sentence
    - Do NOT rewrite requirements to sound "better" - keep the original wording
    - Include both required and preferred qualifications as separate lines
+   - Strip any HTML tags (like <li>, <p>, <strong>, <em>) and return clean text only
    - Example: If posting says "Currently pursuing full time Bachelor's degree" -> use that EXACT text, NOT "Bachelor's degree required"
-8. location: Extract the COMPLETE job location with as much detail as provided (city, state, country, or "Remote").
+
+9. location: Extract the COMPLETE job location with as much detail as provided (city, state, country, or "Remote").
    - Example: "United States, Washington, Redmond" NOT just "United States"
    - Example: "San Francisco, California, United States" NOT just "United States"
    - Include all location details found in the posting
    - Look for location mentions in headers, "based in", "located in", or remote indicators
-9. description: Extract the job description EXACTLY as written in the posting. DO NOT rewrite or paraphrase.
-   - Copy text from "Overview", "Description", "Responsibilities", or similar sections
+
+10. description: Extract the job description EXACTLY as written in the posting. DO NOT rewrite or paraphrase.
+   - Copy text from "Overview", "Description", "Responsibilities", "About The Role", "What You'll Do", or similar sections
    - Preserve the original wording and structure from the posting
    - If there are multiple sections (Overview, Responsibilities, etc.), combine them with line breaks
    - Only summarize if the description is extremely long (>500 words) - otherwise use exact text
    - Do NOT add your own interpretation or rewrite in "better" language
-10. offers_sponsorship: CAREFULLY detect if visa/work sponsorship is offered or NOT offered
+   - CRITICAL: Strip all HTML tags completely. Remove <h1>, <h2>, <p>, <ul>, <li>, <strong>, <em>, <a>, and all other HTML formatting. Return ONLY clean, readable text.
+   - Remove inline styles like style="min-height:1.5em"
+   - Convert HTML lists to text lists using newlines or bullet points
+
+11. offers_sponsorship: CAREFULLY detect if visa/work sponsorship is offered or NOT offered
 
    Set to TRUE (offers sponsorship) if you find ANY of these phrases:
    * "visa sponsorship available", "visa sponsorship provided", "visa sponsorship offered"
@@ -359,7 +380,7 @@ Instructions:
    * Only set to FALSE if you find EXPLICIT policy statements that sponsorship is NOT offered
    * When in doubt about whether something is a question vs a statement, default to TRUE
 
-11. requires_us_citizenship: CAREFULLY detect if U.S. citizenship is required or NOT required
+12. requires_us_citizenship: CAREFULLY detect if U.S. citizenship is required or NOT required
 
    Set to TRUE (citizenship IS required) if you find ANY of these phrases:
    * "U.S. citizenship required", "US citizenship required", "United States citizenship required"
@@ -504,9 +525,9 @@ function parseAndValidateResponse(text: string): ParsedJobData {
       role_type: normalizeString(parsed.role_type),
       relevant_majors: normalizeArray(parsed.relevant_majors),
       deadline: normalizeDate(parsed.deadline),
-      requirements: normalizeString(parsed.requirements),
+      requirements: stripHtml(normalizeString(parsed.requirements)),
       location: normalizeString(parsed.location),
-      description: normalizeString(parsed.description),
+      description: stripHtml(normalizeString(parsed.description)),
       // Default: offers_sponsorship = true (unless explicitly stated no sponsorship)
       offers_sponsorship: normalizeBoolean(parsed.offers_sponsorship, true),
       // Default: requires_us_citizenship = false (unless explicitly stated citizenship required)
@@ -618,5 +639,30 @@ function normalizeBoolean(value: any, defaultValue: boolean = false): boolean {
  */
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+/**
+ * Strip HTML tags and decode entities from text
+ * Safety net in case Gemini returns HTML-formatted content
+ */
+function stripHtml(text: string | null): string | null {
+  if (!text) return text
+  
+  return text
+    // Remove HTML tags
+    .replace(/<[^>]*>/g, '')
+    // Decode common HTML entities
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    // Clean up excessive whitespace
+    .replace(/\s+/g, ' ')
+    // Clean up excessive newlines (but preserve double newlines for paragraphs)
+    .replace(/\n\s*\n\s*\n+/g, '\n\n')
+    .trim()
 }
 
