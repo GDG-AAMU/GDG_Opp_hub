@@ -739,7 +739,7 @@ export default function SettingsPage() {
                 </div>
                 <Button
                   onClick={handleSaveAll}
-                  disabled={saving || !hasChanges || !name.trim()}
+                  disabled={saving || !name.trim()}
                   className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white px-8 py-2.5 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? (
@@ -747,8 +747,10 @@ export default function SettingsPage() {
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                       Saving...
                     </>
-                  ) : (
+                  ) : hasChanges ? (
                     'Save Changes'
+                  ) : (
+                    'No Changes'
                   )}
                 </Button>
               </div>
@@ -770,7 +772,7 @@ export default function SettingsPage() {
                 </div>
                 <Button
                   onClick={handleSaveNotificationPreferences}
-                  disabled={notificationSaving || !notificationChanges}
+                  disabled={notificationSaving}
                   className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white px-8 py-2.5 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {notificationSaving ? (
@@ -778,8 +780,10 @@ export default function SettingsPage() {
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                       Saving...
                     </>
-                  ) : (
+                  ) : notificationChanges ? (
                     'Save Preferences'
+                  ) : (
+                    'No Changes'
                   )}
                 </Button>
               </div>

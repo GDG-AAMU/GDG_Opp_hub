@@ -30,21 +30,22 @@ export const editOpportunitySchema = z.object({
   }),
   deadline: z
     .string()
-    .min(1, "Deadline is required")
+    .optional()
     .refine(
       (value) => {
+        if (!value || value.trim() === '') return true // Allow empty
         const date = new Date(value)
         return !Number.isNaN(date.getTime())
       },
       { message: "Enter a valid date" }
     ),
-  description: z.string().min(1, "Description is required"),
-  requirements: z.string().min(1, "Requirements are required"),
-  location: z.string().min(1, "Location is required"),
-  role_type: z.string().min(1, "Role type is required"),
+  description: z.string().optional(),
+  requirements: z.string().optional(),
+  location: z.string().optional(),
+  role_type: z.string().optional(),
   relevant_majors: z
     .array(z.string().min(1))
-    .min(1, "Add at least one relevant major"),
+    .optional(),
 })
 
 export type EditOpportunityFormData = z.infer<typeof editOpportunitySchema>
