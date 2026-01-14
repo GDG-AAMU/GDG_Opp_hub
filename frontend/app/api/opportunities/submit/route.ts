@@ -7,7 +7,11 @@ import { parseJobPostingFromUrl, parseJobPostingFromText, GeminiAPIError, RateLi
 import { filterContentForGemini } from "@/lib/services/content-filter"
 import { extractStructuredData } from "@/lib/services/structured-data-extractor"
 import { isValidJobData, isGenericInfo, getValidationError } from "@/lib/services/job-validator"
+import { sendEmail } from "@/lib/email/service"
 import { Database } from "@/lib/supabase/types"
+
+// Admin email for parsing failure notifications
+const ADMIN_EMAIL = "solomon.agyire@bulldogs.aamu.edu"
 
 export async function POST(request: NextRequest) {
   try {
@@ -296,7 +300,15 @@ export async function POST(request: NextRequest) {
 
         // STEP 2: For manual content, parse it directly
         if (hasManualContent && (!parsedData || !isValidJobData(parsedData) || isGenericInfo(parsedData))) {
-          const cleanedManualContent = manualContent.trim().replace(/\s+/g, ' ').replace(/\n\s*\n\s*\n/g, '\n\n')
+          // Clean manual content while preserving structure (don't remove newlines!)
+          const cleanedManualContent = manualContent
+            .trim()
+            // Only clean up excessive newlines (3+ becomes 2)
+            .replace(/\n\s*\n\s*\n+/g, '\n\n')
+            // Clean up excessive spaces within lines, but preserve newlines
+            .split('\n')
+            .map(line => line.trim().replace(/\s+/g, ' '))
+            .join('\n')
           
           try {
             parsedData = await parseJobPostingFromText(cleanedManualContent, {
@@ -308,24 +320,46 @@ export async function POST(request: NextRequest) {
             if (!isValidJobData(parsedData) || isGenericInfo(parsedData)) {
               const validationError = getValidationError(parsedData) || "Failed to extract valid job information from manual content"
               console.error(`[Background] Manual content validation failed:`, validationError)
+              
+              // Notify admin
+              await notifyAdminOfParsingFailure(
+                savedOpportunity.id,
+                url,
+                userProvidedCompany || 'Unknown Company',
+                savedOpportunity.submitted_by,
+                user.email || 'unknown@email.com',
+                validationError
+              )
+              
               await serviceClient
                 .from('opportunities')
                 .update({
                   company_name: userProvidedCompany || 'Company Name Not Available',
                   job_title: 'Job Title Not Available - Validation Failed',
-                  description: `Validation Error: ${validationError}. Please use the feedback form to report this issue.`
+                  description: `Validation Error: ${validationError}. An admin has been notified to manually review this opportunity.`
                 })
                 .eq('id', savedOpportunity.id)
               return
             }
           } catch (manualParseError) {
             console.error(`[Background] Manual content parsing failed:`, manualParseError)
+            
+            // Notify admin
+            await notifyAdminOfParsingFailure(
+              savedOpportunity.id,
+              url,
+              userProvidedCompany || 'Unknown Company',
+              savedOpportunity.submitted_by,
+              user.email || 'unknown@email.com',
+              `Parsing exception: ${manualParseError instanceof Error ? manualParseError.message : 'Unknown error'}`
+            )
+            
             await serviceClient
               .from('opportunities')
               .update({
                 company_name: userProvidedCompany || 'Company Name Not Available',
                 job_title: 'Job Title Not Available - Parsing Failed',
-                description: 'Failed to parse job details. Please try again or use the feedback form.'
+                description: 'Failed to parse job details. An admin has been notified to manually review this opportunity.'
               })
               .eq('id', savedOpportunity.id)
             return
@@ -439,12 +473,23 @@ export async function POST(request: NextRequest) {
         if (!parsedData || !isValidJobData(parsedData) || isGenericInfo(parsedData)) {
           const validationError = getValidationError(parsedData) || "All parsing methods failed or returned invalid data"
           console.error(`[Background] Final validation failed:`, validationError)
+          
+          // Notify admin
+          await notifyAdminOfParsingFailure(
+            savedOpportunity.id,
+            url,
+            userProvidedCompany || 'Unknown Company',
+            savedOpportunity.submitted_by,
+            user.email || 'unknown@email.com',
+            validationError
+          )
+          
           await serviceClient
             .from('opportunities')
             .update({
               company_name: userProvidedCompany || 'Company Name Not Available',
               job_title: 'Job Title Not Available - Validation Failed',
-              description: `Validation Error: ${validationError}. Please try manual input or use the feedback form.`
+              description: `Validation Error: ${validationError}. An admin has been notified to manually review this opportunity.`
             })
             .eq('id', savedOpportunity.id)
           return
@@ -516,6 +561,85 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     )
+  }
+}
+
+/**
+ * Notify admin when job parsing fails completely
+ * Creates feedback entry and sends email alert
+ */
+async function notifyAdminOfParsingFailure(
+  opportunityId: string,
+  url: string,
+  companyName: string,
+  userName: string,
+  userEmail: string,
+  validationError: string
+): Promise<void> {
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+    const serviceClient = createServiceClient<Database>(supabaseUrl, supabaseServiceKey)
+
+    // 1. Create feedback entry for record keeping
+    await serviceClient.from('feedback').insert({
+      user_id: 'system', // System-generated feedback
+      feedback_type: 'bug',
+      subject: `Job parsing failed: ${companyName || 'Unknown Company'}`,
+      description: `Automatic job parsing failed and requires manual review.
+
+Opportunity ID: ${opportunityId}
+URL: ${url}
+Submitted by: ${userName} (${userEmail})
+Validation Error: ${validationError}
+
+Please review and manually edit this opportunity in the admin dashboard.`,
+      page_url: `${appUrl}/opportunities/${opportunityId}`,
+      status: 'new'
+    })
+
+    // 2. Send email notification to admin
+    const emailSubject = `🚨 Job Parsing Failed: ${companyName || 'Unknown'}`
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #dc2626;">Job Parsing Failed</h2>
+        
+        <p>Hi Admin,</p>
+        
+        <p>A job posting failed to parse automatically and needs manual review:</p>
+        
+        <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+          <p style="margin: 8px 0;"><strong>Company:</strong> ${companyName || 'Unknown'}</p>
+          <p style="margin: 8px 0;"><strong>Opportunity ID:</strong> ${opportunityId}</p>
+          <p style="margin: 8px 0;"><strong>URL:</strong> <a href="${url}" style="color: #2563eb;">${url}</a></p>
+          <p style="margin: 8px 0;"><strong>Submitted by:</strong> ${userName} (${userEmail})</p>
+          <p style="margin: 8px 0;"><strong>Error:</strong> ${validationError}</p>
+        </div>
+        
+        <p><strong>Action Required:</strong> Please review and manually edit the description and requirements for this opportunity.</p>
+        
+        <p style="margin-top: 24px;">
+          <a href="${appUrl}/admin" 
+             style="background: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+            Review in Admin Dashboard →
+          </a>
+        </p>
+        
+        <hr style="margin: 24px 0; border: none; border-top: 1px solid #e5e7eb;">
+        
+        <p style="font-size: 12px; color: #6b7280;">
+          This is an automated notification from GDG Opportunities Hub.
+        </p>
+      </div>
+    `
+
+    await sendEmail(ADMIN_EMAIL, emailSubject, emailHtml)
+    
+    console.log(`✅ Notified admin about parsing failure for opportunity ${opportunityId}`)
+  } catch (error) {
+    // Don't throw - we don't want to fail the submission if notification fails
+    console.error('❌ Failed to notify admin about parsing failure:', error)
   }
 }
 
