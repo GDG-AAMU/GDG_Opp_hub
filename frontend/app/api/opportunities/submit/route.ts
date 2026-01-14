@@ -5,6 +5,8 @@ import { submitOpportunitySchema } from "@/lib/validations/opportunity"
 import { smartScrape } from "@/lib/services/smart-scraper"
 import { parseJobPostingFromUrl, parseJobPostingFromText, GeminiAPIError, RateLimitError } from "@/lib/ai/gemini"
 import { filterContentForGemini } from "@/lib/services/content-filter"
+import { extractStructuredData } from "@/lib/services/structured-data-extractor"
+import { isValidJobData, isGenericInfo, getValidationError } from "@/lib/services/job-validator"
 import { Database } from "@/lib/supabase/types"
 
 export async function POST(request: NextRequest) {
@@ -272,11 +274,28 @@ export async function POST(request: NextRequest) {
         // Check if we have manual content
         const hasManualContent = manualContent && manualContent.trim().length >= 50
 
-        // STEP 1: For manual content, skip Gemini URL and go straight to parsing
-        // (We detect if site is blocked during scraping, not beforehand)
-        if (hasManualContent) {
-          // Manual content is already clean, use it directly (gentle filtering only)
-          // Just trim and clean whitespace, don't aggressively filter
+        // STEP 1: Try structured data extraction first (if we have HTML from URL)
+        if (!hasManualContent) {
+          try {
+            const response = await fetch(url, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              }
+            })
+            if (response.ok) {
+              const html = await response.text()
+              const structuredData = extractStructuredData(html)
+              if (structuredData && isValidJobData(structuredData) && !isGenericInfo(structuredData)) {
+                parsedData = structuredData
+              }
+            }
+          } catch (error) {
+            // Continue to next step if structured data extraction fails
+          }
+        }
+
+        // STEP 2: For manual content, parse it directly
+        if (hasManualContent && (!parsedData || !isValidJobData(parsedData) || isGenericInfo(parsedData))) {
           const cleanedManualContent = manualContent.trim().replace(/\s+/g, ' ').replace(/\n\s*\n\s*\n/g, '\n\n')
           
           try {
@@ -284,81 +303,131 @@ export async function POST(request: NextRequest) {
               timeout: 30000,
               maxRetries: 3
             })
+            
+            // Validate parsed data
+            if (!isValidJobData(parsedData) || isGenericInfo(parsedData)) {
+              const validationError = getValidationError(parsedData) || "Failed to extract valid job information from manual content"
+              console.error(`[Background] Manual content validation failed:`, validationError)
+              await serviceClient
+                .from('opportunities')
+                .update({
+                  company_name: userProvidedCompany || 'Company Name Not Available',
+                  job_title: 'Job Title Not Available - Validation Failed',
+                  description: `Validation Error: ${validationError}. Please use the feedback form to report this issue.`
+                })
+                .eq('id', savedOpportunity.id)
+              return
+            }
           } catch (manualParseError) {
             console.error(`[Background] Manual content parsing failed:`, manualParseError)
-            // Update with user-provided fields as fallback instead of leaving "Loading..."
             await serviceClient
               .from('opportunities')
               .update({
                 company_name: userProvidedCompany || 'Company Name Not Available',
                 job_title: 'Job Title Not Available - Parsing Failed',
+                description: 'Failed to parse job details. Please try again or use the feedback form.'
               })
               .eq('id', savedOpportunity.id)
             return
           }
-        } else {
-          // STEP 1: Try Gemini with URL first (original approach) - only for non-restricted sites
-          try {
-            parsedData = await parseJobPostingFromUrl(url, {
-              timeout: 30000,
-              maxRetries: 2 // Fewer retries for URL method
-            })
-          } catch (geminiUrlError) {
-
-            // STEP 2: Fallback to scraper
-            const scrapeResult = await smartScrape({
-              url,
-              manualContent,
-              timeout: 30000
-            })
-
-            if (!scrapeResult.success || !scrapeResult.content) {
-              console.error(`[Background] Scraping also failed:`, scrapeResult.error)
-              // Update with user-provided fields as fallback instead of leaving "Loading..."
-              await serviceClient
-                .from('opportunities')
-                .update({
-                  company_name: userProvidedCompany || 'Company Name Not Available',
-                  job_title: 'Job Title Not Available - Scraping Failed',
-                })
-                .eq('id', savedOpportunity.id)
-              return
-            }
-
-            // STEP 3: Filter content before sending to Gemini
-            // Use gentler filtering for manual content
-            const contentToFilter = scrapeResult.content
-            const filteredContent = hasManualContent 
-              ? contentToFilter.trim().replace(/\s+/g, ' ').replace(/\n\s*\n\s*\n/g, '\n\n') // Gentle cleaning for manual content
-              : filterContentForGemini(contentToFilter) // Aggressive filtering for scraped content
-            
-            if (!filteredContent || filteredContent.trim().length < 50) {
-              console.error(`[Background] Content filtering resulted in insufficient content`)
-              // Update with user-provided fields as fallback instead of leaving "Loading..."
-              await serviceClient
-                .from('opportunities')
-                .update({
-                  company_name: userProvidedCompany || 'Company Name Not Available',
-                  job_title: 'Job Title Not Available - Insufficient Content',
-                })
-                .eq('id', savedOpportunity.id)
-              return
-            }
-
-            // STEP 4: Parse scraped content with Gemini
+        } else if (!hasManualContent) {
+          // STEP 2: Try Gemini with URL first (if structured data didn't work)
+          if (!parsedData || !isValidJobData(parsedData) || isGenericInfo(parsedData)) {
             try {
-              parsedData = await parseJobPostingFromText(filteredContent, {
+              parsedData = await parseJobPostingFromUrl(url, {
                 timeout: 30000,
-                maxRetries: 3
+                maxRetries: 2
               })
-            } catch (geminiTextError) {
-              console.error(`[Background] Gemini text parsing failed:`, geminiTextError)
-              // Update with user-provided fields as fallback instead of leaving "Loading..."
+              
+              // Validate parsed data
+              if (!isValidJobData(parsedData) || isGenericInfo(parsedData)) {
+                parsedData = null // Reset to try scraper
+              }
+            } catch (geminiUrlError) {
+              // Continue to scraper fallback
+            }
+          }
+
+          // STEP 3: Fallback to scraper if needed
+          if (!parsedData || !isValidJobData(parsedData) || isGenericInfo(parsedData)) {
+            try {
+
+              const scrapeResult = await smartScrape({
+                url,
+                manualContent,
+                timeout: 30000
+              })
+
+              if (!scrapeResult.success || !scrapeResult.content) {
+                console.error(`[Background] Scraping failed:`, scrapeResult.error)
+                await serviceClient
+                  .from('opportunities')
+                  .update({
+                    company_name: userProvidedCompany || 'Company Name Not Available',
+                    job_title: 'Job Title Not Available - Scraping Failed',
+                    description: 'Unable to scrape job details. Please try manual input or use the feedback form.'
+                  })
+                  .eq('id', savedOpportunity.id)
+                return
+              }
+
+              // Filter content before sending to Gemini
+              const filteredContent = filterContentForGemini(scrapeResult.content)
+              
+              if (!filteredContent || filteredContent.trim().length < 50) {
+                console.error(`[Background] Content filtering resulted in insufficient content`)
+                await serviceClient
+                  .from('opportunities')
+                  .update({
+                    company_name: userProvidedCompany || 'Company Name Not Available',
+                    job_title: 'Job Title Not Available - Insufficient Content',
+                    description: 'Scraped content was insufficient. Please try manual input.'
+                  })
+                  .eq('id', savedOpportunity.id)
+                return
+              }
+
+              // Parse scraped content with Gemini
+              try {
+                parsedData = await parseJobPostingFromText(filteredContent, {
+                  timeout: 30000,
+                  maxRetries: 3
+                })
+                
+                // Validate parsed data
+                if (!isValidJobData(parsedData) || isGenericInfo(parsedData)) {
+                  const validationError = getValidationError(parsedData) || "Failed to extract valid job information"
+                  console.error(`[Background] Scraped content validation failed:`, validationError)
+                  await serviceClient
+                    .from('opportunities')
+                    .update({
+                      company_name: userProvidedCompany || 'Company Name Not Available',
+                      job_title: 'Job Title Not Available - Validation Failed',
+                      description: `Validation Error: ${validationError}. Please try manual input or use the feedback form.`
+                    })
+                    .eq('id', savedOpportunity.id)
+                  return
+                }
+              } catch (geminiTextError) {
+                console.error(`[Background] Gemini text parsing failed:`, geminiTextError)
+                await serviceClient
+                  .from('opportunities')
+                  .update({
+                    company_name: userProvidedCompany || 'Company Name Not Available',
+                    job_title: 'Job Title Not Available - Parsing Failed',
+                    description: 'Failed to parse scraped content. Please try manual input.'
+                  })
+                  .eq('id', savedOpportunity.id)
+                return
+              }
+            } catch (scrapeError) {
+              console.error(`[Background] Scraper error:`, scrapeError)
               await serviceClient
                 .from('opportunities')
                 .update({
                   company_name: userProvidedCompany || 'Company Name Not Available',
-                  job_title: 'Job Title Not Available - Parsing Failed',
+                  job_title: 'Job Title Not Available - Scraping Error',
+                  description: 'An error occurred during scraping. Please try manual input.'
                 })
                 .eq('id', savedOpportunity.id)
               return
@@ -366,14 +435,16 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        if (!parsedData) {
-          console.error(`[Background] All parsing methods failed`)
-          // Update with user-provided fields as fallback instead of leaving "Loading..."
+        // Final validation - ensure we have valid data before saving
+        if (!parsedData || !isValidJobData(parsedData) || isGenericInfo(parsedData)) {
+          const validationError = getValidationError(parsedData) || "All parsing methods failed or returned invalid data"
+          console.error(`[Background] Final validation failed:`, validationError)
           await serviceClient
             .from('opportunities')
             .update({
               company_name: userProvidedCompany || 'Company Name Not Available',
-              job_title: 'Job Title Not Available - All Parsing Methods Failed',
+              job_title: 'Job Title Not Available - Validation Failed',
+              description: `Validation Error: ${validationError}. Please try manual input or use the feedback form.`
             })
             .eq('id', savedOpportunity.id)
           return
