@@ -78,21 +78,52 @@ export async function GET() {
       return NextResponse.json({ contributors: [] })
     }
 
+    // Create service role client - this should bypass RLS
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
-        persistSession: false
+        persistSession: false,
+        detectSessionInUrl: false
+      },
+      global: {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`
+        }
       }
     })
+    
+    console.log("[Contributors API] Service role client created")
 
-    // Fetch ALL users
-    console.log("[Contributors API] Fetching users...")
-    const { data: allUsers, error: usersError } = await supabase
-      .from('users')
-      .select('id, name, avatar_url, created_at')
-      .order('created_at', { ascending: true })
+    // Fetch ALL users via REST API to bypass RLS
+    console.log("[Contributors API] Fetching users via REST API...")
+    let allUsers: any[] | null = null
+    let usersError: any = null
+    
+    try {
+      const response = await fetch(`${supabaseUrl}/rest/v1/users?select=id,name,avatar_url,created_at&order=created_at.asc`, {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        }
+      })
+      
+      if (response.ok) {
+        allUsers = await response.json()
+        console.log(`[Contributors API] Fetched ${allUsers?.length || 0} users via REST API`)
+      } else {
+        const errorText = await response.text()
+        usersError = { message: errorText, status: response.status }
+        console.error("[Contributors API] REST API error for users:", response.status, errorText)
+      }
+    } catch (fetchError: any) {
+      usersError = fetchError
+      console.error("[Contributors API] Fetch error for users:", fetchError)
+    }
 
-    if (usersError) {
+    if (usersError || !allUsers) {
       console.error("[Contributors API] Failed to fetch users:", usersError)
       return NextResponse.json({ contributors: [] })
     }
@@ -103,17 +134,37 @@ export async function GET() {
     }
 
     // Get all opportunities with timestamps and types
-    console.log("[Contributors API] Fetching opportunities...")
-    const { data: opportunities, error: oppError } = await supabase
-      .from('opportunities')
-      .select('submitted_by, created_at, opportunity_type')
-      .order('created_at', { ascending: true })
+    // Use REST API directly with service role to bypass RLS
+    console.log("[Contributors API] Fetching opportunities via REST API...")
+    
+    let opportunities: any[] | null = null
+    let oppError: any = null
+    
+    try {
+      const response = await fetch(`${supabaseUrl}/rest/v1/opportunities?select=submitted_by,created_at,opportunity_type&order=created_at.asc`, {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        }
+      })
+      
+      if (response.ok) {
+        opportunities = await response.json()
+        console.log(`[Contributors API] Fetched ${opportunities?.length || 0} opportunities via REST API`)
+      } else {
+        const errorText = await response.text()
+        oppError = { message: errorText, status: response.status }
+        console.error("[Contributors API] REST API error:", response.status, errorText)
+      }
+    } catch (fetchError: any) {
+      oppError = fetchError
+      console.error("[Contributors API] Fetch error:", fetchError)
+    }
 
     if (oppError) {
       console.error("[Contributors API] Failed to fetch opportunities:", oppError)
-      console.error("[Contributors API] Error code:", oppError.code)
-      console.error("[Contributors API] Error message:", oppError.message)
-      console.error("[Contributors API] Full error:", JSON.stringify(oppError, null, 2))
       return NextResponse.json({ contributors: [] })
     }
 
@@ -211,8 +262,17 @@ export async function GET() {
 
     // Build contributor list for ALL users
     console.log("[Contributors API] Building contributor list...")
+    console.log("[Contributors API] User stats keys:", Array.from(userStats.keys()))
+    console.log("[Contributors API] All user IDs:", allUsers?.map(u => u.id))
+    
     const contributors: Contributor[] = (allUsers || []).map((user) => {
       const stats = userStats.get(user.id)
+      
+      console.log(`[Contributors API] Mapping user ${user.name} (${user.id}):`, {
+        hasStats: !!stats,
+        postCount: stats?.postCount || 0,
+        statsKeyMatch: userStats.has(user.id)
+      })
       
       if (stats && stats.postCount > 0) {
         console.log(`[Contributors API] User ${user.name} (${user.id}) has ${stats.postCount} posts`)
