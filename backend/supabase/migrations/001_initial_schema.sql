@@ -107,14 +107,28 @@ CREATE POLICY "Admins can delete opportunities" ON opportunities
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.users (id, email, name, role)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'name', 'User'),
-    'student'
-  );
+  -- Check if user already exists in public.users table
+  IF NOT EXISTS (SELECT 1 FROM public.users WHERE id = NEW.id) THEN
+    -- Only insert if user doesn't exist
+    INSERT INTO public.users (id, email, name, role)
+    VALUES (
+      NEW.id,
+      NEW.email,
+      COALESCE(NEW.raw_user_meta_data->>'name', 'User'),
+      'student'
+    );
+  END IF;
+  
   RETURN NEW;
+EXCEPTION
+  WHEN unique_violation THEN
+    -- Email already exists (shouldn't happen due to auth constraint, but handle it)
+    RAISE WARNING 'User with email % already exists', NEW.email;
+    RETURN NEW;
+  WHEN OTHERS THEN
+    -- Log any other errors but don't fail the auth signup
+    RAISE WARNING 'Error in handle_new_user for %: %', NEW.email, SQLERRM;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
