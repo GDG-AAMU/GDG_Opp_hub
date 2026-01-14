@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
 
 export const dynamic = 'force-dynamic'
 
@@ -78,25 +77,7 @@ export async function GET() {
       return NextResponse.json({ contributors: [] })
     }
 
-    // Create service role client - this should bypass RLS
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false
-      },
-      global: {
-        headers: {
-          'apikey': supabaseServiceKey,
-          'Authorization': `Bearer ${supabaseServiceKey}`
-        }
-      }
-    })
-    
-    console.log("[Contributors API] Service role client created")
-
     // Fetch ALL users via REST API to bypass RLS
-    console.log("[Contributors API] Fetching users via REST API...")
     let allUsers: any[] | null = null
     let usersError: any = null
     
@@ -112,7 +93,6 @@ export async function GET() {
       
       if (response.ok) {
         allUsers = await response.json()
-        console.log(`[Contributors API] Fetched ${allUsers?.length || 0} users via REST API`)
       } else {
         const errorText = await response.text()
         usersError = { message: errorText, status: response.status }
@@ -124,18 +104,12 @@ export async function GET() {
     }
 
     if (usersError || !allUsers) {
-      console.error("[Contributors API] Failed to fetch users:", usersError)
+      console.error("Failed to fetch users:", usersError)
       return NextResponse.json({ contributors: [] })
-    }
-
-    console.log(`[Contributors API] Found ${allUsers?.length || 0} users`)
-    if (allUsers && allUsers.length > 0) {
-      console.log("[Contributors API] User IDs:", allUsers.map(u => ({ id: u.id, name: u.name })))
     }
 
     // Get all opportunities with timestamps and types
     // Use REST API directly with service role to bypass RLS
-    console.log("[Contributors API] Fetching opportunities via REST API...")
     
     let opportunities: any[] | null = null
     let oppError: any = null
@@ -152,29 +126,19 @@ export async function GET() {
       
       if (response.ok) {
         opportunities = await response.json()
-        console.log(`[Contributors API] Fetched ${opportunities?.length || 0} opportunities via REST API`)
       } else {
         const errorText = await response.text()
         oppError = { message: errorText, status: response.status }
-        console.error("[Contributors API] REST API error:", response.status, errorText)
+        console.error("Failed to fetch opportunities:", response.status, errorText)
       }
     } catch (fetchError: any) {
       oppError = fetchError
-      console.error("[Contributors API] Fetch error:", fetchError)
+      console.error("Error fetching opportunities:", fetchError)
     }
 
     if (oppError) {
-      console.error("[Contributors API] Failed to fetch opportunities:", oppError)
+      console.error("Failed to fetch opportunities:", oppError)
       return NextResponse.json({ contributors: [] })
-    }
-
-    console.log(`[Contributors API] Found ${opportunities?.length || 0} opportunities`)
-    if (opportunities && opportunities.length > 0) {
-      console.log("[Contributors API] Sample opportunity:", opportunities[0])
-      console.log("[Contributors API] All submitted_by values:", opportunities.map(o => o.submitted_by))
-      console.log("[Contributors API] Unique submitted_by values:", [...new Set(opportunities.map(o => o.submitted_by))])
-    } else {
-      console.warn("[Contributors API] No opportunities found - this might be an RLS issue")
     }
 
     // Calculate date for "recent" posts (last 7 days)
@@ -182,7 +146,6 @@ export async function GET() {
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
 
     // Build detailed stats per user
-    console.log("[Contributors API] Building user stats...")
     const userStats = new Map<string, {
       postCount: number
       recentPosts: number
@@ -196,11 +159,9 @@ export async function GET() {
     }>()
 
     const opportunitiesArray = opportunities || []
-    console.log(`[Contributors API] Processing ${opportunitiesArray.length} opportunities`)
 
     for (const opp of opportunitiesArray) {
       if (!opp.submitted_by) {
-        console.warn("[Contributors API] Opportunity missing submitted_by:", opp)
         continue
       }
 
@@ -254,29 +215,9 @@ export async function GET() {
       userStats.set(opp.submitted_by, existing)
     }
 
-    console.log(`[Contributors API] User stats built for ${userStats.size} users`)
-    console.log("[Contributors API] User stats:", Array.from(userStats.entries()).map(([id, stats]) => ({
-      userId: id,
-      postCount: stats.postCount
-    })))
-
     // Build contributor list for ALL users
-    console.log("[Contributors API] Building contributor list...")
-    console.log("[Contributors API] User stats keys:", Array.from(userStats.keys()))
-    console.log("[Contributors API] All user IDs:", allUsers?.map(u => u.id))
-    
     const contributors: Contributor[] = (allUsers || []).map((user) => {
       const stats = userStats.get(user.id)
-      
-      console.log(`[Contributors API] Mapping user ${user.name} (${user.id}):`, {
-        hasStats: !!stats,
-        postCount: stats?.postCount || 0,
-        statsKeyMatch: userStats.has(user.id)
-      })
-      
-      if (stats && stats.postCount > 0) {
-        console.log(`[Contributors API] User ${user.name} (${user.id}) has ${stats.postCount} posts`)
-      }
 
       return {
         id: user.id,
@@ -351,14 +292,6 @@ export async function GET() {
         currentRank++
       }
     }
-
-    const totalPosts = contributors.reduce((sum, c) => sum + c.post_count, 0)
-    const activeContributors = contributors.filter(c => c.post_count > 0).length
-    console.log(`[Contributors API] Final stats: ${activeContributors} contributors, ${totalPosts} total posts`)
-    console.log("[Contributors API] Contributors with posts:", contributors.filter(c => c.post_count > 0).map(c => ({
-      name: c.name,
-      post_count: c.post_count
-    })))
 
     return NextResponse.json({ contributors })
   } catch (error) {
