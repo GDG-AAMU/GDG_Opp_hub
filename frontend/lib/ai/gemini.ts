@@ -648,10 +648,11 @@ function sleep(ms: number): Promise<void> {
 function stripHtml(text: string | null): string | null {
   if (!text) return text
   
-  return text
-    // Remove HTML tags
-    .replace(/<[^>]*>/g, '')
-    // Decode common HTML entities
+  // First, remove HTML tags
+  let cleaned = text.replace(/<[^>]*>/g, '')
+  
+  // Decode common HTML entities
+  cleaned = cleaned
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
@@ -659,10 +660,16 @@ function stripHtml(text: string | null): string | null {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
-    // Clean up excessive whitespace
-    .replace(/\s+/g, ' ')
-    // Clean up excessive newlines (but preserve double newlines for paragraphs)
-    .replace(/\n\s*\n\s*\n+/g, '\n\n')
-    .trim()
+  
+  // Clean up excessive newlines (3+ becomes 2)
+  cleaned = cleaned.replace(/\n\s*\n\s*\n+/g, '\n\n')
+  
+  // Clean up excessive spaces within each line, but preserve newlines
+  cleaned = cleaned
+    .split('\n')
+    .map((line: string) => line.trim().replace(/\s+/g, ' '))
+    .join('\n')
+  
+  return cleaned.trim()
 }
 
